@@ -1,8 +1,9 @@
 <?php
 
-use App\Livewire\Settings\Appearance;
-use App\Livewire\Settings\Password;
+use App\Livewire\TestPage;
 use App\Livewire\Settings\Profile;
+use App\Livewire\Settings\Password;
+use App\Livewire\Settings\Appearance;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -12,6 +13,10 @@ Route::get('/', function () {
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+Route::get('test-page', TestPage::class)
+    ->middleware(['auth', 'verified'])
+    ->name('test-page');
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
