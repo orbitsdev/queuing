@@ -5,6 +5,11 @@ namespace Database\Seeders;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Database\Seeders\UserSeeder;
+use Database\Seeders\BranchSeeder;
+use Database\Seeders\CounterSeeder;
+use Database\Seeders\ServiceSeeder;
+use Database\Seeders\SettingSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,12 +18,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => bcrypt('password'),
-        ]);
+        $this->call([
+        BranchSeeder::class,
+        ServiceSeeder::class,
+        CounterSeeder::class,
+        UserSeeder::class,
+        SettingSeeder::class,
+    ]);
     }
 }

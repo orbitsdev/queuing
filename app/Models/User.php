@@ -3,10 +3,12 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Queue;
+use App\Models\Branch;
+use Illuminate\Support\Str;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -18,11 +20,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+   
 
     /**
      * The attributes that should be hidden for serialization.
@@ -57,5 +55,14 @@ class User extends Authenticatable
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+    public function queues()
+    {
+        return $this->hasMany(Queue::class);
     }
 }
