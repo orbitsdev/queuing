@@ -6,17 +6,41 @@ use App\Models\Queue;
 use App\Models\Branch;
 use App\Models\Counter;
 use App\Models\Service;
-use Livewire\Component;
+
 use Livewire\Attributes\Title;
 
-class Dashboard extends Component
+use Filament\Actions\Action;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Forms\Concerns\InteractsWithForms;
+
+use Filament\Actions\Contracts\HasActions;
+
+use Filament\Forms\Contracts\HasForms;
+use Livewire\Component;
+
+class Dashboard extends Component  implements HasForms, HasActions
 {
+    use InteractsWithActions;
+    use InteractsWithForms;
+
     #[Title('Admin Dashboard')]
     public $totalQueues;
     public $activeCounters;
     public $totalServices;
     public $branches;
     public $queuesByStatus;
+
+
+    public function testAction(): Action
+    {
+        return Action::make('test')
+            ->label('Test')
+            ->requiresConfirmation()
+            ->action(function () {
+                dd('test');
+              
+            });
+    }
 
     public function mount()
     {

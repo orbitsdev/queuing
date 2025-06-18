@@ -18,13 +18,13 @@
                     <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
                 </flux:navlist.group>
 
-                <flux:navlist.group :heading="__('Management')" class="grid">
+                {{-- <flux:navlist.group :heading="__('Management')" class="grid">
                     <flux:navlist.item icon="building-office" :href="route('admin.branches')" :current="request()->routeIs('admin.branches')" wire:navigate>{{ __('Branches') }}</flux:navlist.item>
                     <flux:navlist.item icon="briefcase" :href="route('admin.services')" :current="request()->routeIs('admin.services')" wire:navigate>{{ __('Services') }}</flux:navlist.item>
                     <flux:navlist.item icon="computer-desktop" :href="route('admin.counters')" :current="request()->routeIs('admin.counters')" wire:navigate>{{ __('Counters') }}</flux:navlist.item>
                     <flux:navlist.item icon="queue-list" :href="route('admin.queues')" :current="request()->routeIs('admin.queues')" wire:navigate>{{ __('Queues') }}</flux:navlist.item>
                     <flux:navlist.item icon="users" :href="route('admin.users')" :current="request()->routeIs('admin.users')" wire:navigate>{{ __('Users') }}</flux:navlist.item>
-                </flux:navlist.group>
+                </flux:navlist.group> --}}
             </flux:navlist>
 
             <flux:spacer />

@@ -8,9 +8,38 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Rule;
 
-class Branches extends Component
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
+use Illuminate\Contracts\View\View;
+
+class Branches extends Component  implements HasForms, HasTable
 {
-    use WithPagination;
+    use InteractsWithTable;
+    use InteractsWithForms;
+    
+    public function table(Table $table): Table
+    {
+        return $table
+            ->query(Branch::query())
+            ->columns([
+                TextColumn::make('name')->searchable(),
+            ])
+            ->filters([
+                // ...
+            ])
+            ->actions([
+                // ...
+            ])
+            ->bulkActions([
+                // ...
+            ]);
+    }
+    
+
 
     #[Title('Branch Management')]
     
