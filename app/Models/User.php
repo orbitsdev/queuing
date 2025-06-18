@@ -65,4 +65,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Queue::class);
     }
+
+    public function scopeNotSuperAdmin()
+    {
+        return $this->where('role', '!=', 'superadmin');
+    }
+    
 }

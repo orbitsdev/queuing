@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->foreignId('branch_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->enum('role', ['superadmin', 'admin', 'staff', 'coordinator']);
+            $table->enum('role', ['superadmin', 'admin', 'staff']);
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();

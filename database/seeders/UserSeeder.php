@@ -17,6 +17,16 @@ class UserSeeder extends Seeder
     {
         $branch = Branch::first();
 
+        // Create superadmin (not tied to any branch)
+        User::create([
+            'branch_id' => null,
+            'name' => 'Super Admin',
+            'email' => 'superadmin@kiosqueeing.local',
+            'password' => Hash::make('password'),
+            'role' => 'superadmin',
+        ]);
+
+        // Create branch admin
         User::create([
             'branch_id' => $branch->id,
             'name' => 'Admin User',
@@ -25,6 +35,7 @@ class UserSeeder extends Seeder
             'role' => 'admin',
         ]);
 
+        // Create branch staff
         User::create([
             'branch_id' => $branch->id,
             'name' => 'Staff User',
