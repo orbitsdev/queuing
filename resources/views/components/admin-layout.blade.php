@@ -1,12 +1,14 @@
 <div x-data="{ sidebarOpen: true }" class="min-h-screen flex bg-kiosqueeing-background text-kiosqueeing-text">
 
     {{-- Sidebar --}}
-    <aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-kiosqueeing-sidebar border-r border-gray-200 flex flex-col transition-all duration-300">
-        
+    <aside :class="sidebarOpen ? 'w-64' : 'w-20'"
+        class="bg-kiosqueeing-sidebar border-r border-gray-200 flex flex-col transition-all duration-300">
+
         {{-- Logo / Brand --}}
         <div class="flex items-center px-4">
             <img src="{{ asset('images/queue_logo.png') }}" alt="Kiosqueeing Logo" class="h-16" />
-            <span class="font-bold text-xl text-kiosqueeing-primar uppercase text-center" x-show="sidebarOpen">Kiosqueeing</span>
+            <span class="font-bold text-xl text-kiosqueeing-primar uppercase text-center"
+                x-show="sidebarOpen">Kiosqueeing</span>
         </div>
 
         {{-- Links --}}
@@ -27,17 +29,13 @@
                 @php
                     $isActive = request()->routeIs($item['route']);
                 @endphp
-              <a href="{{ $item['route'] !== '#' ? route($item['route']) : '#' }}"
-   class="group flex items-center px-3 py-2 rounded-md border-l-4 transition-all duration-200
-       {{ $isActive 
-           ? 'bg-gradient-to-r from-kiosqueeing-primary/80 to-kiosqueeing-primary border-kiosqueeing-primary text-white hover:translate-x-1 '
-           : 'border-transparent hover:bg-kiosqueeing-primary/5 hover:border-kiosqueeing-primary hover:translate-x-1 hover:text-kiosqueeing-primary' }}">
-    @svg('heroicon-o-'.$item['icon'], [
-        'class' => 'w-5 h-5 mr-3 ' . ($isActive ? 'text-white' : 'text-gray-400 group-hover:text-kiosqueeing-primary')
-    ])
-    <span x-show="sidebarOpen" class="text-sm font-medium">{{ $item['label'] }}</span>
-</a>
-
+                <a href="{{ $item['route'] !== '#' ? route($item['route']) : '#' }}" wire:navigate wire:ignore
+                    class="group nav-link {{ $isActive ? 'active' : 'inactive' }}">
+                    @svg('heroicon-o-' . $item['icon'], [
+                        'class' => 'nav-icon ' . ($isActive ? 'active' : 'inactive group-hover:text-kiosqueeing-primary'),
+                    ])
+                    <span x-show="sidebarOpen" class="text-sm font-medium">{{ $item['label'] }}</span>
+                </a>
             @endforeach
         </nav>
 
@@ -46,7 +44,7 @@
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit"
-                        class="w-full flex items-center px-3 py-2 rounded-md hover:bg-kiosqueeing-primary/5 text-sm text-kiosqueeing-primary font-medium transition">
+                    class="w-full flex items-center px-3 py-2 rounded-md hover:bg-kiosqueeing-primary/5 text-sm text-kiosqueeing-primary font-medium transition">
                     @svg('heroicon-o-arrow-left-on-rectangle', ['class' => 'w-5 h-5 mr-3'])
                     <span x-show="sidebarOpen">Logout</span>
                 </button>
@@ -61,44 +59,45 @@
         {{-- Topbar --}}
         <header class="h-16 bg-kiosqueeing-sidebar border-b border-gray-200 px-6 flex items-center justify-between">
 
-          <div class="flex items-center space-x-4">
- <button @click="sidebarOpen = !sidebarOpen" class="text-gray-500 hover:text-kiosqueeing-primary transition">
-    <template x-if="sidebarOpen">
-        @svg('heroicon-o-bars-3', 'w-6 h-6')
-    </template>
-    <template x-if="!sidebarOpen">
-        @svg('heroicon-o-bars-3', 'w-6 h-6')
-    </template>
-</button>
+            <div class="flex items-center space-x-4">
+                <button @click="sidebarOpen = !sidebarOpen"
+                    class="text-gray-500 hover:text-kiosqueeing-primary transition">
+                    <template x-if="sidebarOpen">
+                        @svg('heroicon-o-bars-3', 'w-6 h-6')
+                    </template>
+                    <template x-if="!sidebarOpen">
+                        @svg('heroicon-o-bars-3', 'w-6 h-6')
+                    </template>
+                </button>
 
-    <h1 class="text-lg font-semibold text-kiosqueeing-primary">
-        {{ $title ?? 'Dashboard' }}
-    </h1>
+                <h1 class="text-lg font-semibold text-kiosqueeing-primary">
+                    {{ $title ?? 'Dashboard' }}
+                </h1>
 
-</div>
+            </div>
 
 
             {{-- Profile dropdown --}}
             <div class="relative" x-data="{ open: false }">
                 <button @click="open = !open" @click.away="open = false"
-                        class="flex items-center space-x-2 focus:outline-none">
+                    class="flex items-center space-x-2 focus:outline-none">
                     <span class="font-medium text-sm text-kiosqueeing-text">Admin</span>
-                    <div class="w-8 h-8 rounded-full bg-kiosqueeing-primary text-white flex items-center justify-center">
+                    <div
+                        class="w-8 h-8 rounded-full bg-kiosqueeing-primary text-white flex items-center justify-center">
                         A
                     </div>
                 </button>
 
                 <div x-show="open" x-transition
-                     class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50"
-                     style="display: none;">
-                    <a href="#"
-                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                    class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50"
+                    style="display: none;">
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                         Profile
                     </a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit"
-                                class="w-full text-left px-4 py-2 text-sm text-kiosqueeing-primary hover:bg-kiosqueeing-primary/5">
+                            class="w-full text-left px-4 py-2 text-sm text-kiosqueeing-primary hover:bg-kiosqueeing-primary/5">
                             Logout
                         </button>
                     </form>

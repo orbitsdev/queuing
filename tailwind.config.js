@@ -7,6 +7,7 @@ const colors = require('tailwindcss/colors')
 
 export default {
   presets: [
+
     preset,
     
   ],

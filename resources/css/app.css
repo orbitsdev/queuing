@@ -2,3 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 @tailwind variants;
+
+@layer components {
+  .nav-link {
+    @apply flex items-center px-3 py-2 rounded-md transition-all duration-200;
+    position: relative;
+    overflow: hidden;
+    background-size: 200% auto;
+  }
+  
+  .nav-link.active {
+    @apply bg-gradient-to-r from-kiosqueeing-primary/80 to-kiosqueeing-primary border-kiosqueeing-primary text-white ;
+  }
+  
+  .nav-link.inactive {
+    @apply border-transparent hover:border-kiosqueeing-primary  hover:text-kiosqueeing-primary;
+  }
+  
+  .nav-link.inactive::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(38, 160, 218, 0.2), transparent);
+    transition: 0.5s;
+  }
+  
+  .nav-link.inactive:hover::before {
+    left: 100%;
+  }
+  
+  .nav-link.inactive:hover {
+    @apply bg-kiosqueeing-primary/5;
+  }
+  
+  .nav-icon {
+    @apply w-5 h-5 mr-3;
+  }
+  
+  .nav-icon.active {
+    @apply text-white;
+  }
+  
+  .nav-icon.inactive {
+    @apply text-gray-400;
+  }
+}
+
+.btn-grad {background-image: linear-gradient(to right, #314755 0%, #26a0da  51%, #314755  100%)}
+.btn-grad {
+   margin: 10px;
+   padding: 15px 45px;
+   text-align: center;
+   text-transform: uppercase;
+   transition: 0.5s;
+   background-size: 200% auto;
+   color: white;            
+   box-shadow: 0 0 20px #eee;
+   border-radius: 10px;
+   display: block;
+ }
+
+ .btn-grad:hover {
+   background-position: right center; /* change the direction of the change here */
+   color: #fff;
+   text-decoration: none;
+ }

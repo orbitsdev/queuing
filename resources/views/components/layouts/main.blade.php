@@ -26,12 +26,16 @@
         @filamentStyles
         @vite(['resources/css/app.css'])
         @livewireStyles
+        <wireui:scripts />
+       
     </head>
 
     <body class="min-h-screen">
    
         {{ $slot }}
 
+        <x-notifications />
+        <x-dialog z-index="z-50" blur="md" align="center" />
         @livewire('notifications')
         @stack('modals')
         @livewireScripts

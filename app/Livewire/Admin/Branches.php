@@ -4,35 +4,216 @@ namespace App\Livewire\Admin;
 
 use App\Models\Branch;
 use Livewire\Component;
-use Livewire\WithPagination;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Rule;
-
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Livewire\Attributes\Title;
+use WireUi\Traits\WireUiActions;
+use Filament\Tables\Actions\Action;
 use Illuminate\Contracts\View\View;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Placeholder;
+use Filament\Notifications\Notification;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Tables\Concerns\InteractsWithTable;
 
 class Branches extends Component  implements HasForms, HasTable
 {
     use InteractsWithTable;
     use InteractsWithForms;
+    use WireUiActions;
     
     public function table(Table $table): Table
     {
         return $table
             ->query(Branch::query())
             ->columns([
-                TextColumn::make('name')->searchable(),
+                TextColumn::make('name')
+                    ->label('Branch Name')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('code')
+                    ->label('Branch Code')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('services_count')
+                    ->label('Services')
+                    ->counts('services')
+                    ->sortable(),
+                TextColumn::make('counters_count')
+                    ->label('Counters')
+                    ->counts('counters')
+                    ->sortable(),
+                TextColumn::make('queues_count')
+                    ->label('Tickets')
+                    ->counts('queues')
+                    ->sortable()
+            ])
+            ->headerActions([
+                Action::make('create')
+                ->modalWidth('7xl')
+                    ->label('Create Branch')
+                    ->icon('heroicon-o-plus')
+                 
+                    ->modalHeading('Create New Branch')
+                    ->modalDescription('Add a new branch to the queuing system. Each branch represents a physical location where services are offered.')
+                   
+                    ->form([
+                        Section::make('Branch Information')
+                            ->description('Enter the basic details of the branch')
+                            
+                            ->columns(2)
+                            ->schema([
+                                TextInput::make('name')
+                                    ->label('Branch Name')
+                                    ->placeholder('Enter branch name')
+                                    ->helperText('Full name of the branch location')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->columnSpan(1),
+                                    
+                                TextInput::make('code')
+                                    ->label('Branch Code')
+                                    ->placeholder('Enter unique code')
+                                    ->helperText('Short unique identifier for this branch (e.g. HQ, BR01)')
+                                    ->required()
+                                    ->maxLength(50)
+                                    ->unique('branches', 'code')
+                                    ->columnSpan(1),
+                            ]),
+                            
+                        Section::make('Location Details')
+                            ->description('Specify where this branch is located')
+                            ->icon('heroicon-o-map-pin')
+                            ->schema([
+                                TextInput::make('address')
+                                    ->label('Branch Address')
+                                    ->placeholder('Enter complete address')
+                                    ->helperText('Physical location of this branch')
+                                    ->maxLength(500),
+                                    
+                                Placeholder::make('note')
+                                    ->content('This address will be displayed on tickets and public displays.')
+                                    ->extraAttributes(['class' => 'text-sm text-gray-500'])
+                            ]),
+                    ])
+                    ->action(function (array $data) {
+                        Branch::create([
+                            'name' => $data['name'],
+                            'code' => $data['code'],
+                            'address' => $data['address'] ?? null,
+                        ]);
+                        $this->dialog()->success(
+                            title: 'Branch Created',
+                            description: 'The new branch has been successfully added to the system'
+                        );
+                    }),
             ])
             ->filters([
                 // ...
             ])
             ->actions([
-                // ...
+                EditAction::make('edit')
+                    ->label('Edit')
+                    ->modalWidth('7xl')
+                    ->modalHeading('Edit Branch')
+                    ->modalDescription('Update branch information. Changes will affect all associated services, counters, and queues.')
+                    ->successNotification(null)
+                    ->after(function () {
+                        $this->dialog()->success(
+                            title: 'Branch Updated',
+                            description: 'Branch information has been successfully updated'
+                        );
+                    })
+                    ->form([
+                        Section::make('Branch Information')
+                            ->description('Update the basic details of the branch')
+                          
+                            ->columns(2)
+                            ->schema([
+                                TextInput::make('name')
+                                    ->label('Branch Name')
+                                    ->placeholder('Enter branch name')
+                                    ->helperText('Full name of the branch location')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->columnSpan(1),
+                                    
+                                TextInput::make('code')
+                                    ->label('Branch Code')
+                                    ->placeholder('Enter unique code')
+                                    ->helperText('Short unique identifier for this branch (e.g. HQ, BR01)')
+                                    ->required()
+                                    ->maxLength(50)
+                                    ->unique('branches', 'code', ignoreRecord: true)
+                                    ->columnSpan(1),
+                            ]),
+                            
+                        Section::make('Location Details')
+                            ->description('Update where this branch is located')
+                            
+                            ->schema([
+                                TextInput::make('address')
+                                    ->label('Branch Address')
+                                    ->placeholder('Enter complete address')
+                                    ->helperText('Physical location of this branch')
+                                    ->maxLength(500),
+                                    
+                                Placeholder::make('note')
+                                    ->content('This address will be displayed on tickets and public displays.')
+                                    ->extraAttributes(['class' => 'text-sm text-gray-500'])
+                            ]),
+                            
+                        // Section::make('Branch Status')
+                        //     ->description('Review the current branch statistics')
+                            
+                        //     ->collapsible()
+                        //     ->schema([
+                        //         Placeholder::make('services_count')
+                        //             ->label('Services')
+                        //             ->content(fn (Branch $record): string => $record->services()->count() . ' services offered'),
+                                    
+                        //         Placeholder::make('counters_count')
+                        //             ->label('Counters')
+                        //             ->content(fn (Branch $record): string => $record->counters()->count() . ' service counters'),
+                                    
+                        //         Placeholder::make('queues_count')
+                        //             ->label('Queues')
+                        //             ->content(fn (Branch $record): string => $record->queues()->count() . ' total tickets processed')
+                        //     ])
+                        ])
+                        
+                        ,
+                   
+                Action::make('delete')
+                    ->label('Delete')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Delete Branch')
+                    ->modalDescription('Are you sure you want to delete this branch? This action cannot be undone if the branch has no associated records.')
+                    ->modalIcon('heroicon-o-exclamation-triangle')
+                    ->modalSubmitActionLabel('Yes, Delete Branch')
+                    ->action(function (Branch $branch) {
+                        // Check if branch has associated records
+                        if ($branch->queues()->exists() || $branch->services()->exists() || $branch->counters()->exists()) {
+                            $this->dialog()->error(
+                                title: 'Cannot Delete Branch',
+                                description: 'This branch has associated services, counters, or queues. Please remove those records first.'
+                            );
+                            return;
+                        }
+                        
+                        $branch->delete();
+                        $this->dialog()->success(
+                            title: 'Branch Deleted',
+                            description: 'The branch has been permanently removed from the system'
+                        );
+                    }),
+                
             ])
             ->bulkActions([
                 // ...
@@ -41,103 +222,10 @@ class Branches extends Component  implements HasForms, HasTable
     
 
 
-    #[Title('Branch Management')]
-    
-    public $showModal = false;
-    public $isEditing = false;
-    public $confirmingDeletion = false;
-    public $selectedBranchId;
-    
-    #[Rule('required|min:3|max:255')]
-    public $name = '';
-    
-    #[Rule('required|min:2|max:50|unique:branches,code')]
-    public $code = '';
-    
-    #[Rule('nullable|max:500')]
-    public $address = '';
-
-    public function create()
-    {
-        $this->reset(['name', 'code', 'address', 'isEditing', 'selectedBranchId']);
-        $this->showModal = true;
-    }
-
-    public function edit(Branch $branch)
-    {
-        $this->selectedBranchId = $branch->id;
-        $this->name = $branch->name;
-        $this->code = $branch->code;
-        $this->address = $branch->address;
-        $this->isEditing = true;
-        $this->showModal = true;
-    }
-
-    public function save()
-    {
-        $this->validate();
-
-        if ($this->isEditing) {
-            $branch = Branch::find($this->selectedBranchId);
-            $this->validate([
-                'code' => 'required|min:2|max:50|unique:branches,code,' . $branch->id
-            ]);
-            $branch->update([
-                'name' => $this->name,
-                'code' => $this->code,
-                'address' => $this->address
-            ]);
-            $this->notification()->success(
-                $title = 'Success',
-                $description = 'Branch updated successfully'
-            );
-        } else {
-            Branch::create([
-                'name' => $this->name,
-                'code' => $this->code,
-                'address' => $this->address
-            ]);
-            $this->notification()->success(
-                $title = 'Success',
-                $description = 'Branch created successfully'
-            );
-        }
-
-        $this->reset(['showModal', 'name', 'code', 'address', 'isEditing', 'selectedBranchId']);
-    }
-
-    public function confirmDelete(Branch $branch)
-    {
-        $this->selectedBranchId = $branch->id;
-        $this->confirmingDeletion = true;
-    }
-
-    public function delete()
-    {
-        $branch = Branch::find($this->selectedBranchId);
-        
-        if ($branch->queues()->exists() || $branch->services()->exists() || $branch->counters()->exists()) {
-            $this->notification()->error(
-                $title = 'Error',
-                $description = 'Cannot delete branch with associated records'
-            );
-            return;
-        }
-
-        $branch->delete();
-        $this->notification()->success(
-            $title = 'Success',
-            $description = 'Branch deleted successfully'
-        );
-        $this->reset(['confirmingDeletion', 'selectedBranchId']);
-    }
+ 
 
     public function render()
     {
-        return view('livewire.admin.branches', [
-            'branches' => Branch::withCount(['queues', 'services', 'counters'])
-                ->latest()
-                ->paginate(10)
-        ]);
+        return view('livewire.admin.branches');
     }
 }
