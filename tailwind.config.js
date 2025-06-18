@@ -9,7 +9,7 @@ export default {
   presets: [
 
     preset,
-    
+
   ],
   content: [
     './vendor/wireui/wireui/src/*.php',
@@ -17,7 +17,7 @@ export default {
     './vendor/wireui/wireui/src/WireUi/**/*.php',
     './vendor/wireui/wireui/src/Components/**/*.php',
 
-    
+
 
     './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
     './storage/framework/views/*.php',
@@ -28,7 +28,7 @@ export default {
     './app/Filament/**/*.php',
     './resources/views/filament/**/*.blade.php',
     './vendor/filament/**/*.blade.php',
-  
+
   ],
   theme: {
     extend: {
@@ -46,21 +46,21 @@ export default {
               info: colors.blue,
 
            'kiosqueeing': {
-  'primary': '#3B82F6',       // Trustworthy blue
-  'primary-hover': '#2563EB', // Slightly darker blue for hover
+  'primary': '#085fc5',       // Trustworthy blue
+  'primary-hover': '#0d539b', // Slightly darker blue for hover
   'positive': '#22C55E',      // Success green
   'warning': '#F97316',       // Soft orange for mild alerts
   'negative': '#EF4444',      // Red for errors
-  'info': '#0EA5E9',          // Light info blue
+  'info': '#1eafff',          // Light info blue
   'sidebar': '#FFFFFF',       // Sidebar background
   'background': '#F9FAFB',    // Main page background
   'text': '#334155',          // Dark slate text
 },
 
-              
+
       }
 
-      
+
 
     },
   },

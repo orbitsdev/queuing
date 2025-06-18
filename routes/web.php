@@ -1,15 +1,13 @@
 <?php
 
 use App\Livewire\TestPage;
-use App\Livewire\Admin\Dashboard;
-use App\Livewire\Admin\Branches;
-use App\Livewire\Admin\Services;
-use App\Livewire\Admin\Counters;
 use App\Livewire\Admin\Users;
 use App\Livewire\Admin\Queues;
-use App\Livewire\Settings\Profile;
-use App\Livewire\Settings\Password;
-use App\Livewire\Settings\Appearance;
+use App\Livewire\Admin\Branches;
+use App\Livewire\Admin\Counters;
+use App\Livewire\Admin\Services;
+use App\Livewire\Admin\Settings;
+use App\Livewire\Admin\Dashboard;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -33,6 +31,8 @@ Route::middleware(['auth', 'verified', 'can:superadmin_or_admin'])->prefix('admi
     Route::get('counters', Counters::class)->name('admin.counters');
     Route::get('users', Users::class)->name('admin.users');
     Route::get('queues', Queues::class)->name('admin.queues');
+    Route::get('settings', Settings::class)->name('admin.settings');
+
 });
 
 

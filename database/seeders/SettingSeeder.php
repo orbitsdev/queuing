@@ -14,10 +14,14 @@ class SettingSeeder extends Seeder
     public function run(): void
     {
         $settings = [
-            ['key' => 'ticket_prefix_style', 'value' => 'branch_code'],
+            // Ticket Settings
+            ['key' => 'ticket_prefix_style', 'value' => '{branch}-{number}'],
             ['key' => 'print_logo', 'value' => 'true'],
-            ['key' => 'announcement_voice', 'value' => 'en_female'],
-            ['key' => 'max_hold_time_minutes', 'value' => '5'],
+
+            // Queue Settings
+            ['key' => 'queue_reset_daily', 'value' => 'true'],
+            ['key' => 'queue_reset_time', 'value' => '00:00'],
+            ['key' => 'default_break_message', 'value' => 'On break, please proceed to another counter.'],
         ];
 
         foreach ($settings as $setting) {

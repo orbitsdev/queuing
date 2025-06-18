@@ -36,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
             'danger' => Color::Red,
             'gray' => Color::Zinc,
             'info' => Color::Blue,
-            'primary' => '#3B82F6',
+            'primary' => '#007dfe',
             'success' => Color::Green,
             'warning' => Color::Amber,
             'cool-gray' => Color::Zinc,
@@ -44,7 +44,7 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         // Register custom CSS
-        
+
     }
 
     public function configGates(){
@@ -57,17 +57,17 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('superadmin_or_admin', function (User $user) {
             return $user->role === 'superadmin' || $user->role === 'admin';
         });
-        
+
         //admin
         Gate::define('admin', function (User $user) {
             return $user->role === 'admin';
         });
-        
+
         //staff
         Gate::define('staff', function (User $user) {
             return $user->role === 'staff';
         });
-        
+
 
     }
 }
