@@ -5,8 +5,8 @@
 
             <div class="mb-8">
                 <h1 class="text-4xl font-bold  text-gray-800 mb-2">Counter A</h1>
-                <div class="flex justify-center">
-                    <span class="px-4 py-1 bg-kiosqueeing-primary text-white text-sm font-medium rounded-full">Active</span>
+                <div class="">
+                    <span class="px-4 py-1 bg-green-500 text-white text-sm font-medium rounded-full">Active</span>
                 </div>
             </div>
 
