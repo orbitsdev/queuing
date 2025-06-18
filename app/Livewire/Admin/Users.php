@@ -24,6 +24,7 @@ use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Validation\Rules\Password;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Notifications\Notification;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Actions\Action as TableAction;
@@ -369,9 +370,24 @@ class Users extends Component implements HasForms, HasTable, HasActions
                     );
                 }),
                 //Delete Action
-               DeleteAction::make()->visible(function (User $record) {
-                   return $record->role !== 'superadmin';
-               })
+               DeleteAction::make()
+                   ->visible(function (User $record) {
+                       // Only visible if not superadmin and doesn't have queues or branch
+                       return $record->role !== 'superadmin' && 
+                              !$record->queues()->exists() && 
+                              $record->id !== auth()->guard()->id();
+                   })
+                   ->requiresConfirmation()
+                   ->modalHeading('Delete User')
+                   ->modalDescription('Are you sure you want to delete this user? This action cannot be undone.')
+                   ->modalIcon('heroicon-o-exclamation-triangle')
+                   ->modalSubmitActionLabel('Yes, Delete User')
+                   ->successNotification(
+                       Notification::make()
+                           ->title('User Deleted')
+                           ->body('The user has been permanently removed from the system')
+                           ->success()
+                   )
               ])
 
                 ])

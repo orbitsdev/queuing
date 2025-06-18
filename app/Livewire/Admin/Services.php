@@ -5,154 +5,195 @@ namespace App\Livewire\Admin;
 use App\Models\Branch;
 use App\Models\Service;
 use Livewire\Component;
-use Livewire\WithPagination;
+use Filament\Tables\Table;
+use Filament\Actions\Action;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\Rule;
+use WireUi\Traits\WireUiActions;
+use Filament\Tables\Grouping\Group;
+use Illuminate\Contracts\View\View;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Actions\Contracts\HasActions;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Actions\Action as TableAction;
+use Filament\Actions\Concerns\InteractsWithActions;
 
-class Services extends Component
+class Services extends Component implements HasForms, HasTable, HasActions
 {
-    use WithPagination;
+    use InteractsWithTable;
+    use InteractsWithActions;
+    use InteractsWithForms;
+    use WireUiActions;
 
-    #[Title('Service Management')]
-    
-    public $showModal = false;
-    public $isEditing = false;
-    public $confirmingDeletion = false;
-    public $selectedServiceId;
-    public $selectedBranch = null;
-    
-    #[Rule('required|min:3|max:255')]
-    public $name = '';
-    
-    #[Rule('required|min:1|max:10')]
-    public $code = '';
-    
-    #[Rule('nullable|max:500')]
-    public $description = '';
-    
-    #[Rule('required|exists:branches,id')]
-    public $branch_id = '';
 
-    public function mount()
+ 
+    //cratee action
+    public function createAction(): Action
     {
-        // Set default branch if none selected
-        if (!$this->selectedBranch) {
-            $this->selectedBranch = Branch::first()?->id;
-        }
+        return Action::make('create')
+            ->size('xs')
+            ->label('Create Service')
+            ->button('dark-gray')
+            ->icon('heroicon-o-plus')
+            ->modalWidth('7xl')
+            ->modalHeading('Create New Service')
+            ->modalDescription('Add a new service to the system. Services are used to group queues and define the order of processing.')
+            ->form([
+                Section::make('Service Information')
+                    ->description('Enter the basic details of the service')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('Service Name')
+                            ->placeholder('Enter service name')
+                            ->required()
+                            ->maxLength(255)
+                            ->columnSpan(1),
+                        TextInput::make('code')
+                            ->label('Service Code')
+                            ->placeholder('Enter service code')
+                            ->required()
+                            ->maxLength(10)
+                            ->columnSpan(1),
+                        Textarea::make('description')
+                            ->label('Service Description')
+                            ->placeholder('Enter service description')
+                            ->rows(3)
+                            ->columnSpan(2),
+                        Select::make('branch_id')
+                            ->label('Branch')
+                            ->placeholder('Select branch')
+                            ->options(Branch::all()->pluck('name', 'id'))
+                            ->required()
+                            ->columnSpan(2),
+                    ]),
+            ])
+            ->action(function (array $data): void {
+                Service::create($data);
+                $this->dialog()->success(
+                    title: 'Service Created',
+                    description: 'Service has been successfully created'
+                );
+            });
     }
 
-    public function updatedSelectedBranch($value)
+    public function table(Table $table): Table
     {
-        $this->resetPage();
-    }
+        return $table
+            ->query(Service::query())
+            ->groups([
+                Group::make('branch.name')
+                    ->label('Branch')
+                    ->getTitleFromRecordUsing(fn ($record) => $record->branch ? $record->branch->name : 'Unassigned')
+                    ->collapsible()
+            ])
+            ->defaultGroup('branch.name')
+            ->columns([
+                TextColumn::make('name')
+                    ->label('Name')
+                    ->searchable(isIndividual:true)
+                    ->sortable(),
+                TextColumn::make('code')
+                    ->label('Code')
+                    ->searchable(isIndividual:true)
+                    ->sortable(),
+                TextColumn::make('description')
+                    ->label('Description')
+                    ->searchable(isIndividual:true)
+                    ->sortable(),
+                TextColumn::make('branch.name')
+                    ->label('Branch')
+                    ->sortable(),
+                TextColumn::make('created_at')
+                    ->label('Created')
+                    ->date('M d, Y')
+                    ->sortable(),
+            ])
 
-    public function create()
-    {
-        $this->reset(['name', 'code', 'description', 'isEditing', 'selectedServiceId']);
-        $this->branch_id = $this->selectedBranch;
-        $this->showModal = true;
-    }
-
-    public function edit(Service $service)
-    {
-        $this->selectedServiceId = $service->id;
-        $this->name = $service->name;
-        $this->code = $service->code;
-        $this->description = $service->description;
-        $this->branch_id = $service->branch_id;
-        $this->isEditing = true;
-        $this->showModal = true;
-    }
-
-    public function save()
-    {
-        $this->validate();
-
-        if ($this->isEditing) {
-            $service = Service::find($this->selectedServiceId);
-            $this->validate([
-                'code' => 'required|min:1|max:10|unique:services,code,' . $service->id . ',id,branch_id,' . $this->branch_id
+            ->filters([
+                SelectFilter::make('branch_id')
+                    ->label('Branch')
+                    ->options(fn () => Branch::pluck('name', 'id')->toArray())
+                    ->placeholder('All Branches')
+                    ->indicator('Branch')
+            ])
+            ->actions([
+                EditAction::make()
+                ->successNotification(null)
+                    ->label('Edit')
+                    ->button('dark-gray')
+                    ->icon('heroicon-o-pencil')
+                    ->modalWidth('7xl')
+                    ->modalHeading('Edit Service')
+                    ->modalDescription('Edit the details of the service')
+                    ->form([
+                        Section::make('Service Information')
+                            ->description('Enter the basic details of the service')
+                            ->columns(2)
+                            ->schema([
+                                TextInput::make('name')
+                                    ->label('Service Name')
+                                    ->placeholder('Enter service name')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->columnSpan(1),
+                                TextInput::make('code')
+                                    ->label('Service Code')
+                                    ->placeholder('Enter service code')
+                                    ->required()
+                                    ->maxLength(10)
+                                    ->columnSpan(1),
+                                Textarea::make('description')
+                                    ->label('Service Description')
+                                    ->placeholder('Enter service description')
+                                    ->rows(3)
+                                    ->columnSpan(2),
+                                Select::make('branch_id')
+                                    ->label('Branch')
+                                    ->placeholder('Select branch')
+                                    ->options(Branch::all()->pluck('name', 'id'))
+                                    ->required()
+                                    ->columnSpan(2),
+                            ]),
+                    ])
+                    ->action(function (Service $record, array $data): void {
+                        $record->update($data);
+                        $this->dialog()->success(
+                            title: 'Service Updated',
+                            description: 'Service has been successfully updated'
+                        );
+                    }),
+                DeleteAction::make()
+                    ->label('Delete')
+                    ->button('dark-gray')
+                    ->icon('heroicon-o-trash')
+                    ->modalWidth('7xl')
+                    ->modalHeading('Delete Service')
+                    ->modalDescription('Delete the service from the system')
+                    ->action(function (Service $record): void {
+                        $record->delete();
+                       $this->dialog()->success(
+                            title: 'Service Deleted',
+                            description: 'Service has been successfully deleted'
+                        );
+                    }),
             ]);
-            
-            $service->update([
-                'name' => $this->name,
-                'code' => $this->code,
-                'description' => $this->description,
-                'branch_id' => $this->branch_id
-            ]);
-            
-            $this->notification()->success(
-                $title = 'Success',
-                $description = 'Service updated successfully'
-            );
-        } else {
-            $this->validate([
-                'code' => 'required|min:1|max:10|unique:services,code,NULL,id,branch_id,' . $this->branch_id
-            ]);
-            
-            Service::create([
-                'name' => $this->name,
-                'code' => $this->code,
-                'description' => $this->description,
-                'branch_id' => $this->branch_id,
-                'last_ticket_number' => 0
-            ]);
-            
-            $this->notification()->success(
-                $title = 'Success',
-                $description = 'Service created successfully'
-            );
-        }
-
-        $this->reset(['showModal', 'name', 'code', 'description', 'isEditing', 'selectedServiceId']);
     }
 
-    public function confirmDelete(Service $service)
-    {
-        $this->selectedServiceId = $service->id;
-        $this->confirmingDeletion = true;
-    }
-
-    public function delete()
-    {
-        $service = Service::find($this->selectedServiceId);
-        
-        if ($service->queues()->exists()) {
-            $this->notification()->error(
-                $title = 'Error',
-                $description = 'Cannot delete service with existing queues'
-            );
-            return;
-        }
-
-        $service->delete();
-        $this->notification()->success(
-            $title = 'Success',
-            $description = 'Service deleted successfully'
-        );
-        $this->reset(['confirmingDeletion', 'selectedServiceId']);
-    }
-
-    public function resetTicketNumber(Service $service)
-    {
-        $service->update(['last_ticket_number' => 0]);
-        $this->notification()->success(
-            $title = 'Success',
-            $description = 'Ticket number reset successfully'
-        );
-    }
 
     public function render()
     {
-        return view('livewire.admin.services', [
-            'branches' => Branch::orderBy('name')->get(),
-            'services' => Service::when($this->selectedBranch, function($query) {
-                    $query->where('branch_id', $this->selectedBranch);
-                })
-                ->withCount('queues')
-                ->with('branch')
-                ->latest()
-                ->paginate(10)
-        ]);
+        return view('livewire.admin.services');
     }
 }
