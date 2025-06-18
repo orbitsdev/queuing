@@ -9,7 +9,9 @@ use App\Livewire\Admin\Services;
 use App\Livewire\Admin\Settings;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\ListSettings;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Livewire\Counter\CounterTransactionPage;
 
 Route::get('/', function () {
     return view('welcome');
@@ -17,6 +19,14 @@ Route::get('/', function () {
 
 
 Route::get('dashboard', function(){
+    switch(Auth::user()->role){
+        case 'superadmin':
+            return redirect()->route('admin.dashboard');
+        case 'admin':
+            return redirect()->route('admin.dashboard');
+        case 'staff':
+            return redirect()->route('counter.transaction');
+    }
     return redirect()->route('admin.dashboard');
 })->name('dashboard');
 
@@ -36,6 +46,12 @@ Route::middleware(['auth', 'verified', 'can:superadmin_or_admin'])->prefix('admi
     Route::get('settings/{branch}', Settings::class)->name('admin.settings')->where('branch', '[0-9]+');
 
 });
+    // Admin Routes
+Route::middleware(['auth', 'verified', 'can:staff'])->prefix('counter')->group(function () {
+    Route::get('transaction', CounterTransactionPage::class)->name('counter.transaction');
+});
+
+
 
 
 // Route::middleware(['auth'])->group(function () {

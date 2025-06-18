@@ -10,8 +10,21 @@ use Illuminate\Database\Eloquent\Model;
 
 class Queue extends Model
 {
-   
-    
+    protected $fillable = [
+        'branch_id',
+        'service_id',
+        'counter_id',
+        'user_id',
+        'ticket_number',
+        'status',
+        'called_at',
+        'serving_at',
+        'served_at',
+        'skipped_at',
+        'hold_started_at',
+        'cancelled_at',
+        'hold_reason',
+    ];
     
 
     public function branch()
