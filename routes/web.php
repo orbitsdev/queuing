@@ -8,6 +8,7 @@ use App\Livewire\Admin\Counters;
 use App\Livewire\Admin\Services;
 use App\Livewire\Admin\Settings;
 use App\Livewire\Admin\Dashboard;
+use App\Livewire\Admin\ListSettings;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -31,7 +32,8 @@ Route::middleware(['auth', 'verified', 'can:superadmin_or_admin'])->prefix('admi
     Route::get('counters', Counters::class)->name('admin.counters');
     Route::get('users', Users::class)->name('admin.users');
     Route::get('queues', Queues::class)->name('admin.queues');
-    Route::get('settings', Settings::class)->name('admin.settings');
+    Route::get('branch-settings', ListSettings::class)->name('admin.branch-settings');
+    Route::get('settings/{branch}', Settings::class)->name('admin.settings');
 
 });
 

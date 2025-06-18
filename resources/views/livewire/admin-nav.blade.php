@@ -7,7 +7,7 @@
             ['label' => 'Services', 'route' => 'admin.services', 'icon' => 'wrench-screwdriver'],
             ['label' => 'Counters', 'route' => 'admin.counters', 'icon' => 'computer-desktop'],
             ['label' => 'Queues', 'route' => 'admin.queues', 'icon' => 'ticket'],
-            ['label' => 'Settings', 'route' => 'admin.settings', 'icon' => 'cog-6-tooth'],
+            ['label' => 'Branch Settings', 'route' => 'admin.branch-settings', 'icon' => 'cog-6-tooth'],
         ];
     @endphp
 

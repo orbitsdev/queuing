@@ -13,15 +13,17 @@ return new class extends Migration
     {
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
-            $table->string('key')->unique();
+            $table->string('key');
             $table->text('value')->nullable();
-            $table->string('group')->nullable();
+
             $table->text('description')->nullable();
             $table->foreignId('branch_id')->nullable()->constrained()->nullOnDelete();
             $table->timestamps();
-            
+
+            // Allow same key across different branches, but key must be unique per branch
+            $table->unique(['branch_id', 'key']);
             $table->index('key');
-            $table->index('group');
+            
         });
     }
 

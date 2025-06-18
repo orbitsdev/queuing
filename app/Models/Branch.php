@@ -8,11 +8,14 @@ use App\Models\Counter;
 use App\Models\Service;
 use App\Models\Setting;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use App\Observers\BranchObserver;
 
+#[ObservedBy([BranchObserver::class])]
 class Branch extends Model
 {
-   
-    
+
+
     public function services()
     {
         return $this->hasMany(Service::class);
@@ -32,7 +35,7 @@ class Branch extends Model
     {
         return $this->hasMany(User::class);
     }
-    
+
     public function settings()
     {
         return $this->hasMany(Setting::class);

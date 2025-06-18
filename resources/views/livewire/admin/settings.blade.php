@@ -1,10 +1,7 @@
 <div>
-    @section('nav-title', 'System Settings')
+    @section('nav-title', 'Branch Settings')
     <x-admin-layout>
         <div class="max-w-8xl mx-auto">
-            <!-- Page Description -->
-
-
             <div class="bg-white px-6 py-8 shadow-lg rounded-xl ring-1 ring-gray-900/5 sm:rounded-lg">
                 <div class="mb-8 bg-gradient-to-r from-kiosqueeing-primary to-kiosqueeing-info px-6 py-6 shadow-sm ring-1 ring-gray-900/5 sm:rounded-lg">
                     <div class="flex items-start gap-x-4">
@@ -17,13 +14,16 @@
                             </div>
                         </div>
                         <div class="min-w-0 flex-1">
-                            <h1 class="text-2xl font-semibold leading-7 text-white">System Settings</h1>
-                            <p class="mt-2 text-[15px] leading-6 text-white/90">ConfigureTicket SettingsTicket Settings core system settings including ticket formats, queue behavior, and default messages. These settings affect all branches and services.</p>
+                            <div class="flex items-center gap-x-3">
+                                <h1 class="text-2xl font-semibold leading-7 text-white">{{ $branch->name }} Settings</h1>
+                                <span class="inline-flex items-center rounded-md bg-white/20 px-2 py-1 text-sm text-white ring-1 ring-white/30">{{ $branch->code }}</span>
+                            </div>
+                            <p class="mt-2 text-[15px] leading-6 text-white/90">Configure branch-specific settings including ticket prefix, queue behavior, and default messages.</p>
                             <div class="mt-4 flex items-center gap-x-3">
                                 <svg class="size-4 text-white/90" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 5Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
                                 </svg>
-                                <p class="text-sm text-white/90">Changes will affect all branches and services immediately</p>
+                                <p class="text-sm text-white/90">Changes will only affect {{ $branch->name }} branch</p>
                             </div>
                         </div>
                     </div>
@@ -41,38 +41,31 @@
 
                     <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-4">
-                            <label for="ticket_prefix" class="block text-sm/6 font-medium text-kiosqueeing-text">Ticket Number Format</label>
+                            <label for="ticket_prefix" class="block text-sm/6 font-medium text-kiosqueeing-text">Ticket Prefix</label>
                             <div class="mt-2">
                                 <input type="text"
-                                    wire:model="ticket_prefix_style"
+                                    wire:model="settings.ticket_prefix"
                                     id="ticket_prefix"
                                     class="block w-full rounded-md border-0 px-3 py-1.5 text-kiosqueeing-text shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-kiosqueeing-primary sm:text-sm/6"
-                                    placeholder="e.g., {branch}-{number} or {service}-{number}" />
+                                    placeholder="{{ $this->getSettingPlaceholder('ticket_prefix') }}" />
                             </div>
-                            <div class="mt-3 rounded-md bg-gray-50/50 p-3 ring-1 ring-gray-900/5">
-                                <p class="text-sm/6 font-medium text-gray-900">Available Placeholders:</p>
-                                <ul class="mt-2 space-y-1 text-sm/6 text-gray-600">
-                                    <li><code class="rounded bg-gray-100 px-2 py-1 text-kiosqueeing-primary">{branch}</code> - Branch code (e.g., "BR1")</li>
-                                    <li><code class="rounded bg-gray-100 px-2 py-1 text-kiosqueeing-primary">{service}</code> - Service code (e.g., "CS")</li>
-                                    <li><code class="rounded bg-gray-100 px-2 py-1 text-kiosqueeing-primary">{number}</code> - Queue number (e.g., "001")</li>
-                                </ul>
-                                <p class="mt-2 text-sm/6 text-gray-500">Example: <code class="rounded bg-gray-100 px-2 py-1 text-gray-600">{branch}-{service}-{number}</code> becomes <span class="font-medium text-gray-900">BR1-CS-001</span></p>
-                            </div>
+                            <p class="mt-1 text-sm text-gray-500">{{ $this->getSettingHelperText('ticket_prefix') }}</p>
+                            @error('settings.ticket_prefix') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
 
-                        <div class="col-span-full">
-                            <div class="flex gap-3">
-                                <div class="flex h-6 items-center">
-                                    <input type="checkbox"
-                                        wire:model="print_logo"
-                                        id="print_logo"
-                                        class="h-4 w-4 rounded border-gray-300 text-kiosqueeing-primary focus:ring-kiosqueeing-primary" />
-                                </div>
-                                <div class="text-sm/6">
-                                    <label for="print_logo" class="font-medium text-kiosqueeing-text">Print Logo on Ticket</label>
-                                    <p class="text-gray-500">Include your business logo on printed tickets</p>
-                                </div>
+                        <div class="sm:col-span-4">
+                            <label for="print_logo" class="block text-sm/6 font-medium text-kiosqueeing-text">Print Logo on Ticket</label>
+                            <div class="mt-2">
+                                <select
+                                    wire:model="settings.print_logo"
+                                    id="print_logo"
+                                    class="block w-full rounded-md border-0 px-3 py-1.5 text-kiosqueeing-text shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-kiosqueeing-primary sm:text-sm/6"
+                                >
+                                    <option value="true">Yes</option>
+                                    <option value="false">No</option>
+                                </select>
                             </div>
+                            @error('settings.print_logo') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
                     </div>
                 </div>
@@ -81,75 +74,89 @@
                 <div class="border-b border-gray-200 pb-12">
                     <div class="flex items-center gap-x-2">
                         <svg class="size-5 text-kiosqueeing-text" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
                         </svg>
                         <h2 class="text-base/7 font-semibold text-kiosqueeing-text">Queue Settings</h2>
                     </div>
-                    <p class="mt-1 text-sm/6 text-gray-600">Configure queue behavior and display</p>
+                    <p class="mt-1 text-sm/6 text-gray-600">Configure how queues are managed and reset</p>
 
                     <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="col-span-full">
-                            <div class="flex gap-3">
-                                <div class="flex h-6 items-center">
-                                    <input type="checkbox"
-                                        wire:model="queue_reset_daily"
-                                        id="queue_reset_daily"
-                                        class="h-4 w-4 rounded border-gray-300 text-kiosqueeing-primary focus:ring-kiosqueeing-primary" />
-                                </div>
-                                <div class="text-sm/6">
-                                    <label for="queue_reset_daily" class="font-medium text-kiosqueeing-text">Reset Queue Numbers Daily</label>
-                                    <p class="text-gray-500">Automatically reset queue numbers at specified time</p>
-                                </div>
+                        <div class="sm:col-span-4">
+                            <label for="queue_reset_daily" class="block text-sm/6 font-medium text-kiosqueeing-text">Reset Queue Daily</label>
+                            <div class="mt-2">
+                                <select
+                                    wire:model="settings.queue_reset_daily"
+                                    id="queue_reset_daily"
+                                    class="block w-full rounded-md border-0 px-3 py-1.5 text-kiosqueeing-text shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-kiosqueeing-primary sm:text-sm/6"
+                                >
+                                    <option value="true">Yes</option>
+                                    <option value="false">No</option>
+                                </select>
                             </div>
+                            @error('settings.queue_reset_daily') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
 
-                        <div class="sm:col-span-3">
-                            <label for="reset_time" class="block text-sm/6 font-medium text-kiosqueeing-text">Reset Time</label>
+                        <div class="sm:col-span-4">
+                            <label for="queue_reset_time" class="block text-sm/6 font-medium text-kiosqueeing-text">Queue Reset Time</label>
                             <div class="mt-2">
-                                <input type="time"
-                                    wire:model="queue_reset_time"
-                                    id="reset_time"
-                                    :disabled="!$queue_reset_daily"
-                                    class="block w-full rounded-md border-0 px-3 py-1.5 text-kiosqueeing-text shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-kiosqueeing-primary disabled:bg-gray-50 disabled:text-gray-500 disabled:ring-gray-200 sm:text-sm/6" />
-                            </div>
-                        </div>
-
-                        <div class="col-span-full">
-                            <label for="break_message" class="block text-sm/6 font-medium text-kiosqueeing-text">Default Break Message</label>
-                            <div class="mt-2">
-                                <textarea
-                                    wire:model="default_break_message"
-                                    id="break_message"
-                                    rows="3"
+                                <input type="text"
+                                    wire:model="settings.queue_reset_time"
+                                    id="queue_reset_time"
                                     class="block w-full rounded-md border-0 px-3 py-1.5 text-kiosqueeing-text shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-kiosqueeing-primary sm:text-sm/6"
-                                    placeholder="Message to display when counter is on break"></textarea>
+                                    placeholder="{{ $this->getSettingPlaceholder('queue_reset_time') }}" />
                             </div>
+                            <p class="mt-1 text-sm text-gray-500">{{ $this->getSettingHelperText('queue_reset_time') }}</p>
+                            @error('settings.queue_reset_time') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
                     </div>
                 </div>
 
-                </form>
-            </div>
-            <div class="mt-8 border-t border-gray-100 pt-6">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-x-3">
-                        <svg class="size-5 text-yellow-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                            <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd" />
+                <!-- Counter Settings -->
+                <div class="border-b border-gray-200 pb-12">
+                    <div class="flex items-center gap-x-2">
+                        <svg class="size-5 text-kiosqueeing-text" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
                         </svg>
-                        <p class="text-sm text-gray-600">Review changes carefully before saving</p>
+                        <h2 class="text-base/7 font-semibold text-kiosqueeing-text">Counter Settings</h2>
                     </div>
-                    <div class="flex items-center gap-x-6">
-                        <button type="button" class="text-sm/6 font-semibold text-kiosqueeing-text hover:text-gray-500">Cancel</button>
-                        <button type="submit" class="inline-flex items-center gap-x-2 rounded-md bg-kiosqueeing-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-kiosqueeing-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kiosqueeing-primary">
-                            <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+                    <p class="mt-1 text-sm/6 text-gray-600">Configure counter behavior and messages</p>
+
+                    <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                        <div class="sm:col-span-4">
+                            <label for="default_break_message" class="block text-sm/6 font-medium text-kiosqueeing-text">Default Break Message</label>
+                            <div class="mt-2">
+                                <textarea
+                                    wire:model="settings.default_break_message"
+                                    id="default_break_message"
+                                    rows="3"
+                                    class="block w-full rounded-md border-0 px-3 py-1.5 text-kiosqueeing-text shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-kiosqueeing-primary sm:text-sm/6"
+                                    placeholder="{{ $this->getSettingPlaceholder('default_break_message') }}"></textarea>
+                            </div>
+                            @error('settings.default_break_message') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-6">
+                    <div class="flex justify-end gap-x-3">
+                        <a href="{{ route('admin.branch-settings') }}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                            Save Changes
+                            Cancel
+                        </a>
+                        <button wire:click="save" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span wire:loading.remove wire:target="save">Save Branch Settings</span>
+                            <span wire:loading wire:target="save">Saving...</span>
                         </button>
                     </div>
                 </div>
+            </form>
             </div>
         </div>
-
-
     </x-admin-layout>
+</div>
+
