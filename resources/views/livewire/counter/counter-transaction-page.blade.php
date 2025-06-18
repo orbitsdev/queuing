@@ -15,13 +15,31 @@
                         <div class="text-8xl font-bold text-white">QUE-123</div>
                     </div>
                     <h2 class="text-2xl mt-4 uppercase font-medium text-gray-600 mb-4 text-center">Now Serving</h2>
-                  <div class="grid grid-cols-4 gap-4 mt-8">
-                    <button class="px-5 py-3 border border-gray-300 text-gray-800  hover:bg-kiosqueeing-primary-hover hover:text-white hover:scale-95 transition-all rounded-lg">Complete</button>
-                    <button class="px-5 py-3 border border-gray-300 text-gray-800  hover:bg-kiosqueeing-primary-hover hover:text-white hover:scale-95 transition-all rounded-lg">Hold</button>
-                    <button class="px-5 py-3 border border-gray-300 text-gray-800  hover:bg-kiosqueeing-primary-hover hover:text-white hover:scale-95 transition-all rounded-lg">Skip</button>
-                    <button class="px-5 py-3 border border-gray-300 text-gray-800  hover:bg-kiosqueeing-primary-hover hover:text-white hover:scale-95 transition-all rounded-lg ">
-                        Cancel
-                      </button>
+                  <div class="grid grid-cols-4 gap-4 mt-12">
+                    <button class="px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white hover:scale-95 transition-all rounded-lg flex flex-col items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Complete
+                    </button>
+                    <button class="px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white hover:scale-95 transition-all rounded-lg flex flex-col items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Hold
+                    </button>
+                    <button class="px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white hover:scale-95 transition-all rounded-lg flex flex-col items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                      Skip
+                    </button>
+                    <button class="px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white hover:scale-95 transition-all rounded-lg flex flex-col items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Cancel
+                    </button>
                   </div>
                 </div>
 
