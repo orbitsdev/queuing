@@ -11,15 +11,15 @@
 
                 <!-- Now Serving -->
                 <div>
-                  <h2 class="text-lg uppercase font-medium text-gray-600 mb-4 text-center">Now Serving</h2>
-                  <div class="flex justify-center items-center aspect-square w-80 h-80 mx-auto border-2 border-gray-200 rounded-xl mb-8 shadow-lg">
-                    <div class="text-8xl font-bold text-gray-900">QUE-123</div>
-                  </div>
-                  <div class="grid grid-cols-4 gap-4">
-                    <button class="px-5 py-3 border border-gray-300 text-gray-800 rounded hover:bg-gray-100">Complete</button>
-                    <button class="px-5 py-3 border border-gray-300 text-gray-800 rounded hover:bg-gray-100">Hold</button>
-                    <button class="px-5 py-3 border border-gray-300 text-gray-800 rounded hover:bg-gray-100">Skip</button>
-                    <button class="px-5 py-3 border border-gray-300 text-gray-800 rounded hover:bg-gray-100 ">
+                    <div class="flex justify-center items-center aspect-square w-80 h-80 mx-auto rounded-xl mb-2 shadow-lg bg-gradient-to-r from-kiosqueeing-primary to-kiosqueeing-primary-hover">
+                        <div class="text-8xl font-bold text-white">QUE-123</div>
+                    </div>
+                    <h2 class="text-2xl mt-4 uppercase font-medium text-gray-600 mb-4 text-center">Now Serving</h2>
+                  <div class="grid grid-cols-4 gap-4 mt-8">
+                    <button class="px-5 py-3 border border-gray-300 text-gray-800  hover:bg-kiosqueeing-primary-hover hover:text-white hover:scale-95 transition-all rounded-lg">Complete</button>
+                    <button class="px-5 py-3 border border-gray-300 text-gray-800  hover:bg-kiosqueeing-primary-hover hover:text-white hover:scale-95 transition-all rounded-lg">Hold</button>
+                    <button class="px-5 py-3 border border-gray-300 text-gray-800  hover:bg-kiosqueeing-primary-hover hover:text-white hover:scale-95 transition-all rounded-lg">Skip</button>
+                    <button class="px-5 py-3 border border-gray-300 text-gray-800  hover:bg-kiosqueeing-primary-hover hover:text-white hover:scale-95 transition-all rounded-lg ">
                         Cancel
                       </button>
                   </div>
@@ -39,9 +39,9 @@
                     </button>
                   </div>
                   <div class="grid grid-cols-3 gap-4 mb-2">
-                    <div class="px-6 py-4 bg-gray-100 rounded text-3xl font-semibold text-gray-800">QUE-124</div>
-                    <div class="px-6 py-4 bg-gray-100 rounded text-3xl font-semibold text-gray-800">QUE-125</div>
-                    <div class="px-6 py-4 bg-gray-100 rounded text-3xl font-semibold text-gray-800">QUE-126</div>
+                    <div class="px-6 py-4 bg-gray-100 rounded text-3xl font-semibold text-gray-800 hover:bg-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer">QUE-124</div>
+                    <div class="px-6 py-4 bg-gray-100 rounded text-3xl font-semibold text-gray-800 hover:bg-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer">QUE-125</div>
+                    <div class="px-6 py-4 bg-gray-100 rounded text-3xl font-semibold text-gray-800 hover:bg-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer">QUE-126</div>
                   </div>
                 </div>
                 <div>
@@ -61,15 +61,37 @@
                 <div>
                   <h2 class="text-sm uppercase font-medium text-gray-500 mb-4">Currently Serving By Other Counter</h2>
                   <div class="grid grid-cols-1 gap-2">
-                    <span class="px-4 py-2 bg-gray-50 border border-gray-200 rounded text-sm font-medium text-gray-800">
-                      QUE-101
-                    </span>
-                    <span class="px-4 py-2 bg-gray-50 border border-gray-200 rounded text-sm font-medium text-gray-800">
-                      QUE-102
-                    </span>
-                    <span class="px-4 py-2 bg-gray-50 border border-gray-200 rounded text-sm font-medium text-gray-800">
-                      QUE-103
-                    </span>
+                    <div class="flex items-center bg-gray-50 border border-gray-200 rounded text-sm font-medium text-gray-800">
+
+                        <div class="flex items-center rounded-l-lg bg-gray-950 text-white uppercase px-4 py-2 ">
+                            Counter A
+                        </div>
+                        <div class="px-4 py-2">
+
+                            QUE-102
+                        </div>
+                    </div>
+                    <div class="flex items-center bg-gray-50 border border-gray-200 rounded text-sm font-medium text-gray-800">
+
+                        <div class="flex items-center rounded-l-lg bg-gray-950 text-white uppercase px-4 py-2">
+                            Counter B
+                        </div>
+                        <div class="px-4 py-2">
+
+                            QUE-102
+                        </div>
+                    </div>
+                    <div class="flex items-center bg-gray-50 border border-gray-200 rounded text-sm font-medium text-gray-800">
+
+                        <div class="flex items-center rounded-l-lg bg-gray-950 text-white uppercase px-4 py-2">
+                            Counter C
+                        </div>
+                        <div class="px-4 py-2">
+
+                            QUE-103
+                        </div>
+                    </div>
+
                   </div>
                 </div>
 
