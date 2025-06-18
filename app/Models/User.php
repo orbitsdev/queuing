@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Queue;
 use App\Models\Branch;
+use App\Models\Counter;
 use Illuminate\Support\Str;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,7 +21,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-   
+
 
     /**
      * The attributes that should be hidden for serialization.
@@ -70,5 +71,7 @@ class User extends Authenticatable
     {
         return $this->where('role', '!=', 'superadmin');
     }
-    
+    //counter
+
+
 }

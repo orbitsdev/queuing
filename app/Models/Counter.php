@@ -8,9 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Counter extends Model
 {
-  
-    
-    
+
+
     public function branch()
     {
         return $this->belongsTo(Branch::class);
@@ -19,6 +18,11 @@ class Counter extends Model
     public function queues()
     {
         return $this->hasMany(Queue::class);
+    }
+
+    public function getQueueCountAttribute()
+    {
+        return $this->queues()->count();
     }
 
 }

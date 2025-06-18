@@ -4,160 +4,233 @@ namespace App\Livewire\Admin;
 
 use App\Models\Branch;
 use App\Models\Counter;
+use Filament\Forms\Get;
 use Livewire\Component;
-use Livewire\WithPagination;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Rule;
+use Filament\Tables\Table;
+use Filament\Actions\Action;
+use WireUi\Traits\WireUiActions;
+use Filament\Actions\CreateAction;
+use Filament\Tables\Grouping\Group;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\ViewAction;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Actions\Contracts\HasActions;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Actions\Concerns\InteractsWithActions;
 
-class Counters extends Component
+class Counters extends Component implements HasForms, HasTable, HasActions
 {
-    use WithPagination;
+    use InteractsWithTable;
+    use InteractsWithActions;
+    use InteractsWithForms;
+    use WireUiActions;
 
-    #[Title('Counter Management')]
-    
-    public $showModal = false;
-    public $isEditing = false;
-    public $confirmingDeletion = false;
-    public $selectedCounterId;
-    public $selectedBranch = null;
-    
-    #[Rule('required|min:2|max:255')]
-    public $name = '';
-    
-    #[Rule('required|exists:branches,id')]
-    public $branch_id = '';
-    
-    #[Rule('boolean')]
-    public $is_priority = false;
-    
-    #[Rule('boolean')]
-    public $active = true;
-    
-    #[Rule('nullable|max:500')]
-    public $break_message = '';
+    //create Action
 
-    public function mount()
+    public function createAction(): CreateAction
     {
-        // Set default branch if none selected
-        if (!$this->selectedBranch) {
-            $this->selectedBranch = Branch::first()?->id;
-        }
+        return CreateAction::make('create')
+        ->model(Counter::class)
+            ->size('xs')
+            ->label('Create Counter')
+            ->button('dark-gray')
+            ->icon('heroicon-o-plus')
+            ->modalWidth('7xl')
+            ->modalHeading('Create New Counter')
+            ->modalDescription('Add a new counter to the system. Counters are used to group queues and define the order of processing.')
+            ->form([
+                Section::make('Basic Information')
+                    ->description('Enter the counter identification details')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('Counter Name')
+                            ->placeholder('e.g., Counter 1, Window 2')
+                            ->helperText('Name should be clear and easily identifiable')
+                            ->required()
+                            ->minLength(3)
+                            ->maxLength(255)
+                            ->unique(ignoreRecord: true)
+                            ->columnSpan(1),
+                        Select::make('branch_id')
+                            ->label('Branch')
+                            ->relationship(name: 'branch', titleAttribute: 'name')
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Select branch')
+                            ->required()
+                            ->helperText('Branch where this counter is located')
+                            ->columnSpan(1)
+                    ]),
+                Section::make('Counter Settings')
+                    ->description('Configure counter status and priority settings')
+                    ->columns(2)
+                    ->schema([
+                        Toggle::make('is_priority')
+                            ->label('Priority Counter')
+                            ->helperText('Priority counters handle special or urgent cases')
+                            ->default(false)
+                            ->inline()
+                            ->columnSpan(1),
+                        Toggle::make('active')
+                            ->live()
+                            ->label('Active Status')
+                            ->helperText('Inactive counters will not accept new queues')
+                            ->default(true)
+                            ->inline()
+                            ->columnSpan(1),
+                        Textarea::make('break_message')
+                            ->visible(function (Get $get) {
+                                return $get('active') == false;
+                            })
+                            ->label('Break Message')
+                            ->placeholder('e.g., On lunch break, Back at 2:00 PM')
+                            ->helperText('Message to display when counter is inactive')
+                            ->rows(2)
+                            ->maxLength(500)
+                            ->columnSpan(2)
+                    ]),
+            ])
+            ->action(function (array $data): void {
+                Counter::create($data);
+                $this->dialog()->success(
+                    title: 'Counter Created',
+                    description: 'Counter has been successfully created'
+                );
+            });
     }
+    //table
 
-    public function updatedSelectedBranch($value)
+    public function table(Table $table): Table
     {
-        $this->resetPage();
-    }
-
-    public function create()
-    {
-        $this->reset(['name', 'is_priority', 'active', 'break_message', 'isEditing', 'selectedCounterId']);
-        $this->branch_id = $this->selectedBranch;
-        $this->showModal = true;
-    }
-
-    public function edit(Counter $counter)
-    {
-        $this->selectedCounterId = $counter->id;
-        $this->name = $counter->name;
-        $this->branch_id = $counter->branch_id;
-        $this->is_priority = $counter->is_priority;
-        $this->active = $counter->active;
-        $this->break_message = $counter->break_message;
-        $this->isEditing = true;
-        $this->showModal = true;
-    }
-
-    public function save()
-    {
-        $this->validate();
-
-        $data = [
-            'name' => $this->name,
-            'branch_id' => $this->branch_id,
-            'is_priority' => $this->is_priority,
-            'active' => $this->active,
-            'break_message' => $this->break_message
-        ];
-
-        if ($this->isEditing) {
-            $counter = Counter::find($this->selectedCounterId);
-            $counter->update($data);
-            
-            $this->notification()->success(
-                $title = 'Success',
-                $description = 'Counter updated successfully'
-            );
-        } else {
-            Counter::create($data);
-            
-            $this->notification()->success(
-                $title = 'Success',
-                $description = 'Counter created successfully'
-            );
-        }
-
-        $this->reset(['showModal', 'name', 'is_priority', 'active', 'break_message', 'isEditing', 'selectedCounterId']);
-    }
-
-    public function confirmDelete(Counter $counter)
-    {
-        $this->selectedCounterId = $counter->id;
-        $this->confirmingDeletion = true;
-    }
-
-    public function delete()
-    {
-        $counter = Counter::find($this->selectedCounterId);
-        
-        if ($counter->queues()->exists()) {
-            $this->notification()->error(
-                $title = 'Error',
-                $description = 'Cannot delete counter with existing queues'
-            );
-            return;
-        }
-
-        $counter->delete();
-        $this->notification()->success(
-            $title = 'Success',
-            $description = 'Counter deleted successfully'
-        );
-        $this->reset(['confirmingDeletion', 'selectedCounterId']);
-    }
-
-    public function toggleStatus(Counter $counter)
-    {
-        $counter->update(['active' => !$counter->active]);
-        
-        $status = $counter->active ? 'activated' : 'deactivated';
-        $this->notification()->success(
-            $title = 'Success',
-            $description = "Counter {$status} successfully"
-        );
-    }
-
-    public function updateBreakMessage(Counter $counter, $message)
-    {
-        $counter->update(['break_message' => $message ?: null]);
-        
-        $this->notification()->success(
-            $title = 'Success',
-            $description = 'Break message updated successfully'
-        );
+        return $table
+            ->query(Counter::query())
+            ->groups([
+                Group::make('branch.name')
+                    ->label('Branch')
+                    ->getTitleFromRecordUsing(fn ($record) => $record->branch ? $record->branch->name : 'Unassigned')
+                    ->collapsible()
+            ])
+            ->columns([
+                TextColumn::make('name')
+                    ->label('Name')
+                    ->searchable(isIndividual: true)
+                    ->sortable(),
+                TextColumn::make('branch.name')
+                    ->label('Branch')
+                    ->sortable(),
+                TextColumn::make('is_priority')
+                    ->label('Priority')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Yes' : 'No')
+                    ->sortable(),
+                TextColumn::make('active')
+                    ->label('Status')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
+                    ->sortable(),
+                TextColumn::make('created_at')
+                    ->label('Created')
+                    ->date('M d, Y')
+                    ->sortable(),
+            ])
+            ->filters([
+                SelectFilter::make('branch_id')
+                ->relationship('branch', 'name')
+                ->searchable()
+                ->preload()
+            ])
+            ->actions([
+                ViewAction::make()
+                    ->button('dark-gray')
+                    ->icon('heroicon-o-eye'),
+                EditAction::make()
+                    ->button('dark-gray')
+                    ->icon('heroicon-o-pencil')
+                    ->form([
+                        Section::make('Basic Information')
+                            ->description('Enter the counter identification details')
+                            ->columns(2)
+                            ->schema([
+                                TextInput::make('name')
+                                    ->label('Counter Name')
+                                    ->placeholder('e.g., Counter 1, Window 2')
+                                    ->helperText('Name should be clear and easily identifiable')
+                                    ->required()
+                                    ->minLength(3)
+                                    ->maxLength(255)
+                                    ->unique(ignoreRecord: true)
+                                    ->columnSpan(1),
+                                Select::make('branch_id')
+                                    ->label('Branch')
+                                    ->relationship(name: 'branch', titleAttribute: 'name')
+                                    ->searchable()
+                                    ->preload()
+                                    ->placeholder('Select branch')
+                                    ->required()
+                                    ->helperText('Branch where this counter is located')
+                                    ->columnSpan(1)
+                            ]),
+                        Section::make('Counter Settings')
+                            ->description('Configure counter status and priority settings')
+                            ->columns(2)
+                            ->schema([
+                                Toggle::make('is_priority')
+                                    ->label('Priority Counter')
+                                    ->helperText('Priority counters handle special or urgent cases')
+                                    ->default(false)
+                                    ->inline()
+                                    ->columnSpan(1),
+                                Toggle::make('active')
+                                    ->live()
+                                    ->label('Active Status')
+                                    ->helperText('Inactive counters will not accept new queues')
+                                    ->default(true)
+                                    ->inline()
+                                    ->columnSpan(1),
+                                Textarea::make('break_message')
+                                    ->visible(function (Get $get) {
+                                        return $get('active') == false;
+                                    })
+                                    ->label('Break Message')
+                                    ->placeholder('e.g., On lunch break, Back at 2:00 PM')
+                                    ->helperText('Message to display when counter is inactive')
+                                    ->rows(2)
+                                    ->maxLength(500)
+                                    ->columnSpan(2)
+                            ])
+                    ])
+                    ->after(function () {
+                        $this->dialog()->success(
+                            title: 'Counter Updated',
+                            description: 'Counter has been successfully updated'
+                        );
+                    }),
+                DeleteAction::make()
+                    ->button('dark-gray')
+                    ->icon('heroicon-o-trash')
+                    ->requiresConfirmation()
+                    ->modalHeading('Delete Counter')
+                    ->modalDescription('Are you sure you want to delete this counter? This action cannot be undone.')
+                    ->after(function () {
+                        $this->dialog()->success(
+                            title: 'Counter Deleted',
+                            description: 'Counter has been successfully deleted'
+                        );
+                    })
+            ]);
     }
 
     public function render()
     {
-        return view('livewire.admin.counters', [
-            'branches' => Branch::orderBy('name')->get(),
-            'counters' => Counter::when($this->selectedBranch, function($query) {
-                    $query->where('branch_id', $this->selectedBranch);
-                })
-                ->withCount('queues')
-                ->with('branch')
-                ->latest()
-                ->paginate(10)
-        ]);
+        return view('livewire.admin.counters');
     }
 }

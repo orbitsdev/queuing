@@ -6,8 +6,8 @@
             ['label' => 'Users', 'route' => 'admin.users', 'icon' => 'users'],
             ['label' => 'Services', 'route' => 'admin.services', 'icon' => 'wrench-screwdriver'],
             ['label' => 'Counters', 'route' => 'admin.counters', 'icon' => 'computer-desktop'],
-            ['label' => 'Queues', 'route' => 'admin.queues', 'icon' => 'ticket'],
             ['label' => 'Settings', 'route' => '#', 'icon' => 'cog-6-tooth'],
+            ['label' => 'Queues', 'route' => 'admin.queues', 'icon' => 'ticket'],
         ];
     @endphp
 

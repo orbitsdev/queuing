@@ -37,7 +37,7 @@ class Services extends Component implements HasForms, HasTable, HasActions
     use WireUiActions;
 
 
- 
+
     //cratee action
     public function createAction(): Action
     {
@@ -76,7 +76,7 @@ class Services extends Component implements HasForms, HasTable, HasActions
                             ->placeholder('Select branch')
                             ->options(Branch::all()->pluck('name', 'id'))
                             ->required()
-                            ->columnSpan(2),
+                            ->columnSpan(2)
                     ]),
             ])
             ->action(function (array $data): void {
@@ -130,7 +130,7 @@ class Services extends Component implements HasForms, HasTable, HasActions
             ])
             ->actions([
                 EditAction::make()
-                ->successNotification(null)
+                    ->successNotification(null)
                     ->label('Edit')
                     ->button('dark-gray')
                     ->icon('heroicon-o-pencil')
@@ -164,16 +164,16 @@ class Services extends Component implements HasForms, HasTable, HasActions
                                     ->placeholder('Select branch')
                                     ->options(Branch::all()->pluck('name', 'id'))
                                     ->required()
-                                    ->columnSpan(2),
-                            ]),
+                                    ->columnSpan(2)
+                            ])
                     ])
-                    ->action(function (Service $record, array $data): void {
-                        $record->update($data);
+                    ->after(function () {
                         $this->dialog()->success(
                             title: 'Service Updated',
                             description: 'Service has been successfully updated'
                         );
                     }),
+
                 DeleteAction::make()
                     ->label('Delete')
                     ->button('dark-gray')
@@ -187,7 +187,7 @@ class Services extends Component implements HasForms, HasTable, HasActions
                             title: 'Service Deleted',
                             description: 'Service has been successfully deleted'
                         );
-                    }),
+                    })
             ]);
     }
 
