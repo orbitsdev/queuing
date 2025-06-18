@@ -36,15 +36,30 @@ class ListSettings extends Component implements HasForms, HasTable
                     ->label('Branch Code')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('settings_count')
-                    ->label('Settings')
-                    ->counts('settings'),
+                Tables\Columns\TextColumn::make('settings')
+                    ->label('Settings Status')
+                    ->formatStateUsing(function (Branch $record) {
+                        $settings = \App\Models\Setting::where('branch_id', $record->id)->first();
+                        return $settings ? 'Branch Configured' : 'Using Global Defaults';
+                    }),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Last Updated')
                     ->dateTime()
                     ->sortable(),
             ])
             ->actions([
+                Tables\Actions\Action::make('view_settings')
+                    ->label('View Settings')
+                    ->size('sm')
+                    ->color('gray')
+                    ->icon('heroicon-o-eye')
+                    ->modalWidth('5xl')
+                    ->modalHeading(fn (Branch $record) => "Settings for {$record->name} ({$record->code})")
+                    ->modalContent(function (Branch $record) {
+                        return view('livewire.admin.branch-settings-modal', ['record' => $record]);
+                    })
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(fn ($action) => $action->label('Close')),
                 Tables\Actions\Action::make('manage_settings')
                     ->label('Manage Settings')
                     ->size('sm')

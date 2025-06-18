@@ -9,21 +9,24 @@ class BranchObserver
 {
     /**
      * Handle the Branch "created" event.
-     * 
-     * Clone global settings to the newly created branch
+     *
+     * Create settings for the newly created branch
      */
     public function created(Branch $branch): void
     {
-        // Get all global settings (where branch_id is null)
-        $globalSettings = Setting::whereNull('branch_id')->get();
-        
-        // Clone each global setting to the new branch
-        foreach ($globalSettings as $globalSetting) {
-            Setting::create([
-                'branch_id' => $branch->id,
-                'key' => $globalSetting->key,
-                'value' => $globalSetting->value,
-            ]);
-        }
+        // Get global settings
+        $globalSettings = Setting::global();
+
+        // Create settings for the new branch, copying values from global settings
+        Setting::updateOrCreate(
+            ['branch_id' => $branch->id],
+            [
+                'ticket_prefix' => $globalSettings->ticket_prefix ?? 'QUE',
+                'print_logo' => $globalSettings->print_logo ?? true,
+                'queue_reset_daily' => $globalSettings->queue_reset_daily ?? true,
+                'queue_reset_time' => $globalSettings->queue_reset_time ?? '00:00',
+                'default_break_message' => $globalSettings->default_break_message ?? 'On break, please proceed to another counter.',
+            ]
+        );
     }
 }

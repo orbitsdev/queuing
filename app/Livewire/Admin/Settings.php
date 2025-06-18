@@ -13,92 +13,34 @@ class Settings extends Component
 {
     use WireUiActions;
 
-    public ?Branch $branch = null;
-    public bool $isGlobal = false;
+    public Branch $branch;
     public array $settings = [];
     public string $settingsTitle = '';
-    
-    public function mount($branch)
+
+    public function mount(Branch $branch)
     {
-        // Handle 'global' parameter for global settings
-        if ($branch === 'global') {
-            $this->isGlobal = true;
-            $this->settingsTitle = 'Global Default Settings';
-        } else {
-            $this->branch = $branch;
-            $this->settingsTitle = "Settings for {$branch->name} ({$branch->code})";
-        }
+        $this->branch = $branch;
+        $this->settingsTitle = "Settings for {$branch->name} ({$branch->code})";
         
-        // Load branch-specific settings or global settings
+        // Load branch-specific settings
         $this->loadSettings();
     }
 
     protected function loadSettings()
     {
-        // Define the keys we want to load
-        $settingKeys = [
-            'ticket_prefix',
-            'print_logo',
-            'queue_reset_daily',
-            'queue_reset_time',
-            'default_break_message',
-        ];
+        // Get branch settings with fallback to global
+        $settings = Setting::forBranch($this->branch);
         
-        if ($this->isGlobal) {
-            // For global settings, load directly from global settings
-            foreach ($settingKeys as $key) {
-                $setting = Setting::whereNull('branch_id')
-                    ->where('key', $key)
-                    ->first();
-                
-                // Set the value in our settings array if found
-                if ($setting) {
-                    $this->settings[$key] = $setting->value;
-                } else {
-                    // Provide sensible defaults if no setting exists at all
-                    $this->settings[$key] = match($key) {
-                        'ticket_prefix' => 'QUE',
-                        'print_logo' => 'true',
-                        'queue_reset_daily' => 'true',
-                        'queue_reset_time' => '00:00',
-                        'default_break_message' => 'On break, please proceed to another counter.',
-                        default => ''
-                    };
-                }
-            }
-        } else {
-            // For branch-specific settings, try to get branch setting or fall back to global default
-            foreach ($settingKeys as $key) {
-                // Try to get branch-specific setting first
-                $setting = Setting::where('branch_id', $this->branch->id)
-                    ->where('key', $key)
-                    ->first();
-                
-                // If not found, fall back to global default (branch_id = NULL)
-                if (!$setting) {
-                    $setting = Setting::whereNull('branch_id')
-                        ->where('key', $key)
-                        ->first();
-                }
-                
-                // Set the value in our settings array if found
-                if ($setting) {
-                    $this->settings[$key] = $setting->value;
-                } else {
-                    // Provide sensible defaults if no setting exists at all
-                    $this->settings[$key] = match($key) {
-                        'ticket_prefix' => 'QUE',
-                        'print_logo' => 'true',
-                        'queue_reset_daily' => 'true',
-                        'queue_reset_time' => '00:00',
-                        'default_break_message' => 'On break, please proceed to another counter.',
-                        default => ''
-                    };
-                }
-            }
-        }
+        // Copy all settings to our settings array
+        $this->settings = [
+            'ticket_prefix' => $settings->ticket_prefix ?? 'QUE',
+            'print_logo' => $settings->print_logo ? 'true' : 'false',
+            'queue_reset_daily' => $settings->queue_reset_daily ? 'true' : 'false',
+            'queue_reset_time' => $settings->queue_reset_time ?? '00:00',
+            'default_break_message' => $settings->default_break_message ?? 'On break, please proceed to another counter.',
+        ];
     }
-    
+
     public function rules()
     {
         return [
@@ -109,7 +51,7 @@ class Settings extends Component
             'settings.default_break_message' => 'required|string|min:5',
         ];
     }
-    
+
     /**
      * Get placeholder text for a setting field
      */
@@ -122,7 +64,7 @@ class Settings extends Component
             default => ''
         };
     }
-    
+
     /**
      * Get helper text for a setting field
      */
@@ -137,19 +79,17 @@ class Settings extends Component
             default => ''
         };
     }
-    
+
     public function save()
-    {        
+    {
         // Validate settings
         $this->validate($this->rules());
-        
+
         // Confirm before saving
-        $confirmMessage = $this->isGlobal 
-            ? 'Are you sure you want to save these global default settings?' 
-            : 'Are you sure you want to save these settings for ' . $this->branch->name . '?';
-            
+        $confirmMessage = 'Are you sure you want to save these settings for ' . $this->branch->name . '?';
+
         $this->dialog()->confirm([
-            'title' => $this->isGlobal ? 'Save Global Settings' : 'Save Branch Settings',
+            'title' => 'Save Branch Settings',
             'description' => $confirmMessage,
             'icon' => 'question',
             'accept' => [
@@ -161,28 +101,30 @@ class Settings extends Component
             ],
         ]);
     }
-    
+
     public function saveConfirmed()
     {
-        // Get branch_id (null for global settings)
-        $branchId = $this->isGlobal ? null : $this->branch->id;
+        // Convert string boolean values to actual booleans
+        $printLogo = $this->settings['print_logo'] === 'true';
+        $queueResetDaily = $this->settings['queue_reset_daily'] === 'true';
         
-        // Save each setting
-        foreach ($this->settings as $key => $value) {
-            Setting::updateOrCreate(
-                ['branch_id' => $branchId, 'key' => $key],
-                ['value' => $value]
-            );
-        }
-        
+        // Save all settings at once
+        Setting::updateOrCreate(
+            ['branch_id' => $this->branch->id],
+            [
+                'ticket_prefix' => $this->settings['ticket_prefix'],
+                'print_logo' => $printLogo,
+                'queue_reset_daily' => $queueResetDaily,
+                'queue_reset_time' => $this->settings['queue_reset_time'],
+                'default_break_message' => $this->settings['default_break_message'],
+            ]
+        );
+
         // Show success notification
-        $successMessage = $this->isGlobal 
-            ? 'Global default settings have been updated successfully.' 
-            : 'Branch settings have been updated successfully.';
-            
-        $this->notification()->success(
+        $this->dialog()->success(
             'Settings Saved',
-            $successMessage
+            'Branch settings have been updated successfully.',
+            ['icon' => 'check']
         );
 
         $this->redirect(route('admin.branch-settings'));

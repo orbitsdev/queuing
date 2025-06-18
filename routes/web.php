@@ -33,7 +33,7 @@ Route::middleware(['auth', 'verified', 'can:superadmin_or_admin'])->prefix('admi
     Route::get('users', Users::class)->name('admin.users');
     Route::get('queues', Queues::class)->name('admin.queues');
     Route::get('branch-settings', ListSettings::class)->name('admin.branch-settings');
-    Route::get('settings/{branch}', Settings::class)->name('admin.settings');
+    Route::get('settings/{branch}', Settings::class)->name('admin.settings')->where('branch', '[0-9]+');
 
 });
 

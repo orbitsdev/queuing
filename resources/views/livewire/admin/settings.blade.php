@@ -99,13 +99,15 @@
                         <div class="sm:col-span-4">
                             <label for="queue_reset_time" class="block text-sm/6 font-medium text-kiosqueeing-text">Queue Reset Time</label>
                             <div class="mt-2">
-                                <input type="text"
+                                <input
                                     wire:model="settings.queue_reset_time"
+                                    type="time"
                                     id="queue_reset_time"
                                     class="block w-full rounded-md border-0 px-3 py-1.5 text-kiosqueeing-text shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-kiosqueeing-primary sm:text-sm/6"
-                                    placeholder="{{ $this->getSettingPlaceholder('queue_reset_time') }}" />
+                                    placeholder="{{ $this->getSettingPlaceholder('queue_reset_time') }}"
+                                >
+                                <p class="mt-1 text-sm text-gray-500">Current value: {{ date('h:i A', strtotime($settings['queue_reset_time'])) }}</p>
                             </div>
-                            <p class="mt-1 text-sm text-gray-500">{{ $this->getSettingHelperText('queue_reset_time') }}</p>
                             @error('settings.queue_reset_time') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
                     </div>
@@ -159,4 +161,3 @@
         </div>
     </x-admin-layout>
 </div>
-
