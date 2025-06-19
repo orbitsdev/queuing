@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Branch;
+use App\Models\Counter;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -16,6 +17,8 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $branch = Branch::first();
+        $counter = Counter::first(); // pick Counter 1 for example
+
 
         // Create superadmin (not tied to any branch)
         User::create([
@@ -42,6 +45,9 @@ class UserSeeder extends Seeder
             'email' => 'staff@kiosqueeing.local',
             'password' => Hash::make('password'),
             'role' => 'staff',
+            'counter_id' => $counter->id,
         ]);
+
+        
     }
 }

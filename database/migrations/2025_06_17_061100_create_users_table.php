@@ -19,6 +19,8 @@ return new class extends Migration
             $table->foreignId('branch_id')->nullable()->constrained()->cascadeOnDelete();
             $table->enum('role', ['superadmin', 'admin', 'staff']);
             $table->string('password');
+$table->unsignedBigInteger('counter_id')->nullable();
+
             $table->rememberToken();
             $table->timestamps();
         });

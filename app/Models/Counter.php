@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\User;
 use App\Models\Queue;
 use App\Models\Branch;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
 
 class Counter extends Model
@@ -23,6 +25,17 @@ class Counter extends Model
     public function getQueueCountAttribute()
     {
         return $this->queues()->count();
+    }
+
+   public function user()
+{
+    return $this->belongsTo(User::class);
+}
+
+
+    public function scopeCurrentBranch($query)
+    {
+        return $query->where('branch_id', Auth::user()->branch_id);
     }
 
 }

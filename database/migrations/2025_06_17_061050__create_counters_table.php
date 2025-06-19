@@ -14,10 +14,12 @@ return new class extends Migration
         Schema::create('counters', function (Blueprint $table) {
             $table->id();
             $table->foreignId('branch_id')->constrained()->cascadeOnDelete();
+               $table->unsignedBigInteger('user_id')->nullable();
             $table->string('name');
             $table->boolean('is_priority')->default(false);
             $table->boolean('active')->default(true);
             $table->text('break_message')->nullable();
+
             $table->timestamps();
         });
     }

@@ -73,5 +73,10 @@ class User extends Authenticatable
     }
     //counter
 
+   public function counter()
+{
+    return $this->belongsTo(Counter::class);
+}
+
 
 }
