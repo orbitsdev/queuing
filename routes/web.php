@@ -10,6 +10,7 @@ use App\Livewire\Admin\Settings;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\ListSettings;
 use Illuminate\Support\Facades\Auth;
+use App\Livewire\Monitor\DisplayPage;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Counter\SelectCounter;
 use App\Livewire\Counter\CounterTransactionPage;
@@ -54,8 +55,8 @@ Route::middleware(['auth', 'verified', 'can:staff'])->prefix('counter')->group(f
     Route::get('transaction', CounterTransactionPage::class)->middleware(['counter.assigned'])->name('counter.transaction');
 });
 
-
-
+//display
+Route::get('/display/{monitor}', DisplayPage::class)->name('display.show');
 
 // Route::middleware(['auth'])->group(function () {
 //     Route::redirect('settings', 'settings/profile');

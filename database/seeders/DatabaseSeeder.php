@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             SettingSeeder::class,
             QueueSeeder::class,
+            MonitorSeeder::class,
         ]);
     }
 }
