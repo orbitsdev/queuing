@@ -168,7 +168,7 @@
                         <select
     wire:model="selectedHoldTicket"
     wire:change="triggerResumeSelectedHold"
-    @disabled($currentTicket || $holdTickets->isEmpty())
+    @disabled($status === 'break')
     class="w-full border border-gray-300 rounded px-4 py-3 mb-4"
 >
     <option value="">Select a Hold Ticket</option>
