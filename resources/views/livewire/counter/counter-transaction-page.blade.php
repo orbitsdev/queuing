@@ -46,24 +46,53 @@
                         <h2 class="text-2xl mt-4 uppercase font-medium text-gray-600 mb-4 text-center">Now Serving</h2>
 
                         <div class="grid grid-cols-4 gap-4 mt-12">
-                            <button wire:click="serveCurrent" wire:loading.attr="disabled"
-                                class="px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white transition rounded-lg flex flex-col items-center justify-center">
+                            <!-- ✅ Complete -->
+                            <button
+                                wire:click="completeQueue"
+                                wire:loading.attr="disabled"
+                                @disabled(! $currentTicket)
+                                class="{{ $currentTicket
+                                    ? 'px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white transition rounded-lg flex flex-col items-center justify-center'
+                                    : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
+                                }}">
                                 ✅ Complete
                             </button>
-                            <button wire:click="holdCurrent" wire:loading.attr="disabled"
-                                class="px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white transition rounded-lg flex flex-col items-center justify-center">
+
+                            <!-- ✅ Hold -->
+                            <button
+                                wire:click="holdCurrent"
+                                wire:loading.attr="disabled"
+                                @disabled(! $currentTicket)
+                                class="{{ $currentTicket
+                                    ? 'px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white transition rounded-lg flex flex-col items-center justify-center'
+                                    : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
+                                }}">
                                 ⏸️ Hold
                             </button>
-                            <button wire:click="skipCurrent" wire:loading.attr="disabled"
-                                class="px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white transition rounded-lg flex flex-col items-center justify-center">
+
+                            <!-- ✅ Skip -->
+                            <button
+                                wire:click="skipCurrent"
+                                wire:loading.attr="disabled"
+                                @disabled(! $currentTicket)
+                                class="{{ $currentTicket
+                                    ? 'px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white transition rounded-lg flex flex-col items-center justify-center'
+                                    : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
+                                }}">
                                 ⏭️ Skip
                             </button>
-                            @if ($currentTicket)
-                                <button wire:click="cancelSelectedQueue" wire:loading.attr="disabled"
-                                    class="px-5 py-3 border border-gray-300 text-red-600 hover:bg-red-100 transition rounded-lg flex flex-col items-center justify-center">
-                                    ❌ Cancel
-                                </button>
-                            @endif
+
+                            <!-- ✅ Cancel -->
+                            <button
+                                wire:click="cancelSelectedQueue"
+                                wire:loading.attr="disabled"
+                                @disabled(! $currentTicket)
+                                class="{{ $currentTicket
+                                    ? 'px-5 py-3 border border-gray-300 text-red-600 hover:bg-red-100 transition rounded-lg flex flex-col items-center justify-center'
+                                    : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
+                                }}">
+                                ❌ Cancel
+                            </button>
                         </div>
 
                     </div>

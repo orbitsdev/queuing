@@ -46,56 +46,57 @@ class CounterTransactionPage extends Component
 
     DB::beginTransaction();
 
-try {
-    $queue = Queue::where('id', $queueId)
-        ->where('status', 'waiting')
-        ->whereNull('counter_id')
-        ->lockForUpdate()
-        ->first();
+    try {
+        $queue = Queue::where('id', $queueId)
+            ->where('status', 'waiting')
+            ->whereNull('counter_id')
+            ->lockForUpdate()
+            ->first();
 
-    if (!$queue) {
-        DB::rollBack();
-        $this->dialog()->error(
-            title: 'Ticket Unavailable',
-            description: 'This ticket was already selected by another counter.'
+        if (!$queue) {
+            DB::rollBack();
+            $this->dialog()->error(
+                title: 'Ticket Unavailable',
+                description: 'This ticket was already selected by another counter.'
+            );
+            $this->loadQueue();
+            return;
+        }
+
+        // ✅ Mark as SERVING immediately
+        $queue->update([
+            'counter_id' => $this->counter->id,
+            'user_id'    => auth()->id(),
+            'status'     => 'serving',
+            'called_at'  => now(),
+            'serving_at' => now(),
+        ]);
+
+        auth()->user()->update([
+            'queue_id'   => $queue->id,
+            'counter_id' => $this->counter->id,
+        ]);
+
+        DB::commit();
+
+        $this->dialog()->success(
+            title: 'Ticket Serving',
+            description: "You are now serving ticket {$queue->ticket_number}."
         );
+
         $this->loadQueue();
-        return;
+
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        report($e);
+
+        $this->dialog()->error(
+            title: 'System Error',
+            description: 'Something went wrong. Please try again.'
+        );
     }
-
-    $queue->update([
-        'counter_id' => $this->counter->id,
-        'user_id' => auth()->id(),
-        'status' => 'called',
-        'called_at' => now(),
-    ]);
-
-    auth()->user()->update([
-        'queue_id' => $queue->id,
-        'counter_id' => $this->counter->id
-    ]);
-
-    DB::commit();
-
-    $this->dialog()->success(
-        title: 'Ticket Assigned',
-        description: "You are now serving ticket {$queue->ticket_number}."
-    );
-
-    $this->loadQueue();
-
-} catch (\Throwable $e) {
-    DB::rollBack();
-    report($e);
-
-    $this->dialog()->error(
-        title: 'System Error',
-        description: 'Something went wrong. Please try again.'
-    );
 }
 
-
-}
 
 public function cancelSelectedQueue()
 {
@@ -184,6 +185,43 @@ public function confirmLogoutCounter()
     return redirect()->route('counter.select');
 }
 
+public function completeQueue()
+{
+    if (!$this->currentTicket) {
+        // Nothing to complete
+        return;
+    }
+
+    $this->dialog()->confirm([
+        'title'       => 'Confirm Complete',
+        'description' => 'Are you sure you want to mark this ticket as served and free this counter?',
+        'acceptLabel' => 'Yes, Complete',
+        'method'      => 'confirmCompleteQueue',
+    ]);
+}
+public function confirmCompleteQueue()
+{
+    DB::transaction(function () {
+        // ✅ Mark as COMPLETED
+        $this->currentTicket->update([
+            'status'     => 'completed',
+            'served_at'  => now(),
+        ]);
+
+        auth()->user()->update([
+            'queue_id' => null,
+            
+        ]);
+    });
+
+    $this->dialog()->success(
+        title: 'Ticket Completed',
+        description: 'The ticket has been marked as completed. Ready for the next one!'
+    );
+
+    $this->loadQueue();
+}
+
 
     public function loadQueue()
     {
@@ -235,12 +273,6 @@ public function confirmLogoutCounter()
         } else {
             $this->notification()->info('No waiting tickets.');
         }
-    }
-
-    public function selectQue(){
-        //check if not selected by other counter
-        //chekc if current user doesnt have selected ticket
-        //check if ticket is not expired
     }
 
     public function serveCurrent()
