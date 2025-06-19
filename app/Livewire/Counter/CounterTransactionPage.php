@@ -18,7 +18,11 @@ class CounterTransactionPage extends Component
     public $others = [];
     public $status = 'active';
     public $breakMessage = '';
-    public $selectedHoldTicket;
+    public $selectedHoldTicket = null;
+    public $holdReason = '';
+
+public $showHoldModal = false;
+
 
     public function mount()
     {
@@ -79,10 +83,10 @@ class CounterTransactionPage extends Component
 
         DB::commit();
 
-        $this->dialog()->success(
-            title: 'Ticket Serving',
-            description: "You are now serving ticket {$queue->ticket_number}."
-        );
+        // $this->dialog()->success(
+        //     title: 'Ticket Serving',
+        //     description: "You are now serving ticket {$queue->ticket_number}."
+        // );
 
         $this->loadQueue();
 
@@ -108,7 +112,8 @@ public function cancelSelectedQueue()
     $this->dialog()->confirm([
         'title'       => 'Confirm Cancel',
         'description' => 'Are you sure you want to cancel this selection? This will free your counter to select another queue.',
-        'acceptLabel' => 'Yes, Cancel',
+        'acceptLabel' => 'Yes Continue ',
+        'cancelLabel' => 'No',
         'method'      => 'confirmCancelSelectedQueue',
     ]);
 }
@@ -185,6 +190,126 @@ public function confirmLogoutCounter()
     return redirect()->route('counter.select');
 }
 
+public function holdQueue()
+{
+    if (!$this->currentTicket) {
+        return;
+    }
+
+    // Show modal (WireUI or custom)
+    $this->holdReason = '';
+    $this->showHoldModal = true;
+}
+
+
+public function triggerResumeSelectedHold()
+{
+    if (!$this->selectedHoldTicket) {
+        return; // Do nothing if blank
+    }
+
+    // Check if user already has an active ticket
+    if ($this->currentTicket) {
+        $this->dialog()->error(
+            title: 'Already Serving',
+            description: 'Please complete or cancel your current ticket before resuming another.'
+        );
+        $this->selectedHoldTicket = null; // reset
+        return;
+    }
+
+    // Ask confirmation
+    $this->dialog()->confirm([
+        'title' => 'Confirm Resume',
+        'description' => 'Are you sure you want to resume this hold ticket?',
+        'acceptLabel' => 'Yes, Resume',
+        'method' => 'confirmResumeSelectedHold',
+        'params' => $this->selectedHoldTicket,
+    ]);
+}
+public function confirmResumeSelectedHold($queueId)
+{
+    DB::transaction(function () use ($queueId) {
+        $queue = \App\Models\Queue::where('id', $queueId)
+            ->where('status', 'held')
+            ->where('counter_id', $this->counter->id)
+            ->lockForUpdate()
+            ->first();
+
+        if (!$queue) {
+            throw new \Exception('This hold ticket is no longer available.');
+        }
+
+        $queue->update([
+            'status'      => 'serving',
+            'called_at'   => now(),
+            'serving_at'  => now(),
+        ]);
+
+        auth()->user()->update([
+            'queue_id' => $queue->id,
+        ]);
+    });
+
+    $this->dialog()->success(
+        title: 'Hold Resumed',
+        description: 'The hold ticket has been resumed and is now serving.'
+    );
+
+    $this->selectedHoldTicket = null; // clear select
+    $this->loadQueue();
+}
+
+
+
+public function confirmHoldQueueWithReason()
+{
+    DB::transaction(function () {
+        $this->currentTicket->update([
+            'status' => 'held',
+            'hold_started_at' => now(),
+            'hold_reason' => $this->holdReason ?? 'Held by staff',
+        ]);
+
+        auth()->user()->update([
+            'queue_id' => null,
+        ]);
+    });
+
+    $this->dialog()->success(
+        title: 'Ticket On Hold',
+        description: 'The ticket has been put on hold.'
+    );
+
+    $this->showHoldModal = false;
+    $this->loadQueue();
+}
+
+
+public function confirmHoldQueue()
+{
+    DB::transaction(function () {
+        // ✅ Update queue to HELD
+        $this->currentTicket->update([
+            'status' => 'held',
+            'hold_started_at' => now(),
+            'hold_reason' => 'On hold by staff'
+        ]);
+
+        // ✅ Clear user current queue
+        auth()->user()->update([
+            'queue_id' => null,
+        ]);
+    });
+
+    $this->dialog()->success(
+        title: 'Ticket On Hold',
+        description: 'This ticket has been put on hold. You may select another.'
+    );
+
+    $this->loadQueue();
+}
+
 public function completeQueue()
 {
     if (!$this->currentTicket) {
@@ -210,7 +335,7 @@ public function confirmCompleteQueue()
 
         auth()->user()->update([
             'queue_id' => null,
-            
+
         ]);
     });
 

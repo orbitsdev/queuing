@@ -60,15 +60,16 @@
 
                             <!-- ✅ Hold -->
                             <button
-                                wire:click="holdCurrent"
-                                wire:loading.attr="disabled"
-                                @disabled(! $currentTicket)
-                                class="{{ $currentTicket
-                                    ? 'px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white transition rounded-lg flex flex-col items-center justify-center'
-                                    : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
-                                }}">
-                                ⏸️ Hold
-                            </button>
+                            wire:click="holdQueue"
+                            wire:loading.attr="disabled"
+                            @disabled(! $currentTicket)
+                            class="{{ $currentTicket
+                                ? 'px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white transition rounded-lg flex flex-col items-center justify-center'
+                                : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
+                            }}">
+                            ⏸️ Hold
+                        </button>
+
 
                             <!-- ✅ Skip -->
                             <button
@@ -144,22 +145,24 @@
                         </div>
                     </div>
 
+<!-- Resume Hold -->
+<div>
+    <h2 class="text-sm uppercase font-medium text-gray-500 mb-4">Resume Hold</h2>
+    <select
+        wire:model="selectedHoldTicket"
+        wire:change="triggerResumeSelectedHold"
+        class="w-full border border-gray-300 rounded px-4 py-3 mb-4"
+    >
+        <option value="">Select a Hold Ticket</option>
+        @foreach ($holdTickets as $hold)
+            <option value="{{ $hold->id }}">
+                {{ $hold->ticket_number }}
+            </option>
+        @endforeach
+    </select>
+</div>
 
-                    <!-- Resume Hold -->
-                    <div>
-                        <h2 class="text-sm uppercase font-medium text-gray-500 mb-4">Resume Hold</h2>
-                        <select wire:model="selectedHoldTicket"
-                            class="w-full border border-gray-300 rounded px-4 py-3 mb-4">
-                            <option value="">Select a Hold Ticket</option>
-                            @foreach ($holdTickets as $hold)
-                                <option value="{{ $hold->id }}">{{ $hold->ticket_number }}</option>
-                            @endforeach
-                        </select>
-                        {{-- <button wire:click="resumeHold" wire:loading.attr="disabled"
-                            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 transition">
-                            Resume Selected Hold
-                        </button> --}}
-                    </div>
+
 
                     <!-- Currently Serving By Others -->
                     <div>
@@ -185,5 +188,20 @@
             </div>
 
         </div>
+        <x-modal-card title="Hold Ticket" wire:model.defer="showHoldModal" align="center">
+            <div class="space-y-4">
+                <x-input
+                    label="Hold Reason (optional)"
+                    placeholder="Explain why you are putting this on hold"
+                    wire:model.defer="holdReason"
+                />
+            </div>
+
+            <x-slot name="footer">
+                <x-button flat label="Cancel" x-on:click="$wire.showHoldModal = false" />
+                <x-button primary label="Confirm Hold" wire:click="confirmHoldQueueWithReason" />
+            </x-slot>
+        </x-modal-card>
+
     </x-admin-layout>
 </div>
