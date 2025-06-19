@@ -3,9 +3,12 @@
 namespace App\Livewire\Counter;
 
 use App\Models\Queue;
+use App\Models\Setting;
 use Livewire\Component;
 use WireUi\Traits\WireUiActions;
 use Illuminate\Support\Facades\DB;
+// use filament notficaiton
+use Filament\Notifications\Notification;
 
 class CounterTransactionPage extends Component
 {
@@ -21,7 +24,10 @@ class CounterTransactionPage extends Component
     public $selectedHoldTicket = null;
     public $holdReason = '';
 
-public $showHoldModal = false;
+    public $showHoldModal = false;
+
+    public $breakInputMessage = '';
+public $showBreakModal = false;
 
 
     public function mount()
@@ -460,6 +466,57 @@ public function confirmCompleteQueue()
             $this->loadQueue();
         }
     }
+    public function startBreak()
+    {
+        // Use existing counter message or fallback to branch setting
+        $default = $this->counter->break_message;
+
+        if (!$default) {
+            $default = Setting::where('branch_id', $this->counter->branch_id)
+                ->orWhereNull('branch_id')
+                ->value('default_break_message') ?? 'Not available';
+        }
+
+        $this->breakInputMessage = $default;
+
+        $this->showBreakModal = true;
+    }
+    public function confirmStartBreak()
+    {
+        $this->counter->update([
+            'active' => false,
+            'break_message' => $this->breakInputMessage,
+        ]);
+
+        $this->status = 'break';
+        $this->breakMessage = $this->breakInputMessage;
+
+        $this->showBreakModal = false;
+
+        $this->notification()->success('Break started.');
+    }
+    public function resumeWork()
+    {
+        $this->dialog()->confirm([
+            'title'       => 'Resume Work',
+            'description' => 'Are you sure you want to resume work? You will be available to select or call new tickets.',
+            'acceptLabel' => 'Yes, Resume',
+            'method'      => 'confirmResumeWork',
+        ]);
+    }
+
+    public function confirmResumeWork()
+{
+    $this->counter->update([
+        'active' => true,
+        'break_message' => null,
+    ]);
+
+    $this->status = 'active';
+    $this->breakMessage = null;
+$this->notification()->success('Work resumed.');
+}
+
 
 
     public function render()

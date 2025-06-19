@@ -6,14 +6,21 @@
             <!-- Counter Name & Status -->
             <div class="mb-8">
                 <h1 class="text-4xl font-bold text-gray-800 mb-2">{{ $counter->name }}</h1>
-                <div>
-                    <span class="{{ $status === 'active' ? 'bg-green-500' : 'bg-yellow-500' }} px-4 py-1 text-white text-sm font-medium rounded-full">
-                        {{ ucfirst($status) }}
-                    </span>
+                <div class="flex flex-col md:flex-row md:items-center md:gap-4 bg-gray-50 px-4 py-3 rounded-lg border border-gray-200">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium
+                            {{ $status === 'active' ? 'bg-green-500 text-white' : 'bg-yellow-400 text-gray-900' }}">
+                            {{ ucfirst($status) }}
+                        </span>
+                    </div>
+
                     @if ($status === 'break')
-                        <p class="mt-1 text-gray-500 text-sm">{{ $breakMessage }}</p>
+                        <div class="mt-2 md:mt-0 md:ml-2 px-4 py-2 bg-yellow-50 text-yellow-800 border border-yellow-300 rounded-md text-sm shadow-sm">
+                            <strong>Break Notice:</strong> {{ $breakMessage ?? 'Not available' }}
+                        </div>
                     @endif
                 </div>
+
             </div>
 
             <!-- GRID -->
@@ -23,8 +30,19 @@
                 <div class="bg-white shadow rounded-lg p-8 space-y-8">
 
                     <!-- Now Serving -->
-                    <div>
-                        <div class="flex flex-col justify-between aspect-square w-80 h-80 mx-auto rounded-xl shadow-md border border-kiosqueeing-primary bg-white overflow-hidden">
+                    <div class="relative w-fit mx-auto">
+                        @if ($status === 'break')
+                            <div
+                                class="absolute inset-0 z-10 bg-black  flex items-center justify-center rounded-xl">
+                                <div class="text-center text-white">
+                                    <p class="text-lg font-bold">On Break</p>
+                                    <p class="text-sm">{{ $breakMessage ?? 'Not available' }}</p>
+                                </div>
+                            </div>
+                        @endif
+
+                        <div
+                            class="flex flex-col justify-between aspect-square w-80 h-80 mx-auto rounded-xl shadow-md border border-kiosqueeing-primary bg-white overflow-hidden">
                             <div class="flex-1 flex flex-col justify-center items-center">
                                 @if ($currentTicket)
                                     <div class="text-7xl font-extrabold text-kiosqueeing-primary">
@@ -35,7 +53,8 @@
                                     <p class="text-xs text-gray-400 mt-2">No ticket selected</p>
                                 @endif
                             </div>
-                            <div class="bg-kiosqueeing-primary w-full text-center py-3 text-white font-semibold tracking-widest">
+                            <div
+                                class="bg-kiosqueeing-primary w-full text-center py-3 text-white font-semibold tracking-widest">
                                 {{ $currentTicket?->ticket_number ?? '' }}
                             </div>
                         </div>
@@ -47,51 +66,36 @@
 
                         <div class="grid grid-cols-4 gap-4 mt-12">
                             <!-- ✅ Complete -->
-                            <button
-                                wire:click="completeQueue"
-                                wire:loading.attr="disabled"
-                                @disabled(! $currentTicket)
+                            <button wire:click="completeQueue" wire:loading.attr="disabled" @disabled(!$currentTicket)
                                 class="{{ $currentTicket
                                     ? 'px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white transition rounded-lg flex flex-col items-center justify-center'
-                                    : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
-                                }}">
+                                    : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center' }}">
                                 ✅ Complete
                             </button>
 
                             <!-- ✅ Hold -->
-                            <button
-                            wire:click="holdQueue"
-                            wire:loading.attr="disabled"
-                            @disabled(! $currentTicket)
-                            class="{{ $currentTicket
-                                ? 'px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white transition rounded-lg flex flex-col items-center justify-center'
-                                : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
-                            }}">
-                            ⏸️ Hold
-                        </button>
+                            <button wire:click="holdQueue" wire:loading.attr="disabled" @disabled(!$currentTicket)
+                                class="{{ $currentTicket
+                                    ? 'px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white transition rounded-lg flex flex-col items-center justify-center'
+                                    : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center' }}">
+                                ⏸️ Hold
+                            </button>
 
 
                             <!-- ✅ Skip -->
-                            <button
-                                wire:click="skipCurrent"
-                                wire:loading.attr="disabled"
-                                @disabled(! $currentTicket)
+                            <button wire:click="skipCurrent" wire:loading.attr="disabled" @disabled(!$currentTicket)
                                 class="{{ $currentTicket
                                     ? 'px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white transition rounded-lg flex flex-col items-center justify-center'
-                                    : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
-                                }}">
+                                    : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center' }}">
                                 ⏭️ Skip
                             </button>
 
                             <!-- ✅ Cancel -->
-                            <button
-                                wire:click="cancelSelectedQueue"
-                                wire:loading.attr="disabled"
-                                @disabled(! $currentTicket)
+                            <button wire:click="cancelSelectedQueue" wire:loading.attr="disabled"
+                                @disabled(!$currentTicket)
                                 class="{{ $currentTicket
                                     ? 'px-5 py-3 border border-gray-300 text-red-600 hover:bg-red-100 transition rounded-lg flex flex-col items-center justify-center'
-                                    : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
-                                }}">
+                                    : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center' }}">
                                 ❌ Cancel
                             </button>
                         </div>
@@ -109,21 +113,23 @@
                             <h2 class="text-sm uppercase font-medium text-gray-500">Next Tickets</h2>
                             <div class="flex gap-2">
                                 <button
-                                    wire:click="toggleBreak"
-                                    wire:loading.attr="disabled"
-                                    class="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition">
-                                    {{ $status === 'active' ? 'Start Break' : 'Resume Work' }}
-                                </button>
-
-                                <button
-                                wire:click="logoutCounter"
+                                wire:click="{{ $status === 'active' ? 'startBreak' : 'resumeWork' }}"
                                 wire:loading.attr="disabled"
-                                class="px-4 py-2 bg-gray-100 text-gray-600 border border-gray-300 rounded hover:bg-gray-200 transition flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7" />
-                                </svg>
-                                Logout
+                                class="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition">
+                                {{ $status === 'active' ? 'Start Break' : 'Resume Work' }}
                             </button>
+
+
+
+                                <button wire:click="logoutCounter" wire:loading.attr="disabled"
+                                    class="px-4 py-2 bg-gray-100 text-gray-600 border border-gray-300 rounded hover:bg-gray-200 transition flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 16l4-4m0 0l-4-4m4 4H7" />
+                                    </svg>
+                                    Logout
+                                </button>
 
                             </div>
                         </div>
@@ -135,42 +141,58 @@
                                     type="button"
                                     wire:click="selectQueue({{ $next->id }})"
                                     wire:loading.attr="disabled"
-                                    class="flex flex-col items-center justify-center px-6 py-4 bg-gray-100 rounded hover:bg-gray-200 hover:shadow-md transition cursor-pointer w-full">
-                                    <div class="text-5xl font-bold text-gray-900">{{ $next->number }}</div>
-                                    <div class="text-xs mt-2 text-gray-500 tracking-wide">{{ $next->ticket_number }}</div>
+                                    @disabled($status === 'break' || $currentTicket)
+                                    class="flex flex-col items-center justify-center px-6 py-4 w-full rounded transition
+                                        {{ ($status === 'break' || $currentTicket)
+                                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                            : 'bg-gray-100 hover:bg-gray-200 hover:shadow-md text-gray-900'
+                                        }}"
+                                >
+                                    <div class="text-5xl font-bold">
+                                        {{ $next->number }}
+                                    </div>
+                                    <div class="text-xs mt-2 text-gray-500 tracking-wide">
+                                        {{ $next->ticket_number }}
+                                    </div>
                                 </button>
                             @empty
                                 <p class="text-gray-500 text-sm">No next tickets.</p>
                             @endforelse
                         </div>
+
                     </div>
 
-<!-- Resume Hold -->
-<div>
-    <h2 class="text-sm uppercase font-medium text-gray-500 mb-4">Resume Hold</h2>
-    <select
-        wire:model="selectedHoldTicket"
-        wire:change="triggerResumeSelectedHold"
-        class="w-full border border-gray-300 rounded px-4 py-3 mb-4"
-    >
-        <option value="">Select a Hold Ticket</option>
-        @foreach ($holdTickets as $hold)
-            <option value="{{ $hold->id }}">
-                {{ $hold->ticket_number }}
-            </option>
-        @endforeach
-    </select>
-</div>
+                    <!-- Resume Hold -->
+                    <div>
+                        <h2 class="text-sm uppercase font-medium text-gray-500 mb-4">Resume Hold</h2>
+                        <select
+    wire:model="selectedHoldTicket"
+    wire:change="triggerResumeSelectedHold"
+    @disabled($currentTicket || $holdTickets->isEmpty())
+    class="w-full border border-gray-300 rounded px-4 py-3 mb-4"
+>
+    <option value="">Select a Hold Ticket</option>
+    @foreach ($holdTickets as $hold)
+        <option value="{{ $hold->id }}">
+            {{ $hold->ticket_number }}
+        </option>
+    @endforeach
+</select>
+
+                    </div>
 
 
 
                     <!-- Currently Serving By Others -->
                     <div>
-                        <h2 class="text-sm uppercase font-medium text-gray-500 mb-4">Currently Serving by Other Counters</h2>
+                        <h2 class="text-sm uppercase font-medium text-gray-500 mb-4">Currently Serving by Other Counters
+                        </h2>
                         <div class="grid grid-cols-1 gap-2">
                             @forelse ($others as $other)
-                                <div class="flex items-center bg-gray-50 border border-gray-200 rounded text-sm font-medium text-gray-800">
-                                    <div class="flex items-center rounded-l-lg bg-kiosqueeing-primary text-white uppercase px-4 py-2">
+                                <div
+                                    class="flex items-center bg-gray-50 border border-gray-200 rounded text-sm font-medium text-gray-800">
+                                    <div
+                                        class="flex items-center rounded-l-lg bg-kiosqueeing-primary text-white uppercase px-4 py-2">
                                         {{ $other->counter->name }}
                                     </div>
                                     <div class="px-4 py-2">
@@ -190,11 +212,8 @@
         </div>
         <x-modal-card title="Hold Ticket" wire:model.defer="showHoldModal" align="center">
             <div class="space-y-4">
-                <x-input
-                    label="Hold Reason (optional)"
-                    placeholder="Explain why you are putting this on hold"
-                    wire:model.defer="holdReason"
-                />
+                <x-input label="Hold Reason (optional)" placeholder="Explain why you are putting this on hold"
+                    wire:model.defer="holdReason" />
             </div>
 
             <x-slot name="footer">
@@ -202,6 +221,19 @@
                 <x-button primary label="Confirm Hold" wire:click="confirmHoldQueueWithReason" />
             </x-slot>
         </x-modal-card>
+
+        <x-modal-card title="Start Break" wire:model.defer="showBreakModal" align="center">
+            <div class="space-y-4">
+                <x-input label="Break Message" placeholder="Describe why you're taking a break"
+                    wire:model.defer="breakInputMessage" />
+            </div>
+
+            <x-slot name="footer">
+                <x-button flat label="Cancel" x-on:click="$wire.showBreakModal = false" />
+                <x-button primary label="Start Break" wire:click="confirmStartBreak" />
+            </x-slot>
+        </x-modal-card>
+
 
     </x-admin-layout>
 </div>
