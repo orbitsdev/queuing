@@ -141,9 +141,9 @@
                                     type="button"
                                     wire:click="selectQueue({{ $next->id }})"
                                     wire:loading.attr="disabled"
-                                    @disabled($status === 'break' || $currentTicket)
+                                    @disabled($status === 'break')
                                     class="flex flex-col items-center justify-center px-6 py-4 w-full rounded transition
-                                        {{ ($status === 'break' || $currentTicket)
+                                        {{ ($status === 'break')
                                             ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                             : 'bg-gray-100 hover:bg-gray-200 hover:shadow-md text-gray-900'
                                         }}"

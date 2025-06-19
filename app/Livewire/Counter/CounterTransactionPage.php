@@ -192,7 +192,10 @@ public function confirmLogoutCounter()
         ]);
     });
 
-    auth()->logout();
+    $this->dialog()->success(
+        title: 'Logged Out',
+        description: 'You have been logged out from this counter.'
+    );
     return redirect()->route('counter.select');
 }
 
@@ -292,29 +295,7 @@ public function confirmHoldQueueWithReason()
 }
 
 
-public function confirmHoldQueue()
-{
-    DB::transaction(function () {
-        // ✅ Update queue to HELD
-        $this->currentTicket->update([
-            'status' => 'held',
-            'hold_started_at' => now(),
-            'hold_reason' => 'On hold by staff'
-        ]);
-
-        // ✅ Clear user current queue
-        auth()->user()->update([
-            'queue_id' => null,
-        ]);
-    });
-
-    $this->dialog()->success(
-        title: 'Ticket On Hold',
-        description: 'This ticket has been put on hold. You may select another.'
-    );
-
-    $this->loadQueue();
-}
+// Method removed - using confirmHoldQueueWithReason() instead
 
 public function completeQueue()
 {
@@ -333,21 +314,20 @@ public function completeQueue()
 public function confirmCompleteQueue()
 {
     DB::transaction(function () {
-        // ✅ Mark as COMPLETED
+        // ✅ Mark as SERVED
         $this->currentTicket->update([
-            'status'     => 'completed',
+            'status'     => 'served',
             'served_at'  => now(),
         ]);
 
         auth()->user()->update([
             'queue_id' => null,
-
         ]);
     });
 
     $this->dialog()->success(
         title: 'Ticket Completed',
-        description: 'The ticket has been marked as completed. Ready for the next one!'
+        description: 'The ticket has been marked as served. Ready for the next one!'
     );
 
     $this->loadQueue();
@@ -356,13 +336,18 @@ public function confirmCompleteQueue()
 
     public function loadQueue()
     {
-        // Now Serving for this counter
-        $this->currentTicket = Queue::where('counter_id', $this->counter->id)
-            ->whereIn('status', ['called', 'serving'])
-            ->latest('called_at')
-            ->first();
 
-        // Next tickets: waiting, unassigned
+        if ($this->counter) {
+
+            $this->currentTicket = Queue::where('counter_id', $this->counter->id)
+                ->whereIn('status', ['called', 'serving'])
+                ->latest('called_at')
+                ->first();
+        } else {
+            $this->currentTicket = null;
+        }
+
+     // Next tickets for this counter
         $this->nextTickets = Queue::where('branch_id', $this->counter->branch_id)
             ->where('status', 'waiting')
             ->whereNull('counter_id')
@@ -406,30 +391,9 @@ public function confirmCompleteQueue()
         }
     }
 
-    public function serveCurrent()
-    {
-        if ($this->currentTicket) {
-            $this->currentTicket->update([
-                'status' => 'served',
-                'served_at' => now(),
-            ]);
-            $this->notification()->success('Ticket served.');
-            $this->loadQueue();
-        }
-    }
+    // Method removed - using selectQueue flow instead
 
-    public function holdCurrent()
-    {
-        if ($this->currentTicket) {
-            $this->currentTicket->update([
-                'status' => 'held',
-                'hold_started_at' => now(),
-                'hold_reason' => 'Held by staff',
-            ]);
-            $this->notification()->success('Ticket put on hold.');
-            $this->loadQueue();
-        }
-    }
+    // Method removed - using holdQueue() and confirmHoldQueueWithReason() instead
 
     public function skipCurrent()
     {
@@ -454,18 +418,7 @@ public function confirmCompleteQueue()
         $this->breakMessage = $this->counter->break_message;
     }
 
-    public function resumeHold()
-    {
-        $ticket = Queue::find($this->selectedHoldTicket);
-        if ($ticket && $ticket->status === 'held') {
-            $ticket->update([
-                'status' => 'called',
-                'called_at' => now(),
-            ]);
-            $this->notification()->success('Hold ticket resumed.');
-            $this->loadQueue();
-        }
-    }
+    // Method removed - using triggerResumeSelectedHold() and confirmResumeSelectedHold() instead
     public function startBreak()
     {
         // Use existing counter message or fallback to branch setting
