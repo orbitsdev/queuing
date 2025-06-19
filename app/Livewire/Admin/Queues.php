@@ -50,42 +50,65 @@ class Queues extends Component implements HasForms, HasTable, HasActions
             ->icon('heroicon-o-plus')
             ->modalWidth('7xl')
             ->modalHeading('Create New Queue')
-            ->modalDescription('Add a new queue to the system. Queues are used to group counters and define the order of processing.')
+            ->modalDescription('Add a new ticket to the queue system.')
             ->form([
-                Section::make('Queue Information')
-                    ->description('Enter the basic details of the queue')
+                Section::make('Ticket Information')
+                    ->description('Enter the ticket details')
                     ->columns(2)
                     ->schema([
-                        TextInput::make('name')
-                            ->label('Queue Name')
-                            ->placeholder('Enter queue name')
-                            ->required()
-                            ->maxLength(255)
-                            ->columnSpan(1),
-                        TextInput::make('code')
-                            ->label('Queue Code')
-                            ->placeholder('Enter queue code')
-                            ->required()
-                            ->maxLength(10)
-                            ->columnSpan(1),
-                        Textarea::make('description')
-                            ->label('Queue Description')
-                            ->placeholder('Enter queue description')
-                            ->rows(3)
-                            ->columnSpan(2),
                         Select::make('branch_id')
                             ->label('Branch')
                             ->placeholder('Select branch')
                             ->options(Branch::all()->pluck('name', 'id'))
                             ->required()
-                            ->columnSpan(2),
+                            ->reactive()
+                            ->afterStateUpdated(fn (callable $set) => $set('service_id', null))
+                            ->columnSpan(1),
+                        Select::make('service_id')
+                            ->label('Service')
+                            ->placeholder('Select service')
+                            ->options(function (callable $get) {
+                                $branchId = $get('branch_id');
+                                if (!$branchId) return [];
+                                return Service::where('branch_id', $branchId)->pluck('name', 'id');
+                            })
+                            ->required()
+                            ->columnSpan(1),
+                        TextInput::make('ticket_number')
+                            ->label('Ticket Number')
+                            ->placeholder('e.g., A001')
+                            ->required()
+                            ->maxLength(10)
+                            ->columnSpan(1),
+                        Select::make('status')
+                            ->label('Status')
+                            ->options([
+                                'waiting' => 'Waiting',
+                                'called' => 'Called',
+                                'serving' => 'Serving',
+                                'held' => 'Held',
+                                'served' => 'Served',
+                                'skipped' => 'Skipped',
+                                'cancelled' => 'Cancelled',
+                                'expired' => 'Expired',
+                                'completed' => 'Completed',
+                            ])
+                            ->default('waiting')
+                            ->required()
+                            ->columnSpan(1),
                     ]),
             ])
             ->action(function (array $data): void {
+                // Generate a number for the ticket
+                $data['number'] = Queue::where('branch_id', $data['branch_id'])
+                    ->where('service_id', $data['service_id'])
+                    ->whereDate('created_at', now()->toDateString())
+                    ->count() + 1;
+
                 Queue::create($data);
                 $this->dialog()->success(
-                    title: 'Queue Created',
-                    description: 'Queue has been successfully created'
+                    title: 'Ticket Created',
+                    description: 'Ticket has been successfully added to the queue'
                 );
             });
     }
@@ -134,16 +157,41 @@ class Queues extends Component implements HasForms, HasTable, HasActions
                     ->indicator('Counter'),
             ])
             ->columns([
-                TextColumn::make('name')
-                    ->label('Name')
+                TextColumn::make('number')
+                    ->label('Number')
+                    ->sortable()
+                    ->searchable(isIndividual: true),
+                TextColumn::make('ticket_number')
+                    ->label('Ticket')
                     ->searchable(isIndividual: true)
                     ->sortable(),
-                TextColumn::make('code')
-                    ->label('Code')
+                TextColumn::make('service.name')
+                    ->label('Service')
                     ->searchable(isIndividual: true)
                     ->sortable(),
-                TextColumn::make('description')
-                    ->label('Description')
+                TextColumn::make('counter.name')
+                    ->label('Counter')
+                    ->searchable(isIndividual: true)
+                    ->sortable(),
+                TextColumn::make('user.name')
+                    ->label('Staff')
+                    ->searchable(isIndividual: true)
+                    ->sortable(),
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'waiting' => 'gray',
+                        'called' => 'warning',
+                        'serving' => 'info',
+                        'held' => 'danger',
+                        'served' => 'success',
+                        'skipped' => 'danger',
+                        'cancelled' => 'danger',
+                        'expired' => 'danger',
+                        'completed' => 'success',
+                        default => 'gray',
+                    })
                     ->searchable(isIndividual: true)
                     ->sortable(),
                 TextColumn::make('branch.name')
@@ -151,7 +199,7 @@ class Queues extends Component implements HasForms, HasTable, HasActions
                     ->sortable(),
                 TextColumn::make('created_at')
                     ->label('Created')
-                    ->date('M d, Y')
+                    ->dateTime('M d, Y h:i A')
                     ->sortable(),
             ])
             ->actions([
@@ -163,7 +211,7 @@ class Queues extends Component implements HasForms, HasTable, HasActions
                     ->modalWidth('5xl')
                     ->modalHeading(fn (Queue $queue) => "Queue Details: {$queue->name}")
                     ->modalContent(function (Queue $queue) {
-                        return view('livewire.admin.queue-details-modal', $queue);
+                        return view('livewire.admin.queue-details-modal', compact('queue'));
                     })
                     ->modalSubmitAction(false)
                     ->modalCancelAction(fn ($action) => $action->label('Close')),
@@ -181,10 +229,10 @@ class Queues extends Component implements HasForms, HasTable, HasActions
                         }),
                 ]),
             ]);
-     
+
     }
-    
- 
+
+
 
     public function render()
     {

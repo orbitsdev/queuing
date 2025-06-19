@@ -340,9 +340,10 @@ public function confirmCompleteQueue()
     $this->loadQueue();
 }
 
-
 public function loadQueue()
 {
+    $allowedServiceIds = $this->counter->services->pluck('id');
+
     if ($this->counter) {
         $this->currentTicket = Queue::todayQueues()
             ->where('counter_id', $this->counter->id)
@@ -356,6 +357,7 @@ public function loadQueue()
     $this->nextTickets = Queue::todayQueues()
         ->where('branch_id', $this->counter->branch_id)
         ->where('status', 'waiting')
+        ->whereIn('service_id', $allowedServiceIds)
         ->whereNull('counter_id')
         ->orderBy('created_at')
         ->take(3)
@@ -377,31 +379,13 @@ public function loadQueue()
     $this->queueCountToday = Queue::todayQueues()
         ->where('branch_id', $this->counter->branch_id)
         ->where('status', 'waiting')
+        ->whereIn('service_id', $allowedServiceIds)
         ->count();
 }
 
 
-    public function callNext()
-    {
-        $next = Queue::where('branch_id', $this->counter->branch_id)
-            ->where('status', 'waiting')
-            ->whereNull('counter_id')
-            ->orderBy('created_at')
-            ->lockForUpdate()
-            ->first();
 
-        if ($next) {
-            $next->update([
-                'counter_id' => $this->counter->id,
-                'status' => 'called',
-                'called_at' => now(),
-            ]);
-            $this->loadQueue();
-            $this->notification()->success('Next ticket called.');
-        } else {
-            $this->notification()->info('No waiting tickets.');
-        }
-    }
+  
 
     // Method removed - using selectQueue flow instead
 

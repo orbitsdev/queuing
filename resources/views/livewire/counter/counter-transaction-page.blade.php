@@ -3,10 +3,23 @@
     <x-admin-layout>
         <div class="max-w-8xl mx-auto px-4">
 
-            <!-- Counter Name & Status -->
             <div class="mb-6">
-                <h1 class="text-4xl font-bold text-gray-800 mb-2">{{ $counter->name }}</h1>
-                <div class="flex flex-col md:flex-row md:items-center md:gap-4 bg-gray-50 px-4 py-3 rounded-lg ">
+                <h1 class="text-4xl font-bold text-gray-800 mb-2">
+                    {{ $counter->name }}
+                </h1>
+
+                <!-- ✅ Service Badges -->
+                <div class="flex flex-wrap gap-2 mb-4">
+                    @forelse ($counter->services as $service)
+                        <span class="inline-flex items-center px-3 py-1 rounded-full bg-gray-200 text-gray-700 text-xs font-medium">
+                            {{ $service->name }}
+                        </span>
+                    @empty
+                        <span class="text-xs text-gray-400">No services assigned</span>
+                    @endforelse
+                </div>
+
+                <div class="flex flex-col md:flex-row md:items-center md:gap-4 bg-gray-50 px-4 py-3 rounded-lg">
                     <div class="flex items-center gap-2">
                         <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium
                             {{ $status === 'active' ? 'bg-green-500 text-white' : 'bg-yellow-400 text-gray-900' }}">
@@ -20,8 +33,8 @@
                         </div>
                     @endif
                 </div>
-
             </div>
+
 
             <!-- GRID -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -199,7 +212,13 @@
                                     </div>
                                 </button>
                             @empty
-                                <p class="text-gray-500 text-sm">No next tickets.</p>
+                                <div class="col-span-3 flex flex-col items-center justify-center px-6 py-12 bg-gray-100 rounded text-gray-500 border border-gray-200 border-dashed">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <p class="text-sm font-medium">No waiting tickets available</p>
+                                    <p class="text-xs mt-1">All tickets have been served or assigned</p>
+                                </div>
                             @endforelse
                         </div>
 
@@ -215,19 +234,29 @@
                             </span>
                         </h2>
 
-                        <select
-    wire:model="selectedHoldTicket"
-    wire:change="triggerResumeSelectedHold"
-    @disabled($status === 'break')
-    class="w-full border border-gray-300 rounded px-4 py-3 mb-4"
->
-    <option value="">Select a Hold Ticket</option>
-    @foreach ($holdTickets as $hold)
-        <option value="{{ $hold->id }}">
-            {{ $hold->ticket_number }}
-        </option>
-    @endforeach
-</select>
+                        @if($holdTickets->count() > 0)
+                            <select
+                                wire:model="selectedHoldTicket"
+                                wire:change="triggerResumeSelectedHold"
+                                @disabled($status === 'break')
+                                class="w-full border border-gray-300 rounded px-4 py-3 mb-4"
+                            >
+                                <option value="">Select a Hold Ticket</option>
+                                @foreach ($holdTickets as $hold)
+                                    <option value="{{ $hold->id }}">
+                                        {{ $hold->ticket_number }} - {{ $hold->service->name ?? 'No Service' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @else
+                            <div class="flex flex-col items-center justify-center px-6 py-8 bg-gray-100 rounded text-gray-500 border border-gray-200 border-dashed mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p class="text-sm font-medium">No tickets on hold</p>
+                                <p class="text-xs mt-1">Use the Hold button when serving a ticket</p>
+                            </div>
+                        @endif
 
                     </div>
 

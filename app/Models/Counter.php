@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Models\User;
 use App\Models\Queue;
 use App\Models\Branch;
+use App\Models\Service;
+use App\Models\CounterService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
 
@@ -37,5 +39,17 @@ class Counter extends Model
     {
         return $query->where('branch_id', Auth::user()->branch_id);
     }
+
+    public function services()
+{
+    return $this->belongsToMany(Service::class, 'counter_service', 'counter_id', 'service_id');
+}
+
+public function counterServices()
+{
+    return $this->hasMany(CounterService::class);
+}
+
+
 
 }

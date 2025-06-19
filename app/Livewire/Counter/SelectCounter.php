@@ -6,22 +6,33 @@ use App\Models\Counter;
 use Livewire\Component;
 use WireUi\Traits\WireUiActions;
 use Livewire\Attributes\Title;
+
 class SelectCounter extends Component
 {
+    use WireUiActions;
 
-use WireUiActions;
-
-    public $counters;
+    public $search = '';
 
     #[Title('Select Counter')]
+    public function getCountersProperty()
+    {
+        return Counter::currentBranch()
+            ->with(['user', 'services'])
+            ->where(function ($query) {
+                $query->where('name', 'like', '%' . $this->search . '%')
+                    ->orWhereHas('services', fn ($q) =>
+                        $q->where('name', 'like', '%' . $this->search . '%')
+                    );
+            })
+            ->orderBy('name')
+            ->get();
+    }
 
     public function mount()
     {
         if (auth()->user()->counter_id) {
             return redirect()->route('counter.transaction');
         }
-
-        $this->counters = Counter::currentBranch()->with('user')->get();
     }
 
     public function assign($counterId)
@@ -45,7 +56,6 @@ use WireUiActions;
     {
         $counter = Counter::findOrFail($counterId);
 
-        // Double-check still free
         if ($counter->user_id) {
             $this->dialog()->error(
                 title: 'Counter Occupied',
@@ -55,7 +65,6 @@ use WireUiActions;
         }
 
         $user = auth()->user();
-
         $user->update(['counter_id' => $counter->id]);
         $counter->update(['user_id' => $user->id]);
 
@@ -69,6 +78,8 @@ use WireUiActions;
 
     public function render()
     {
-        return view('livewire.counter.select-counter');
+        return view('livewire.counter.select-counter', [
+            'counters' => $this->counters,
+        ]);
     }
 }

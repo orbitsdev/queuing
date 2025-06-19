@@ -23,6 +23,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -40,7 +41,7 @@ class Counters extends Component implements HasForms, HasTable, HasActions
     public function createAction(): CreateAction
     {
         return CreateAction::make('create')
-        ->model(Counter::class)
+            ->model(Counter::class)
             ->size('xs')
             ->label('Create Counter')
             ->button('dark-gray')
@@ -64,15 +65,32 @@ class Counters extends Component implements HasForms, HasTable, HasActions
                             ->columnSpan(1),
                         Select::make('branch_id')
                             ->label('Branch')
-                            ->relationship(name: 'branch', titleAttribute: 'name')
+                            ->relationship('branch', 'name')
                             ->searchable()
                             ->preload()
                             ->placeholder('Select branch')
                             ->required()
                             ->helperText('Branch where this counter is located')
-                            ->columnSpan(1)
+                            ->columnSpan(1),
                     ]),
-                Section::make('Counter Settings')
+                Section::make('Allowed Services')
+                    ->description('Assign which services this counter can handle')
+                    ->columns(2)
+                    ->schema([
+                        Select::make('services')
+                        ->relationship(
+                            name: 'services',
+                            titleAttribute: 'name',
+                            modifyQueryUsing: fn (Builder $query) => $query->currentBranch(),
+                        )
+                            ->multiple()
+                            ->preload()
+                            ->required()
+                            ->label('Services')
+                            ->helperText('Select one or more services this counter can handle')
+                            ->columnSpan(2),
+                    ]),
+                Section::make('Status Settings')
                     ->description('Configure counter status and priority settings')
                     ->columns(2)
                     ->schema([
@@ -90,25 +108,23 @@ class Counters extends Component implements HasForms, HasTable, HasActions
                             ->inline()
                             ->columnSpan(1),
                         Textarea::make('break_message')
-                            ->visible(function (Get $get) {
-                                return $get('active') == false;
-                            })
+                            ->visible(fn (Get $get) => $get('active') === false)
                             ->label('Break Message')
                             ->placeholder('e.g., On lunch break, Back at 2:00 PM')
                             ->helperText('Message to display when counter is inactive')
                             ->rows(2)
                             ->maxLength(500)
-                            ->columnSpan(2)
+                            ->columnSpan(2),
                     ]),
             ])
-            ->action(function (array $data): void {
-                Counter::create($data);
+            ->after(function (Counter $record) {
                 $this->dialog()->success(
                     title: 'Counter Created',
-                    description: 'Counter has been successfully created'
+                    description: "Counter '{$record->name}' has been successfully created!"
                 );
             });
     }
+
     //table
 
     public function table(Table $table): Table
@@ -121,6 +137,7 @@ class Counters extends Component implements HasForms, HasTable, HasActions
                     ->getTitleFromRecordUsing(fn ($record) => $record->branch ? $record->branch->name : 'Unassigned')
                     ->collapsible()
             ])
+            ->defaultGroup('branch.name')
             ->columns([
                 TextColumn::make('name')
                     ->label('Name')
@@ -128,6 +145,7 @@ class Counters extends Component implements HasForms, HasTable, HasActions
                     ->sortable(),
                 TextColumn::make('branch.name')
                     ->label('Branch')
+                    ->searchable(isIndividual: true)
                     ->sortable(),
                 TextColumn::make('is_priority')
                     ->label('Priority')
@@ -137,6 +155,12 @@ class Counters extends Component implements HasForms, HasTable, HasActions
                     ->label('Status')
                     ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
                     ->sortable(),
+                TextColumn::make('services.name')
+                    ->badge()
+                    ->wrap()
+                    ->separator(',')
+                    ->label('Services')
+                    ->searchable(isIndividual: true),
                 TextColumn::make('created_at')
                     ->label('Created')
                     ->date('M d, Y')
@@ -149,9 +173,9 @@ class Counters extends Component implements HasForms, HasTable, HasActions
                 ->preload()
             ])
             ->actions([
-                ViewAction::make()
-                    ->button('dark-gray')
-                    ->icon('heroicon-o-eye'),
+                // ViewAction::make()
+                //     ->button('dark-gray')
+                //     ->icon('heroicon-o-eye'),
                 EditAction::make()
                     ->button('dark-gray')
                     ->icon('heroicon-o-pencil')
@@ -177,12 +201,30 @@ class Counters extends Component implements HasForms, HasTable, HasActions
                                     ->placeholder('Select branch')
                                     ->required()
                                     ->helperText('Branch where this counter is located')
-                                    ->columnSpan(1)
+                                    ->columnSpan(1),
                             ]),
-                        Section::make('Counter Settings')
+                        Section::make('Allowed Services')
+                            ->description('Assign which services this counter can handle')
+                            ->columns(2)
+                            ->schema([
+                                Select::make('services')
+                                ->relationship(
+                                    name: 'services',
+                                    titleAttribute: 'name',
+                                    modifyQueryUsing: fn (Builder $query) => $query->currentBranch(),
+                                )
+                                    ->multiple()
+                                    ->preload()
+                                    ->required()
+                                    ->label('Services')
+                                    ->helperText('Select one or more services this counter can handle')
+                                    ->columnSpan(2),
+                            ]),
+                        Section::make('Status Settings')
                             ->description('Configure counter status and priority settings')
                             ->columns(2)
                             ->schema([
+
                                 Toggle::make('is_priority')
                                     ->label('Priority Counter')
                                     ->helperText('Priority counters handle special or urgent cases')
@@ -207,6 +249,8 @@ class Counters extends Component implements HasForms, HasTable, HasActions
                                     ->maxLength(500)
                                     ->columnSpan(2)
                             ])
+
+
                     ])
                     ->after(function () {
                         $this->dialog()->success(
