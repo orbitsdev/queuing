@@ -15,9 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('branch_id')->constrained()->cascadeOnDelete();
             $table->foreignId('service_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('counter_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('counter_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->unsignedInteger('number');
             $table->string('ticket_number');
+         
             $table->enum('status', ['waiting', 'called', 'serving', 'held', 'served', 'skipped', 'cancelled', 'expired', 'completed'])->default('waiting');
             $table->string('hold_reason')->nullable();
             $table->timestamps();
@@ -28,6 +30,7 @@ return new class extends Migration
             $table->timestamp('skipped_at')->nullable();
             $table->timestamp('cancelled_at')->nullable();
 
+            $table->index('number');
             $table->index('ticket_number');
             $table->index('status');
             $table->index('service_id');

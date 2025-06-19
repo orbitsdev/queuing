@@ -23,6 +23,7 @@ class SettingSeeder extends Seeder
                 'queue_reset_daily' => true,
                 'queue_reset_time' => '00:00',
                 'default_break_message' => 'Not available',
+                'queue_number_base' => 1,
             ]
         );
 
@@ -37,6 +38,7 @@ class SettingSeeder extends Seeder
                     'queue_reset_daily' => true,
                     'queue_reset_time' => '00:00',
                     'default_break_message' => 'Not available',
+                    'queue_number_base' => 1,
                 ]
             );
         }

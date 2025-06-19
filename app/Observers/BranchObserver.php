@@ -26,6 +26,7 @@ class BranchObserver
                 'queue_reset_daily' => $globalSettings->queue_reset_daily ?? true,
                 'queue_reset_time' => $globalSettings->queue_reset_time ?? '00:00',
                 'default_break_message' => $globalSettings->default_break_message ?? 'On break, please proceed to another counter.',
+                'queue_number_base' => $globalSettings->queue_number_base ?? 1,
             ]
         );
     }

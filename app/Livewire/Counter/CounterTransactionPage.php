@@ -10,28 +10,74 @@ class CounterTransactionPage extends Component
 {
     use WireUiActions;
 
+    public $counter;
     public $currentTicket;
     public $nextTickets = [];
-    public $status = 'active'; // active or break
+    public $holdTickets = [];
+    public $others = [];
+    public $status = 'active';
     public $breakMessage = '';
+    public $selectedHoldTicket;
 
     public function mount()
     {
+        $this->counter = auth()->user()->counter;
+
+        if (!$this->counter) {
+            return redirect()->route('counter.select');
+        }
+
+        $this->status = $this->counter->active ? 'active' : 'break';
+        $this->breakMessage = $this->counter->break_message;
+
         $this->loadQueue();
     }
 
     public function loadQueue()
     {
-        // Example logic — adjust as needed
-        $this->currentTicket = Queue::where('status', 'called')->first();
-        $this->nextTickets = Queue::where('status', 'waiting')->orderBy('created_at')->take(3)->get();
+        // Now Serving for this counter
+        $this->currentTicket = Queue::where('counter_id', $this->counter->id)
+            ->whereIn('status', ['called', 'serving'])
+            ->latest('called_at')
+            ->first();
+
+        // Next tickets: waiting, unassigned
+        $this->nextTickets = Queue::where('branch_id', $this->counter->branch_id)
+            ->where('status', 'waiting')
+            ->whereNull('counter_id')
+            ->orderBy('created_at')
+            ->take(3)
+            ->get();
+
+        // Hold tickets for this counter
+        $this->holdTickets = Queue::where('counter_id', $this->counter->id)
+            ->where('status', 'held')
+            ->orderBy('hold_started_at')
+            ->get();
+
+        // Others: tickets serving by other counters
+        $this->others = Queue::where('branch_id', $this->counter->branch_id)
+            ->whereIn('status', ['called', 'serving'])
+            ->where('counter_id', '!=', $this->counter->id)
+            ->with('counter')
+            ->get();
     }
 
     public function callNext()
     {
-        $next = Queue::where('status', 'waiting')->orderBy('created_at')->first();
+        $next = Queue::where('branch_id', $this->counter->branch_id)
+            ->where('status', 'waiting')
+            ->whereNull('counter_id')
+            ->orderBy('created_at')
+            ->lockForUpdate()
+            ->first();
+
         if ($next) {
-            $next->update(['status' => 'called']);
+            $next->update([
+                'counter_id' => $this->counter->id,
+                'status' => 'called',
+                'called_at' => now(),
+            ]);
             $this->loadQueue();
             $this->notification()->success('Next ticket called.');
         } else {
@@ -42,7 +88,10 @@ class CounterTransactionPage extends Component
     public function serveCurrent()
     {
         if ($this->currentTicket) {
-            $this->currentTicket->update(['status' => 'served']);
+            $this->currentTicket->update([
+                'status' => 'served',
+                'served_at' => now(),
+            ]);
             $this->notification()->success('Ticket served.');
             $this->loadQueue();
         }
@@ -51,7 +100,11 @@ class CounterTransactionPage extends Component
     public function holdCurrent()
     {
         if ($this->currentTicket) {
-            $this->currentTicket->update(['status' => 'held']);
+            $this->currentTicket->update([
+                'status' => 'held',
+                'hold_started_at' => now(),
+                'hold_reason' => 'Held by staff',
+            ]);
             $this->notification()->success('Ticket put on hold.');
             $this->loadQueue();
         }
@@ -60,7 +113,10 @@ class CounterTransactionPage extends Component
     public function skipCurrent()
     {
         if ($this->currentTicket) {
-            $this->currentTicket->update(['status' => 'skipped']);
+            $this->currentTicket->update([
+                'status' => 'skipped',
+                'skipped_at' => now(),
+            ]);
             $this->notification()->success('Ticket skipped.');
             $this->loadQueue();
         }
@@ -68,14 +124,28 @@ class CounterTransactionPage extends Component
 
     public function toggleBreak()
     {
-        if ($this->status === 'active') {
-            $this->status = 'break';
-            $this->breakMessage = 'On break, back in 5 mins.';
-        } else {
-            $this->status = 'active';
-            $this->breakMessage = '';
+        $newStatus = !$this->counter->active;
+        $this->counter->update([
+            'active' => $newStatus,
+            'break_message' => $newStatus ? 'On break, back soon.' : null,
+        ]);
+        $this->status = $newStatus ? 'break' : 'active';
+        $this->breakMessage = $this->counter->break_message;
+    }
+
+    public function resumeHold()
+    {
+        $ticket = Queue::find($this->selectedHoldTicket);
+        if ($ticket && $ticket->status === 'held') {
+            $ticket->update([
+                'status' => 'called',
+                'called_at' => now(),
+            ]);
+            $this->notification()->success('Hold ticket resumed.');
+            $this->loadQueue();
         }
     }
+
 
     public function render()
     {
