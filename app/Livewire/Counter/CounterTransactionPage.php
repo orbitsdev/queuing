@@ -342,8 +342,10 @@ public function confirmCompleteQueue()
 
 public function loadQueue()
 {
-    $allowedServiceIds = $this->counter->services->pluck('id');
+    // ✅ Always get fresh allowed services for this counter
+    $allowedServiceIds = $this->counter->services()->pluck('services.id');
 
+    // ✅ 1️⃣ Current ticket for this counter
     if ($this->counter) {
         $this->currentTicket = Queue::todayQueues()
             ->where('counter_id', $this->counter->id)
@@ -354,6 +356,7 @@ public function loadQueue()
         $this->currentTicket = null;
     }
 
+    // ✅ 2️⃣ Next tickets matching allowed services
     $this->nextTickets = Queue::todayQueues()
         ->where('branch_id', $this->counter->branch_id)
         ->where('status', 'waiting')
@@ -363,12 +366,14 @@ public function loadQueue()
         ->take(3)
         ->get();
 
+    // ✅ 3️⃣ Hold tickets (always valid, tied to this counter)
     $this->holdTickets = Queue::todayQueues()
         ->where('counter_id', $this->counter->id)
         ->where('status', 'held')
         ->orderBy('hold_started_at')
         ->get();
 
+    // ✅ 4️⃣ Tickets served by other counters (no filter)
     $this->others = Queue::todayQueues()
         ->where('branch_id', $this->counter->branch_id)
         ->whereIn('status', ['called', 'serving'])
@@ -376,6 +381,7 @@ public function loadQueue()
         ->with('counter')
         ->get();
 
+    // ✅ 5️⃣ Count all waiting tickets for allowed services
     $this->queueCountToday = Queue::todayQueues()
         ->where('branch_id', $this->counter->branch_id)
         ->where('status', 'waiting')
@@ -385,7 +391,7 @@ public function loadQueue()
 
 
 
-  
+
 
     // Method removed - using selectQueue flow instead
 
