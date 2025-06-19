@@ -28,7 +28,7 @@ class CounterTransactionPage extends Component
 
     public $breakInputMessage = '';
 public $showBreakModal = false;
-
+public $queueCountToday = 0;
 
     public function mount()
     {
@@ -167,7 +167,6 @@ public function logoutCounter()
         'method'      => 'confirmLogoutCounter',
     ]);
 }
-
 public function confirmLogoutCounter()
 {
     DB::transaction(function () {
@@ -185,7 +184,12 @@ public function confirmLogoutCounter()
             }
         }
 
-        // Clear user counter & queue
+        // ✅ Also clear the counter's user_id
+        $this->counter->update([
+            'user_id' => null,
+        ]);
+
+        // ✅ Clear user fields
         $user->update([
             'queue_id' => null,
             'counter_id' => null,
@@ -196,8 +200,10 @@ public function confirmLogoutCounter()
         title: 'Logged Out',
         description: 'You have been logged out from this counter.'
     );
+
     return redirect()->route('counter.select');
 }
+
 
 public function holdQueue()
 {
@@ -255,7 +261,8 @@ public function confirmResumeSelectedHold($queueId)
             'serving_at'  => now(),
         ]);
 
-        auth()->user()->update([
+        $user = auth()->user();
+        $user->update([
             'queue_id' => $queue->id,
         ]);
     });
@@ -334,40 +341,45 @@ public function confirmCompleteQueue()
 }
 
 
-    public function loadQueue()
-    {
-
-        if ($this->counter) {
-
-            $this->currentTicket = Queue::where('counter_id', $this->counter->id)
-                ->whereIn('status', ['called', 'serving'])
-                ->latest('called_at')
-                ->first();
-        } else {
-            $this->currentTicket = null;
-        }
-
-     // Next tickets for this counter
-        $this->nextTickets = Queue::where('branch_id', $this->counter->branch_id)
-            ->where('status', 'waiting')
-            ->whereNull('counter_id')
-            ->orderBy('created_at')
-            ->take(3)
-            ->get();
-
-        // Hold tickets for this counter
-        $this->holdTickets = Queue::where('counter_id', $this->counter->id)
-            ->where('status', 'held')
-            ->orderBy('hold_started_at')
-            ->get();
-
-        // Others: tickets serving by other counters
-        $this->others = Queue::where('branch_id', $this->counter->branch_id)
+public function loadQueue()
+{
+    if ($this->counter) {
+        $this->currentTicket = Queue::todayQueues()
+            ->where('counter_id', $this->counter->id)
             ->whereIn('status', ['called', 'serving'])
-            ->where('counter_id', '!=', $this->counter->id)
-            ->with('counter')
-            ->get();
+            ->latest('called_at')
+            ->first();
+    } else {
+        $this->currentTicket = null;
     }
+
+    $this->nextTickets = Queue::todayQueues()
+        ->where('branch_id', $this->counter->branch_id)
+        ->where('status', 'waiting')
+        ->whereNull('counter_id')
+        ->orderBy('created_at')
+        ->take(3)
+        ->get();
+
+    $this->holdTickets = Queue::todayQueues()
+        ->where('counter_id', $this->counter->id)
+        ->where('status', 'held')
+        ->orderBy('hold_started_at')
+        ->get();
+
+    $this->others = Queue::todayQueues()
+        ->where('branch_id', $this->counter->branch_id)
+        ->whereIn('status', ['called', 'serving'])
+        ->where('counter_id', '!=', $this->counter->id)
+        ->with('counter')
+        ->get();
+
+    $this->queueCountToday = Queue::todayQueues()
+        ->where('branch_id', $this->counter->branch_id)
+        ->where('status', 'waiting')
+        ->count();
+}
+
 
     public function callNext()
     {

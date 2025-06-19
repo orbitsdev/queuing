@@ -4,9 +4,9 @@
         <div class="max-w-8xl mx-auto px-4">
 
             <!-- Counter Name & Status -->
-            <div class="mb-8">
+            <div class="mb-6">
                 <h1 class="text-4xl font-bold text-gray-800 mb-2">{{ $counter->name }}</h1>
-                <div class="flex flex-col md:flex-row md:items-center md:gap-4 bg-gray-50 px-4 py-3 rounded-lg border border-gray-200">
+                <div class="flex flex-col md:flex-row md:items-center md:gap-4 bg-gray-50 px-4 py-3 rounded-lg ">
                     <div class="flex items-center gap-2">
                         <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium
                             {{ $status === 'active' ? 'bg-green-500 text-white' : 'bg-yellow-400 text-gray-900' }}">
@@ -40,21 +40,31 @@
                                 </div>
                             </div>
                         @endif
-
-                        <div
-                            class="flex flex-col justify-between aspect-square w-80 h-80 mx-auto rounded-xl shadow-md border border-kiosqueeing-primary bg-white overflow-hidden">
-                            <div class="flex-1 flex flex-col justify-center items-center">
+                        <div class="flex flex-col justify-between aspect-square w-80 h-80 mx-auto rounded-xl shadow-md border border-kiosqueeing-primary bg-white overflow-hidden">
+                            <div class="flex-1 flex flex-col justify-center items-center space-y-1">
                                 @if ($currentTicket)
+                                    <!-- Big number -->
                                     <div class="text-7xl font-extrabold text-kiosqueeing-primary">
                                         {{ $currentTicket->number }}
+                                    </div>
+
+                                    <!-- Service name -->
+                                    <div class="text-sm text-gray-600">
+                                        {{ $currentTicket->service->name ?? 'No Service' }}
+                                    </div>
+
+                                    <!-- Created time -->
+                                    <div class="text-sm text-gray-400">
+                                        {{ $currentTicket->created_at->format('h:i A') }}
                                     </div>
                                 @else
                                     <div class="text-4xl font-semibold text-gray-400">NONE</div>
                                     <p class="text-xs text-gray-400 mt-2">No ticket selected</p>
                                 @endif
                             </div>
-                            <div
-                                class="bg-kiosqueeing-primary w-full text-center py-3 text-white font-semibold tracking-widest">
+
+                            <!-- Bottom bar with full ticket number -->
+                            <div class="bg-kiosqueeing-primary w-full text-center py-3 text-white font-semibold tracking-widest">
                                 {{ $currentTicket?->ticket_number ?? '' }}
                             </div>
                         </div>
@@ -62,43 +72,57 @@
 
 
 
+
                         <h2 class="text-2xl mt-4 uppercase font-medium text-gray-600 mb-4 text-center">Now Serving</h2>
 
                         <div class="grid grid-cols-4 gap-4 mt-12">
+
                             <!-- ✅ Complete -->
-                            <button wire:click="completeQueue" wire:loading.attr="disabled" @disabled(!$currentTicket)
+                            <button wire:click="completeQueue"
+                                wire:loading.attr="disabled"
+                                @disabled(!$currentTicket)
                                 class="{{ $currentTicket
-                                    ? 'px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white transition rounded-lg flex flex-col items-center justify-center'
-                                    : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center' }}">
+                                    ? 'px-5 py-3 bg-gray-700 text-white hover:bg-gray-800 transition rounded-lg flex flex-col items-center justify-center'
+                                    : 'px-5 py-3 bg-gray-200 text-gray-400 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
+                                }}">
                                 ✅ Complete
                             </button>
 
                             <!-- ✅ Hold -->
-                            <button wire:click="holdQueue" wire:loading.attr="disabled" @disabled(!$currentTicket)
+                            <button wire:click="holdQueue"
+                                wire:loading.attr="disabled"
+                                @disabled(!$currentTicket)
                                 class="{{ $currentTicket
-                                    ? 'px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white transition rounded-lg flex flex-col items-center justify-center'
-                                    : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center' }}">
+                                    ? 'px-5 py-3 bg-gray-700 text-white hover:bg-gray-800 transition rounded-lg flex flex-col items-center justify-center'
+                                    : 'px-5 py-3 bg-gray-200 text-gray-400 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
+                                }}">
                                 ⏸️ Hold
                             </button>
 
-
                             <!-- ✅ Skip -->
-                            <button wire:click="skipCurrent" wire:loading.attr="disabled" @disabled(!$currentTicket)
+                            <button wire:click="skipCurrent"
+                                wire:loading.attr="disabled"
+                                @disabled(!$currentTicket)
                                 class="{{ $currentTicket
-                                    ? 'px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white transition rounded-lg flex flex-col items-center justify-center'
-                                    : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center' }}">
+                                    ? 'px-5 py-3 bg-gray-700 text-white hover:bg-gray-800 transition rounded-lg flex flex-col items-center justify-center'
+                                    : 'px-5 py-3 bg-gray-200 text-gray-400 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
+                                }}">
                                 ⏭️ Skip
                             </button>
 
                             <!-- ✅ Cancel -->
-                            <button wire:click="cancelSelectedQueue" wire:loading.attr="disabled"
+                            <button wire:click="cancelSelectedQueue"
+                                wire:loading.attr="disabled"
                                 @disabled(!$currentTicket)
                                 class="{{ $currentTicket
-                                    ? 'px-5 py-3 border border-gray-300 text-red-600 hover:bg-red-100 transition rounded-lg flex flex-col items-center justify-center'
-                                    : 'px-5 py-3 border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed rounded-lg flex flex-col items-center justify-center' }}">
+                                    ? 'px-5 py-3 bg-gray-700 text-white hover:bg-gray-800 transition rounded-lg flex flex-col items-center justify-center'
+                                    : 'px-5 py-3 bg-gray-200 text-gray-400 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
+                                }}">
                                 ❌ Cancel
                             </button>
+
                         </div>
+
 
                     </div>
 
@@ -110,7 +134,13 @@
                     <!-- Next Tickets -->
                     <div>
                         <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-sm uppercase font-medium text-gray-500">Next Tickets</h2>
+                            <div class="flex items-center gap-4">
+                                <h2 class="text-sm uppercase font-medium text-gray-500">Next Tickets</h2>
+
+                                <span class="text-xs px-3 py-1 bg-gray-100 rounded-full border text-gray-700">
+                                    Left Today: <strong>{{ $queueCountToday }}</strong>
+                                </span>
+                            </div>
                             <div class="flex gap-2">
                                 <button
                                 wire:click="{{ $status === 'active' ? 'startBreak' : 'resumeWork' }}"
@@ -142,17 +172,30 @@
                                     wire:click="selectQueue({{ $next->id }})"
                                     wire:loading.attr="disabled"
                                     @disabled($status === 'break')
-                                    class="flex flex-col items-center justify-center px-6 py-4 w-full rounded transition
+                                    class="relative flex flex-col items-center justify-center px-6 py-4 w-full rounded transition
                                         {{ ($status === 'break')
-                                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                            : 'bg-gray-100 hover:bg-gray-200 hover:shadow-md text-gray-900'
+                                            ? 'bg-gray-200 cursor-not-allowed'
+                                            : 'bg-gradient-to-tr from-denim-700 via-denim-800 to-denim-900 hover:bg-gradient-to-tr hover:from-denim-800 hover:via-denim-900 hover:to-denim-950 hover:shadow-md text-white'
                                         }}"
                                 >
-                                    <div class="text-5xl font-bold">
+                                    <!-- Absolute created time -->
+                                    <div class="absolute top-0 rounded-sm right-0 text-[10px] font-bold {{ $status === 'break' ? 'text-gray-500' : 'bg-black text-white px-1.5 py-0.5 rounded-sm' }}">
+                                        {{ $next->created_at->format('h:i A') }}
+                                    </div>
+
+                                    <!-- Big number -->
+                                    <div class="text-5xl font-bold {{ $status === 'break' ? 'text-gray-500' : 'text-white' }}">
                                         {{ $next->number }}
                                     </div>
-                                    <div class="text-xs mt-2 text-gray-500 tracking-wide">
+
+                                    <!-- Ticket number -->
+                                    <div class="text-xs mt-1 {{ $status === 'break' ? 'text-gray-500' : 'text-denim-200 font-bold' }} tracking-wide">
                                         {{ $next->ticket_number }}
+                                    </div>
+
+                                    <!-- Service name -->
+                                    <div class="text-xs {{ $status === 'break' ? 'text-gray-500' : 'text-denim-100 font-bold' }} mt-1">
+                                        {{ $next->service->name ?? 'No Service' }}
                                     </div>
                                 </button>
                             @empty
@@ -160,11 +203,18 @@
                             @endforelse
                         </div>
 
+
                     </div>
 
                     <!-- Resume Hold -->
                     <div>
-                        <h2 class="text-sm uppercase font-medium text-gray-500 mb-4">Resume Hold</h2>
+                        <h2 class="text-sm uppercase font-medium text-gray-500 mb-1">
+                            Resume Hold
+                            <span class="ml-2 inline-block px-2 py-0.5 text-xs bg-gray-200 text-gray-700 rounded-full">
+                                {{ $holdTickets->count() }}
+                            </span>
+                        </h2>
+
                         <select
     wire:model="selectedHoldTicket"
     wire:change="triggerResumeSelectedHold"

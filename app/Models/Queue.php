@@ -25,7 +25,7 @@ class Queue extends Model
         'cancelled_at',
         'hold_reason',
     ];
-    
+
 
     public function branch()
     {
@@ -42,5 +42,10 @@ class Queue extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function scopeTodayQueues($query)
+    {
+        return $query->whereDate('created_at', now()->toDateString());
     }
 }
