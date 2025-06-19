@@ -25,10 +25,15 @@
                     <!-- Now Serving -->
                     <div>
                         <div class="flex flex-col justify-between aspect-square w-80 h-80 mx-auto rounded-xl shadow-md border border-kiosqueeing-primary bg-white overflow-hidden">
-                            <div class="flex-1 flex justify-center items-center">
-                                <div class="text-7xl font-extrabold text-kiosqueeing-primary">
-                                    {{ $currentTicket?->number ?? '--' }}3123
-                                </div>
+                            <div class="flex-1 flex flex-col justify-center items-center">
+                                @if ($currentTicket)
+                                    <div class="text-7xl font-extrabold text-kiosqueeing-primary">
+                                        {{ $currentTicket->number }}
+                                    </div>
+                                @else
+                                    <div class="text-4xl font-semibold text-gray-400">NONE</div>
+                                    <p class="text-xs text-gray-400 mt-2">No ticket selected</p>
+                                @endif
                             </div>
                             <div class="bg-kiosqueeing-primary w-full text-center py-3 text-white font-semibold tracking-widest">
                                 {{ $currentTicket?->ticket_number ?? '' }}
@@ -53,11 +58,14 @@
                                 class="px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white transition rounded-lg flex flex-col items-center justify-center">
                                 ⏭️ Skip
                             </button>
-                            <button wire:click="callNext" wire:loading.attr="disabled"
-                                class="px-5 py-3 border border-gray-300 text-gray-800 hover:bg-kiosqueeing-primary-hover hover:text-white transition rounded-lg flex flex-col items-center justify-center">
-                                📞 Next
-                            </button>
+                            @if ($currentTicket)
+                                <button wire:click="cancelSelectedQueue" wire:loading.attr="disabled"
+                                    class="px-5 py-3 border border-gray-300 text-red-600 hover:bg-red-100 transition rounded-lg flex flex-col items-center justify-center">
+                                    ❌ Cancel
+                                </button>
+                            @endif
                         </div>
+
                     </div>
 
                 </div>
@@ -69,23 +77,44 @@
                     <div>
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-sm uppercase font-medium text-gray-500">Next Tickets</h2>
-                            <button wire:click="toggleBreak" wire:loading.attr="disabled"
-                                class="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition">
-                                {{ $status === 'active' ? 'Start Break' : 'Resume Work' }}
+                            <div class="flex gap-2">
+                                <button
+                                    wire:click="toggleBreak"
+                                    wire:loading.attr="disabled"
+                                    class="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition">
+                                    {{ $status === 'active' ? 'Start Break' : 'Resume Work' }}
+                                </button>
+
+                                <button
+                                wire:click="logoutCounter"
+                                wire:loading.attr="disabled"
+                                class="px-4 py-2 bg-gray-100 text-gray-600 border border-gray-300 rounded hover:bg-gray-200 transition flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7" />
+                                </svg>
+                                Logout
                             </button>
+
+                            </div>
                         </div>
+
+
                         <div class="grid grid-cols-3 gap-4 mb-2">
                             @forelse ($nextTickets as $next)
-                                <div class="flex flex-col items-center justify-center px-6 py-4 bg-gray-100 rounded hover:bg-gray-200 hover:shadow-md transition cursor-pointer">
+                                <button
+                                    type="button"
+                                    wire:click="selectQueue({{ $next->id }})"
+                                    wire:loading.attr="disabled"
+                                    class="flex flex-col items-center justify-center px-6 py-4 bg-gray-100 rounded hover:bg-gray-200 hover:shadow-md transition cursor-pointer w-full">
                                     <div class="text-5xl font-bold text-gray-900">{{ $next->number }}</div>
                                     <div class="text-xs mt-2 text-gray-500 tracking-wide">{{ $next->ticket_number }}</div>
-                                </div>
+                                </button>
                             @empty
                                 <p class="text-gray-500 text-sm">No next tickets.</p>
                             @endforelse
                         </div>
-
                     </div>
+
 
                     <!-- Resume Hold -->
                     <div>

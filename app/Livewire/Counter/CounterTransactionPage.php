@@ -2,9 +2,10 @@
 
 namespace App\Livewire\Counter;
 
-use Livewire\Component;
 use App\Models\Queue;
+use Livewire\Component;
 use WireUi\Traits\WireUiActions;
+use Illuminate\Support\Facades\DB;
 
 class CounterTransactionPage extends Component
 {
@@ -32,6 +33,157 @@ class CounterTransactionPage extends Component
 
         $this->loadQueue();
     }
+
+    public function selectQueue($queueId)
+{
+    if ($this->currentTicket) {
+        $this->dialog()->error(
+            title: 'Already Serving',
+            description: 'You are already handling a ticket. Please finish it first.'
+        );
+        return;
+    }
+
+    DB::beginTransaction();
+
+try {
+    $queue = Queue::where('id', $queueId)
+        ->where('status', 'waiting')
+        ->whereNull('counter_id')
+        ->lockForUpdate()
+        ->first();
+
+    if (!$queue) {
+        DB::rollBack();
+        $this->dialog()->error(
+            title: 'Ticket Unavailable',
+            description: 'This ticket was already selected by another counter.'
+        );
+        $this->loadQueue();
+        return;
+    }
+
+    $queue->update([
+        'counter_id' => $this->counter->id,
+        'user_id' => auth()->id(),
+        'status' => 'called',
+        'called_at' => now(),
+    ]);
+
+    auth()->user()->update([
+        'queue_id' => $queue->id,
+        'counter_id' => $this->counter->id
+    ]);
+
+    DB::commit();
+
+    $this->dialog()->success(
+        title: 'Ticket Assigned',
+        description: "You are now serving ticket {$queue->ticket_number}."
+    );
+
+    $this->loadQueue();
+
+} catch (\Throwable $e) {
+    DB::rollBack();
+    report($e);
+
+    $this->dialog()->error(
+        title: 'System Error',
+        description: 'Something went wrong. Please try again.'
+    );
+}
+
+
+}
+
+public function cancelSelectedQueue()
+{
+    if (!$this->currentTicket) {
+        // Nothing to cancel
+        return;
+    }
+
+    $this->dialog()->confirm([
+        'title'       => 'Confirm Cancel',
+        'description' => 'Are you sure you want to cancel this selection? This will free your counter to select another queue.',
+        'acceptLabel' => 'Yes, Cancel',
+        'method'      => 'confirmCancelSelectedQueue',
+    ]);
+}
+
+public function confirmCancelSelectedQueue()
+{
+    DB::beginTransaction();
+try {
+    $this->currentTicket->update([
+        'counter_id' => null,
+        'user_id' => null,
+        'status' => 'waiting',
+    ]);
+
+    auth()->user()->update([
+        'queue_id' => null,
+    ]);
+
+    DB::commit();
+
+    $this->dialog()->success(
+        title: 'Cancelled',
+        description: 'You can now select another queue.'
+    );
+
+    $this->loadQueue();
+
+} catch (\Throwable $e) {
+    DB::rollBack();
+    report($e);
+    $this->dialog()->error(
+        title: 'System Error',
+        description: 'Something went wrong. Please try again.'
+    );
+}
+
+}
+
+public function logoutCounter()
+{
+    $this->dialog()->confirm([
+        'title'       => 'Confirm Logout',
+        'description' => 'Are you sure you want to logout from this counter? Any assigned queue will be released.',
+        'acceptLabel' => 'Yes, Logout',
+        'method'      => 'confirmLogoutCounter',
+    ]);
+}
+
+public function confirmLogoutCounter()
+{
+    DB::transaction(function () {
+        $user = auth()->user();
+
+        // If user has a queue, reset it
+        if ($user->queue_id) {
+            $queue = \App\Models\Queue::find($user->queue_id);
+            if ($queue) {
+                $queue->update([
+                    'counter_id' => null,
+                    'user_id' => null,
+                    'status' => 'waiting',
+                ]);
+            }
+        }
+
+        // Clear user counter & queue
+        $user->update([
+            'queue_id' => null,
+            'counter_id' => null,
+        ]);
+    });
+
+    auth()->logout();
+    return redirect()->route('counter.select');
+}
+
 
     public function loadQueue()
     {
@@ -83,6 +235,12 @@ class CounterTransactionPage extends Component
         } else {
             $this->notification()->info('No waiting tickets.');
         }
+    }
+
+    public function selectQue(){
+        //check if not selected by other counter
+        //chekc if current user doesnt have selected ticket
+        //check if ticket is not expired
     }
 
     public function serveCurrent()
