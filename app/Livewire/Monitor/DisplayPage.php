@@ -30,7 +30,7 @@ class DisplayPage extends Component
         $waitingQueues = Queue::whereIn('service_id', $serviceIds)
             ->where('status', 'waiting')
             ->orderBy('created_at')
-            ->take(1)
+            ->take(10)
             ->get();
 
         return view('livewire.monitor.display-page', [
