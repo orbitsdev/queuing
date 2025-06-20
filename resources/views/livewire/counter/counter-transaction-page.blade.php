@@ -1,4 +1,4 @@
-<div>
+<div wire:poll.5s="loadQueue">
     @section('nav-title', 'Counter')
     <x-admin-layout>
         <div class="max-w-8xl mx-auto px-4">
@@ -37,7 +37,7 @@
 
 
             <!-- GRID -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8" wire:poll.5s="loadQueue">
 
                 <!-- LEFT: Now Serving & Actions -->
                 <div class="bg-white shadow rounded-lg p-8 space-y-8">
