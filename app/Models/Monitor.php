@@ -25,4 +25,15 @@ class Monitor extends Model
 {
     return $this->hasMany(MonitorService::class);
 }
+
+//scope current branch
+  public function scopeCurrentBranch($query){
+    return $query->where('branch_id', auth()->user()->branch_id);
+ }
+
+ //scope branch pass data
+ public function scopeBranchOf($query, $branch_id){
+    return $query->where('branch_id', $branch_id);
+ }
+
 }

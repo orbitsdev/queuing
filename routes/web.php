@@ -8,16 +8,19 @@ use App\Livewire\Admin\Counters;
 use App\Livewire\Admin\Services;
 use App\Livewire\Admin\Settings;
 use App\Livewire\Admin\Dashboard;
+use App\Livewire\Monitor\Monitors;
 use App\Livewire\Admin\ListSettings;
 use Illuminate\Support\Facades\Auth;
 use App\Livewire\Monitor\DisplayPage;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Counter\SelectCounter;
 use App\Livewire\Counter\CounterTransactionPage;
+use App\Livewire\Monitor\BranchesListForMonitorMangement;
 
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
+
 
 
 // ✅ Main dashboard redirect
@@ -45,8 +48,10 @@ Route::middleware(['auth', 'verified', 'can:superadmin_or_admin'])->prefix('admi
     Route::get('users', Users::class)->name('admin.users');
     Route::get('queues', Queues::class)->name('admin.queues');
     Route::get('branch-settings', ListSettings::class)->name('admin.branch-settings');
-    Route::get('settings/{branch}', Settings::class)->name('admin.settings')->where('branch', '[0-9]+');
-    Route::get('settings/{branch}', Settings::class)->name('admin.settings')->where('branch', '[0-9]+');
+    Route::get('settings/{branch}', Settings::class)->name('admin.settings');
+
+    Route::get('branches-for-monitor-management', BranchesListForMonitorMangement::class)->name('admin.branches-for-monitor-management');
+    Route::get('monitors/{branch}', Monitors::class)->name('admin.monitors');
 
 });
     // Admin Routes

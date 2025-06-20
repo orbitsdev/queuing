@@ -7,7 +7,10 @@
             ['label' => 'Services', 'route' => 'admin.services', 'icon' => 'wrench-screwdriver'],
             ['label' => 'Counters', 'route' => 'admin.counters', 'icon' => 'computer-desktop'],
             ['label' => 'Queues', 'route' => 'admin.queues', 'icon' => 'ticket'],
-            ['label' => 'Branch Settings', 'route' => 'admin.branch-settings', 'icon' => 'cog-6-tooth'],
+            // ['label' => 'Branch Settings', 'route' => 'admin.branch-settings', 'icon' => 'cog-6-tooth'],
+            // monitor management
+            ['label' => 'Monitors', 'route' => 'admin.branches-for-monitor-management', 'icon' => 'tv'],
+            // ['label' => 'Reports', 'route' => 'admin.reports', 'icon' => 'chart-bar'],
         ];
     @endphp
 

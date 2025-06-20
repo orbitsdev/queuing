@@ -16,8 +16,8 @@ use Livewire\Component;
 class Login extends Component
 {
     #[Validate('required|string|email')]
-    //public string $email = 'admin@kiosqueeing.local';
-     public string $email = 'staff@kiosqueeing.local';
+    public string $email = 'admin@kiosqueeing.local';
+    //  public string $email = 'staff@kiosqueeing.local';
 
     #[Validate('required|string')]
     public string $password = 'password';

@@ -21,7 +21,7 @@ class Settings extends Component
     {
         $this->branch = $branch;
         $this->settingsTitle = "Settings for {$branch->name} ({$branch->code})";
-        
+
         // Load branch-specific settings
         $this->loadSettings();
     }
@@ -30,7 +30,7 @@ class Settings extends Component
     {
         // Get branch settings with fallback to global
         $settings = Setting::forBranch($this->branch);
-        
+
         // Copy all settings to our settings array
         $this->settings = [
             'ticket_prefix' => $settings->ticket_prefix ?? 'QUE',
@@ -107,7 +107,7 @@ class Settings extends Component
         // Convert string boolean values to actual booleans
         $printLogo = $this->settings['print_logo'] === 'true';
         $queueResetDaily = $this->settings['queue_reset_daily'] === 'true';
-        
+
         // Save all settings at once
         Setting::updateOrCreate(
             ['branch_id' => $this->branch->id],
@@ -127,7 +127,7 @@ class Settings extends Component
             ['icon' => 'check']
         );
 
-        $this->redirect(route('admin.branch-settings'));
+        $this->redirect(route('admin.branches'));
     }
 
     public function render()

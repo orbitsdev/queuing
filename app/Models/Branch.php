@@ -5,11 +5,12 @@ namespace App\Models;
 use App\Models\User;
 use App\Models\Queue;
 use App\Models\Counter;
+use App\Models\Monitor;
 use App\Models\Service;
 use App\Models\Setting;
+use App\Observers\BranchObserver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
-use App\Observers\BranchObserver;
 
 #[ObservedBy([BranchObserver::class])]
 class Branch extends Model
@@ -39,5 +40,9 @@ class Branch extends Model
     public function settings()
     {
         return $this->hasMany(Setting::class);
+    }
+    public function monitors()
+    {
+        return $this->hasMany(Monitor::class);
     }
 }
