@@ -62,7 +62,7 @@
                                 </div>
                                 <p class="text-sm text-blue-600 mt-1 ml-7">This is the number that will be assigned to the next ticket.</p>
                             </div>
-                            
+
                             <div>
                                 <div class="flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -97,39 +97,41 @@
 
                 <div class="flex justify-between pt-4 border-t border-gray-200">
                     <div class="flex space-x-2">
-                        <x-button
-                            negative
-                            icon="trash"
-                            label="Reset Today's Queues"
-                            x-on:confirm="{
-                                title: 'Reset Today\'s Queues?',
-                                description: 'This will delete all {{ $todayCount }} queues created today for this branch. This action cannot be undone.',
-                                icon: 'warning',
-                                method: 'resetTodayQueues',
-                                params: [],
-                            }"
+                        <button
+                            type="button"
+                            class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:outline-none focus:border-red-700 focus:ring focus:ring-red-200 active:bg-red-700 disabled:opacity-50 transition"
+                            wire:click="resetTodayQueues"
+                            wire:confirm="Are you sure you want to delete all {{ $todayCount }} queues created today for this branch? This action cannot be undone."
                             @if($todayCount == 0) disabled @endif
-                        />
-                        <x-button
-                            secondary
-                            icon="refresh"
-                            label="Reset Base to 1"
-                            x-on:confirm="{
-                                title: 'Reset Queue Base to 1?',
-                                description: 'This will set the queue number base to 1. Next queue will start from {{ 1 + $todayCount }}.',
-                                icon: 'question',
-                                method: 'resetBaseToOne',
-                                params: [],
-                            }"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Reset Today's Queues
+                        </button>
+                        <button
+                            type="button"
+                            class="inline-flex items-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-600 focus:outline-none focus:border-gray-600 focus:ring focus:ring-gray-200 active:bg-gray-600 disabled:opacity-50 transition"
+                            wire:click="resetBaseToOne"
+                            wire:confirm="Are you sure you want to reset the queue base to 1? Next queue will start from {{ 1 + $todayCount }}."
                             @if($base == 1) disabled @endif
-                        />
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Reset Base to 1
+                        </button>
                     </div>
-                    <x-button
-                        primary
-                        icon="check"
-                        label="Save Settings"
+                    <button
+                        type="button"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:outline-none focus:border-blue-700 focus:ring focus:ring-blue-200 active:bg-blue-700 transition"
                         wire:click="save"
-                    />
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Save Settings
+                    </button>
                 </div>
             </div>
         </div>
