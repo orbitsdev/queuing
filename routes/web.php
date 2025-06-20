@@ -26,14 +26,18 @@ Route::get('/', function () {
 
 // ✅ Main dashboard redirect
 Route::get('dashboard', function() {
+    if (!Auth::check()) {
+        return redirect()->route('login');
+    }
+    
     switch (Auth::user()->role) {
         case 'superadmin':
         case 'admin':
-            return redirect()->route('admin.dashboard');
+            return redirect()->route('admin.branches');
         case 'staff':
             return redirect()->route('counter.transaction');
     }
-    return redirect()->route('admin.dashboard');
+    return redirect()->route('admin.branches');
 })->name('dashboard');
 
 Route::get('test-page', TestPage::class)
@@ -93,7 +97,7 @@ Route::get('/create-test-queue/{branch?}/{service?}', function($branchId = null,
 
     // Calculate next number
     $nextNumber = $base + $todayCount;
-    
+
     // Format ticket number with prefix
     $formattedTicketNumber = $prefix . $nextNumber;
 
