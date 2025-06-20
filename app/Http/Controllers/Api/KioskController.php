@@ -108,7 +108,7 @@ class KioskController extends Controller
             ->first();
 
         if (!$service) {
-            return ApiResponse::error('Service not found or not active for this branch', 404);
+            return ApiResponse::error('Service not found for this branch', 404);
         }
 
         // Get branch settings
