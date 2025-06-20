@@ -65,7 +65,61 @@ Route::middleware(['auth', 'verified', 'can:staff'])->prefix('counter')->group(f
 //display
 Route::get('/display/{monitor}', DisplayPage::class)->name('display.show');
 
-// Route::middleware(['auth'])->group(function () {
+// Simple test route for generating queue tickets
+Route::get('/create-test-queue/{branch?}/{service?}', function($branchId = null, $serviceId = null) {
+    // Get the first branch or the one specified
+    $branch = $branchId ? \App\Models\Branch::find($branchId) : \App\Models\Branch::first();
+
+    if (!$branch) {
+        return response()->json(['error' => 'Branch not found'], 404);
+    }
+
+    // Get the first service for this branch or the one specified
+    $service = $serviceId ? \App\Models\Service::find($serviceId) : \App\Models\Service::where('branch_id', $branch->id)->first();
+
+    if (!$service) {
+        return response()->json(['error' => 'Service not found'], 404);
+    }
+
+    // Get the branch settings
+    $setting = \App\Models\Setting::where('branch_id', $branch->id)->first();
+    $base = $setting ? $setting->queue_number_base : 1;
+    $prefix = $setting ? $setting->ticket_prefix : 'QUE';
+
+    // Count today's issued tickets for this branch
+    $todayCount = \App\Models\Queue::where('branch_id', $branch->id)
+        ->whereDate('created_at', today())
+        ->count();
+
+    // Calculate next number
+    $nextNumber = $base + $todayCount;
+    
+    // Format ticket number with prefix
+    $formattedTicketNumber = $prefix . $nextNumber;
+
+    // Create the queue
+    $queue = \App\Models\Queue::create([
+        'branch_id' => $branch->id,
+        'service_id' => $service->id,
+        'number' => $nextNumber,
+        'ticket_number' => $formattedTicketNumber,
+        'status' => 'waiting',
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Test queue created successfully',
+        'queue' => [
+            'id' => $queue->id,
+            'branch' => $branch->name,
+            'service' => $service->name,
+            'number' => $queue->number,
+            'ticket_number' => $queue->ticket_number,
+            'created_at' => $queue->created_at->format('Y-m-d H:i:s'),
+            'status' => $queue->status
+        ],
+    ]);
+})->name('test.create-queue');
 //     Route::redirect('settings', 'settings/profile');
 //     Route::get('settings/profile', Profile::class)->name('settings.profile');
 //     Route::get('settings/password', Password::class)->name('settings.password');
@@ -73,3 +127,5 @@ Route::get('/display/{monitor}', DisplayPage::class)->name('display.show');
 // });
 
 require __DIR__.'/auth.php';
+
+

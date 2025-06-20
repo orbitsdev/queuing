@@ -22,11 +22,18 @@ class BranchQueueSettings extends Component
     // Add property updated hook for base
     public function updatedBase($value)
     {
-        // Validate the input
-        if (!is_numeric($value) || $value < 0) {
-            return;
+        // Handle empty values or invalid inputs
+        if ($value === '' || $value === null) {
+            $this->base = 1; // Default to 1 if empty
+            $value = 1;
         }
         
+        // Validate the input
+        if (!is_numeric($value) || $value < 0) {
+            $this->base = 1; // Default to 1 if invalid
+            $value = 1;
+        }
+
         // Recalculate next number whenever base changes
         $this->nextNumber = (int)$value + $this->todayCount;
     }
@@ -37,36 +44,43 @@ class BranchQueueSettings extends Component
 
         // Get branch setting or create if not exists
         $setting = Setting::where('branch_id', $branch->id)->first();
-        
-        // Load current base or default
+
+        // Load current base or default to 1
         if ($setting && isset($setting->queue_number_base)) {
             $this->base = $setting->queue_number_base;
+        } else {
+            $this->base = 1; // Default to 1 if not set
         }
 
         // Count today's issued tickets for this branch
         $this->todayCount = Queue::where('branch_id', $branch->id)
             ->whereDate('created_at', today())
             ->count();
-            
+
         // Get the last queue number issued today
         $lastQueue = Queue::where('branch_id', $branch->id)
             ->whereDate('created_at', today())
             ->latest('created_at')
             ->first();
-            
+
         $this->lastQueueNumber = $lastQueue ? $lastQueue->ticket_number : null;
-            
+
         // Calculate next number
         $this->nextNumber = $this->base + $this->todayCount;
     }
 
     public function confirmSave()
     {
+        // Handle empty values
+        if ($this->base === '' || $this->base === null) {
+            $this->base = 1; // Default to 1 if empty
+        }
+        
         // Validate input
         $this->validate([
             'base' => 'required|integer|min:0',
         ]);
-        
+
         // Get or create setting
         $setting = Setting::updateOrCreate(
             ['branch_id' => $this->branch->id],
@@ -81,7 +95,7 @@ class BranchQueueSettings extends Component
             description: 'The base number has been saved. New tickets will start from ' . $this->nextNumber . '.'
         );
     }
-    
+
     public function save()
     {
         $this->dialog()->confirm([
@@ -98,44 +112,44 @@ class BranchQueueSettings extends Component
         $queueCount = Queue::where('branch_id', $this->branch->id)
             ->whereDate('created_at', today())
             ->count();
-            
+
         // Delete all queues for today for this branch
         Queue::where('branch_id', $this->branch->id)
             ->whereDate('created_at', today())
             ->delete();
-            
+
         // Reset today's count
         $this->todayCount = 0;
-        
+
         // Recalculate next number
         $this->nextNumber = $this->base + $this->todayCount;
-        
+
         $this->dialog()->success(
             title: 'Queues Reset',
             description: $queueCount . ' queues have been deleted for today.'
         );
     }
-    
+
     public function resetBaseToOne()
     {
         // Set base to 1
         $this->base = 1;
-        
+
         // Save the setting
         $setting = Setting::updateOrCreate(
             ['branch_id' => $this->branch->id],
             ['queue_number_base' => $this->base]
         );
-        
+
         // Recalculate next number
         $this->nextNumber = $this->base + $this->todayCount;
-        
+
         $this->dialog()->success(
             title: 'Queue Base Reset',
             description: 'The base number has been reset to 1. Next queue number will be ' . $this->nextNumber . '.'
         );
     }
-    
+
     public function render()
     {
         return view('livewire.admin.branch-queue-settings');
