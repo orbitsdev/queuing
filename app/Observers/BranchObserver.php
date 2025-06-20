@@ -7,11 +7,16 @@ use App\Models\Setting;
 
 class BranchObserver
 {
-    /**
-     * Handle the Branch "created" event.
-     *
-     * Create settings for the newly created branch
-     */
+
+    public function creating(Branch $branch): void
+    {
+        // Auto-generate code if none provided
+        if (empty($branch->code)) {
+            $nextId = (Branch::max('id') ?? 0) + 1;
+            $branch->code = 'BR' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
+        }
+    }
+    
     public function created(Branch $branch): void
     {
         // Get global settings
