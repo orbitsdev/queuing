@@ -19,6 +19,7 @@ class Setting extends Model
         'print_logo' => 'boolean',
         'queue_reset_daily' => 'boolean',
         'queue_reset_time' => 'string',
+        'queue_number_base' => 'integer',
     ];
 
     /**

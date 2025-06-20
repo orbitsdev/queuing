@@ -137,6 +137,11 @@ class Branches extends Component  implements HasForms, HasTable
                     ->color('gray')
                     ->icon('heroicon-o-cog-6-tooth')
                     ->url(fn (Branch $record): string => route('admin.settings', ['branch' => $record])),
+                    Action::make('queue_settings')
+                    ->label('Queue Settings')
+                    ->icon('heroicon-o-adjustments-horizontal')
+                    ->color('gray')
+                    ->url(fn (Branch $record) => route('admin.branch-queue-settings', ['branch' => $record])),
 
                     EditAction::make('edit')
                     ->color('gray')
@@ -194,6 +199,7 @@ class Branches extends Component  implements HasForms, HasTable
                         ])
 
                         ,
+
 
                 Action::make('delete')
                     ->label('Delete')

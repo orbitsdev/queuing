@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Livewire\Monitor\DisplayPage;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Counter\SelectCounter;
+use App\Livewire\Admin\BranchQueueSettings;
 use App\Livewire\Counter\CounterTransactionPage;
 use App\Livewire\Monitor\BranchesListForMonitorMangement;
 
@@ -52,6 +53,7 @@ Route::middleware(['auth', 'verified', 'can:superadmin_or_admin'])->prefix('admi
 
     Route::get('branches-for-monitor-management', BranchesListForMonitorMangement::class)->name('admin.branches-for-monitor-management');
     Route::get('monitors/{branch}', Monitors::class)->name('admin.monitors');
+    Route::get('branch-queue-settings/{branch}', BranchQueueSettings::class)->name('admin.branch-queue-settings');
 
 });
     // Admin Routes

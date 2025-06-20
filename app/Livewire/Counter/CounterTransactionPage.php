@@ -346,12 +346,8 @@ public function loadQueue()
     $allowedServiceIds = $this->counter->services()->pluck('services.id');
 
     // ✅ 1️⃣ Current ticket for this counter
-    if ($this->counter) {
-        $this->currentTicket = Queue::todayQueues()
-            ->where('counter_id', $this->counter->id)
-            ->whereIn('status', ['called', 'serving'])
-            ->latest('called_at')
-            ->first();
+    if (auth()->user()->queue_id) {
+        $this->currentTicket = Queue::find(auth()->user()->queue_id);
     } else {
         $this->currentTicket = null;
     }

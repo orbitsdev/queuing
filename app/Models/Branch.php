@@ -37,9 +37,9 @@ class Branch extends Model
         return $this->hasMany(User::class);
     }
 
-    public function settings()
+    public function setting()
     {
-        return $this->hasMany(Setting::class);
+        return $this->hasOne(Setting::class);
     }
     public function monitors()
     {
