@@ -8,7 +8,7 @@ class ApiResponse
     public static function success($data, $message = 'Success', $code = 200)
     {
         return response()->json([
-            'status' => true,
+            'success' => true,
             'message' => $message,
             'data' => $data,
         ], $code);
@@ -17,7 +17,7 @@ class ApiResponse
     public static function error($message = 'Error', $code = 400, $data = null)
     {
         return response()->json([
-            'status' => false,
+            'success' => false,
             'message' => $message,
             'data' => $data,
         ], $code);
@@ -26,7 +26,7 @@ class ApiResponse
     public static function paginate(LengthAwarePaginator $paginator, $message = 'Success', $code = 200)
     {
         return response()->json([
-            'status' => true,
+            'success' => true,
             'message' => $message,
             'data' => $paginator->items(),
             'pagination' => [
