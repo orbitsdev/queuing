@@ -1,0 +1,148 @@
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+use Livewire\Attributes\On;
+
+class ReverTestPage extends Component
+{
+    public $count = 0;
+#[On('increaseCount')]
+public function increaseCount()
+{
+    $this->count++;
+}
+
+#[On('decreaseCount')]
+public function decreaseCount($data)
+{
+    // dd($data);
+     $this->count -= $data;
+}
+
+
+
+    public function render()
+    {
+        return view('livewire.rever-test-page');
+    }
+}
+
+
+<?php
+
+namespace App\Events;
+
+use Illuminate\Broadcasting\Channel;
+use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Broadcasting\PresenceChannel;
+use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
+
+class NewQue implements ShouldBroadcast, ShouldQueue
+{
+    use Dispatchable, InteractsWithSockets, SerializesModels;
+
+
+    public $queue = 'default'; 
+    /**
+     * Create a new event instance.
+
+
+     */
+    public function __construct(public $que)
+    {
+        //
+    }
+
+    /**
+     * Get the channels the event should broadcast on.
+     *
+     * @return array<int, \Illuminate\Broadcasting\Channel>
+     */
+    public function broadcastOn(): array
+    {
+        return [
+            new Channel('incoming-queues'),
+        ];
+    }
+
+    public function broadcastWith(): array
+    {
+        return array(
+            'queue' => $this->que,
+
+        );
+    }
+     /**
+     * The event's broadcast name.
+     */
+    public function broadcastAs(): string
+    {
+        return 'queue.created';
+    }
+    /**
+     * Determine if this event should broadcast.
+     */
+
+
+
+}
+
+
+
+
+/**
+ * Echo exposes an expressive API for subscribing to channels and listening
+ * for events that are broadcast by Laravel. Echo and event broadcasting
+ * allow your team to quickly build robust real-time web applications.
+ */
+
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+window.Pusher = Pusher;
+
+window.Echo = new Echo({
+    broadcaster: 'reverb',
+    key: import.meta.env.VITE_REVERB_APP_KEY,
+    wsHost: import.meta.env.VITE_REVERB_HOST,
+    wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
+    wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
+    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
+    enabledTransports: ['ws', 'wss'],
+});
+
+// Log when WebSocket connection is established
+window.Echo.connector.pusher.connection.bind('connected', () => {
+    console.log('WebSocket connection established successfully!');
+});
+
+// Log connection errors
+window.Echo.connector.pusher.connection.bind('error', (error) => {
+    console.error('WebSocket connection error:', error);
+});
+
+// document.addEventListener('DOMContentLoaded', function () {
+//     const userID = window.userID;
+
+//     // Debug the channel subscription
+//     console.log("Subscribing to channel: incoming-queus");
+
+//     window.Echo.channel('incoming-queus')
+//         .listen('.queue.created', (response) => {
+//             console.log("Event received:", response);
+//         })
+//         .listen('App\\Events\\NewQue', (response) => {
+//             console.log("Event received via full class name:", response);
+//         });
+
+//     // Add a subscription success handler
+//     window.Echo.connector.pusher.connection.bind('message', (message) => {
+//         console.log('Pusher message received:', message);
+//     });
+// });
+

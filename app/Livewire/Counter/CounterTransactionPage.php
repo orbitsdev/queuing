@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Counter;
 
+use App\Events\QueueStatusChanged;
 use App\Models\Queue;
 use App\Models\Setting;
 use Livewire\Component;
@@ -27,8 +28,8 @@ class CounterTransactionPage extends Component
     public $showHoldModal = false;
 
     public $breakInputMessage = '';
-public $showBreakModal = false;
-public $queueCountToday = 0;
+    public $showBreakModal = false;
+    public $queueCountToday = 0;
 
     public function mount()
     {
@@ -87,6 +88,9 @@ public $queueCountToday = 0;
             'counter_id' => $this->counter->id,
         ]);
 
+        // Broadcast queue status change
+        event(new QueueStatusChanged($queue->fresh()));
+
         DB::commit();
 
         // $this->dialog()->success(
@@ -137,6 +141,9 @@ try {
     auth()->user()->update([
         'queue_id' => null,
     ]);
+
+    // Broadcast queue status change
+    event(new QueueStatusChanged($this->currentTicket->fresh()));
 
     DB::commit();
 
@@ -265,6 +272,9 @@ public function confirmResumeSelectedHold($queueId)
         $user->update([
             'queue_id' => $queue->id,
         ]);
+        
+        // Broadcast queue status change
+        event(new QueueStatusChanged($queue->fresh()));
     });
 
     $this->dialog()->success(
@@ -290,6 +300,9 @@ public function confirmHoldQueueWithReason()
         auth()->user()->update([
             'queue_id' => null,
         ]);
+        
+        // Broadcast queue status change
+        event(new QueueStatusChanged($this->currentTicket->fresh()));
     });
 
     $this->dialog()->success(
@@ -330,6 +343,9 @@ public function confirmCompleteQueue()
         auth()->user()->update([
             'queue_id' => null,
         ]);
+        
+        // Broadcast queue status change
+        event(new QueueStatusChanged($this->currentTicket->fresh()));
     });
 
     $this->dialog()->success(
@@ -400,6 +416,10 @@ public function loadQueue()
                 'status' => 'skipped',
                 'skipped_at' => now(),
             ]);
+            
+            // Broadcast queue status change
+            event(new QueueStatusChanged($this->currentTicket->fresh()));
+            
             $this->notification()->success('Ticket skipped.');
             $this->loadQueue();
         }

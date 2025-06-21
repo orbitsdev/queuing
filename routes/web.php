@@ -10,6 +10,7 @@ use App\Livewire\Admin\Counters;
 use App\Livewire\Admin\Services;
 use App\Livewire\Admin\Settings;
 use App\Livewire\Admin\Dashboard;
+use App\Events\QueueStatusChanged;
 use App\Livewire\Monitor\Monitors;
 use App\Livewire\Admin\ListSettings;
 use Illuminate\Support\Facades\Auth;
@@ -111,8 +112,8 @@ Route::get('/create-test-queue/{branch?}/{service?}', function($branchId = null,
         'ticket_number' => $formattedTicketNumber,
         'status' => 'waiting',
     ]);
-event(new NewQue($queue));
-
+// event(new NewQue($queue));
+event(new QueueStatusChanged($queue));
     return response()->json([
         'success' => true,
         'message' => 'Test queue created successfully',

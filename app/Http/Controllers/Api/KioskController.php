@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Branch;
 use App\Models\Queue;
+use App\Models\Branch;
 use App\Models\Service;
 use App\Models\Setting;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
+use App\Events\QueueStatusChanged;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\BranchResource;
 use App\Http\Resources\QueueResource;
+use App\Http\Resources\BranchResource;
 use App\Http\Resources\ServiceResource;
 use Illuminate\Support\Facades\Validator;
 
@@ -134,6 +135,9 @@ class KioskController extends Controller
         $queue->ticket_number = $formattedTicketNumber;
         $queue->status = 'waiting';
         $queue->save();
+
+        // Broadcast the queue status change event
+        event(new QueueStatusChanged($queue));
 
         return ApiResponse::success(
             new QueueResource($queue),

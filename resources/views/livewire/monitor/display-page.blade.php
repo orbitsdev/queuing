@@ -1,8 +1,19 @@
-<div class="h-screen w-screen bg-[#001a71] overflow-hidden" wire:poll.5s>
+<div class="h-screen w-screen bg-[#001a71] overflow-hidden" wire:poll.{{ $pollingActive ? $pollingInterval : 'none' }}="checkPollingStatus">
     <!-- Header with branch name and time -->
     <header class="bg-black text-white py-2 px-4 flex justify-between items-center border-b-2 border-[#cee1ff]">
-        <h1 class="text-2xl font-bold">{{ $monitor->branch->name ?? 'Branch' }} - {{ $monitor->name }}</h1>
-        <div class="text-2xl font-medium" x-data="{ time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }" x-init="setInterval(() => time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), 60000)" x-text="time"></div>
+        <div class="flex items-center">
+            <h1 class="text-2xl font-bold">{{ $monitor->branch->name ?? 'Branch' }} - {{ $monitor->name }}</h1>
+            <div class="ml-3 flex items-center text-xs text-green-400">
+                <span class="relative flex h-3 w-3 mr-1">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+                <span>Live</span>
+            </div>
+        </div>
+        <div class="flex items-center">
+            <div class="text-2xl font-medium" x-data="{ time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }" x-init="setInterval(() => time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), 60000)" x-text="time"></div>
+        </div>
     </header>
 
     <!-- Main content area with two panels side by side -->
@@ -108,4 +119,84 @@
             </div>
         </div>
     </div>
+
+    <!-- Small indicator for real-time updates -->
+    <div class="fixed bottom-0 right-0 z-50 bg-black bg-opacity-50 text-white p-1 text-xs">
+        <div class="flex items-center">
+            <span class="relative flex h-2 w-2 mr-1">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span class="connection-indicator relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            <span>Live</span>
+            <span class="ml-2" x-data="{ polling: false }" x-init="$watch('$wire.pollingActive', value => { polling = value })">
+                <span x-show="polling" class="text-yellow-400">(Fallback)</span>
+            </span>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if Echo is properly initialized
+        if (typeof window.Echo === 'undefined') {
+            console.error('ERROR: window.Echo is not defined. Laravel Echo is not properly initialized!');
+            return;
+        }
+
+        console.log('Echo initialized:', window.Echo);
+        console.log('Echo connection status:', window.Echo.connector.socket ? 'Connected' : 'Not connected');
+
+        // Log when the Echo listeners are being set up
+        console.log('Setting up Echo listeners for branch and service channels');
+
+        // Get data from PHP
+        var branchId = {!! $monitor->branch_id !!};
+        var services = {!! json_encode($monitor->services->map(function($service) {
+            return ['id' => $service->id, 'name' => $service->name];
+        })) !!};
+
+        console.log('Branch ID:', branchId);
+        console.log('Services:', services);
+        
+        // Debounce function to prevent rapid-fire updates
+        let updateTimeout = null;
+        const debounceUpdate = function(eventData) {
+            clearTimeout(updateTimeout);
+            updateTimeout = setTimeout(function() {
+                console.log('Debounced update triggered', eventData);
+                Livewire.dispatch('refreshFromEcho', eventData);
+            }, 100); // 100ms debounce
+        };
+
+        // Listen for queue updates on the combined channels for each service in this monitor
+        services.forEach(function(service) {
+            window.Echo.channel('incoming-queue.' + branchId + '.' + service.id)
+                .listen('.queue.updated', function(event) {
+                    console.log('Received queue update for branch ' + branchId + ', service ' + service.name + ':', event);
+                    debounceUpdate(event);
+                });
+        });
+        
+        // Note: We're now using the combined channel format: incoming-queue.{branch_id}.{service_id}
+        
+        // Update the connection status indicator
+        const updateConnectionStatus = function() {
+            const indicator = document.querySelector('.connection-indicator');
+            if (indicator) {
+                if (window.Echo.connector.socket && window.Echo.connector.socket.connected) {
+                    indicator.classList.remove('bg-red-500');
+                    indicator.classList.add('bg-green-500');
+                } else {
+                    indicator.classList.remove('bg-green-500');
+                    indicator.classList.add('bg-red-500');
+                }
+            }
+        };
+        
+        // Check connection status periodically
+        setInterval(updateConnectionStatus, 5000);
+    });
+</script>
+
 </div>
+
+
