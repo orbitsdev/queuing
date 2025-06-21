@@ -1,4 +1,4 @@
-<div wire:poll.5s="loadQueue">
+<div>
     @section('nav-title', 'Counter')
     <x-admin-layout>
         <div class="max-w-8xl mx-auto px-4">
@@ -25,6 +25,17 @@
                             {{ $status === 'active' ? 'bg-green-500 text-white' : 'bg-yellow-400 text-gray-900' }}">
                             {{ ucfirst($status) }}
                         </span>
+                        
+                        <!-- Connection status indicator -->
+                        <div class="flex items-center text-xs ml-2">
+                            <span class="relative flex h-3 w-3 mr-1">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full {{ $connectionStatus === 'connected' ? 'bg-green-400' : 'bg-red-400' }} opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3 {{ $connectionStatus === 'connected' ? 'bg-green-500' : 'bg-red-500' }}"></span>
+                            </span>
+                            <span class="{{ $connectionStatus === 'connected' ? 'text-green-600' : 'text-red-600' }}">
+                                {{ $connectionStatus === 'connected' ? 'Live' : 'Offline' }}
+                            </span>
+                        </div>
                     </div>
 
                     @if ($status === 'break')
@@ -37,7 +48,7 @@
 
 
             <!-- GRID -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8" wire:poll.5s="loadQueue">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
                 <!-- LEFT: Now Serving & Actions -->
                 <div class="bg-white shadow rounded-lg p-8 space-y-8">
@@ -312,7 +323,57 @@
                 <x-button primary label="Start Break" wire:click="confirmStartBreak" />
             </x-slot>
         </x-modal-card>
-
+        <script>
+          document.addEventListener('DOMContentLoaded', function() {
+                // Check if Echo is properly initialized
+                if (typeof window.Echo === 'undefined') {
+                    console.error('ERROR: window.Echo is not defined. Laravel Echo is not properly initialized!');
+                    return;
+                }
+                
+                console.log('Echo initialized for counter transaction page');
+                
+                // Get branch ID and service IDs from the counter
+                var branchId = {{ $counter->branch_id }};
+                var serviceIds = {{ json_encode($counter->services->pluck('id')) }};
+                
+                console.log('Branch ID:', branchId);
+                console.log('Service IDs:', serviceIds);
+                
+                // Debounce function to prevent rapid-fire updates
+                let updateTimeout = null;
+                const debounceUpdate = function(eventData) {
+                    clearTimeout(updateTimeout);
+                    updateTimeout = setTimeout(function() {
+                        console.log('Dispatching refreshFromEcho with data:', eventData);
+                        Livewire.dispatch('refreshFromEcho', eventData);
+                    }, 100); // 100ms debounce
+                };
+                
+                // Listen for queue updates on the combined channels for each service this counter handles
+                serviceIds.forEach(function(serviceId) {
+                    const channelName = 'incoming-queue.' + branchId + '.' + serviceId;
+                    console.log('Subscribing to channel:', channelName);
+                    
+                    window.Echo.channel(channelName)
+                        .listen('.queue.updated', function(event) {
+                            console.log('Received queue update for branch ' + branchId + ', service ' + serviceId + ':', event);
+                            debounceUpdate(event);
+                        });
+                });
+                
+                // Update connection status indicator every 5 seconds
+                setInterval(function() {
+                    if (window.Echo.connector.socket && window.Echo.connector.socket.connected) {
+                        console.log('WebSocket connection: Connected');
+                        Livewire.dispatch('connectionStatusUpdate', {status: 'connected'});
+                    } else {
+                        console.log('WebSocket connection: Disconnected');
+                        Livewire.dispatch('connectionStatusUpdate', {status: 'disconnected'});
+                    }
+                }, 5000);
+            });
+          </script>
 
     </x-admin-layout>
 </div>

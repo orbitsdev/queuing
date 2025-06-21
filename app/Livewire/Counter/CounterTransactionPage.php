@@ -10,6 +10,7 @@ use WireUi\Traits\WireUiActions;
 use Illuminate\Support\Facades\DB;
 // use filament notficaiton
 use Filament\Notifications\Notification;
+use Livewire\Attributes\On;
 
 class CounterTransactionPage extends Component
 {
@@ -31,6 +32,9 @@ class CounterTransactionPage extends Component
     public $showBreakModal = false;
     public $queueCountToday = 0;
 
+    // Real-time update tracking
+    public $connectionStatus = 'connected';
+
     public function mount()
     {
         $this->counter = auth()->user()->counter;
@@ -44,6 +48,71 @@ class CounterTransactionPage extends Component
 
         $this->loadQueue();
     }
+
+    /**
+     * Listen for Echo events on the queue channel
+     * Using a wildcard to capture all events for this branch
+     */
+    #[On('echo:incoming-queue.*.*, queue.updated')]
+    public function handleQueueUpdate($event)
+    {
+        // Log the event for debugging
+        logger()->info('CounterTransactionPage received Echo event', [
+            'event' => $event,
+            'counter_id' => $this->counter->id,
+            'branch_id' => $this->counter->branch_id
+        ]);
+
+        // Update connection status
+        $this->connectionStatus = 'connected';
+
+        // Only refresh if the event is for our branch
+        if ($event['branch_id'] == $this->counter->branch_id) {
+            // Get the allowed service IDs for this counter
+            $allowedServiceIds = $this->counter->services()->pluck('services.id')->toArray();
+
+            // Only refresh if:
+            // 1. The event is for a service this counter handles
+            // 2. We have fewer than 3 next tickets (optimization)
+            // 3. The status changed to 'waiting' (new ticket)
+            // 4. Or if it's a status change for a ticket we're currently handling
+            if (
+                in_array($event['service_id'], $allowedServiceIds) &&
+                (count($this->nextTickets) < 3 ||
+                $event['status'] == 'waiting' ||
+                ($this->currentTicket && $this->currentTicket->id == $event['id']))
+            ) {
+                $this->loadQueue();
+            }
+        }
+    }
+
+    /**
+     * Handle refresh request from JavaScript Echo listener
+     */
+    #[On('refreshFromEcho')]
+    public function refreshFromEcho($event = null)
+    {
+        logger()->info('CounterTransactionPage received refreshFromEcho', [
+            'event' => $event,
+            'counter_id' => $this->counter->id
+        ]);
+
+        $this->connectionStatus = 'connected';
+        $this->loadQueue();
+    }
+
+    /**
+     * Update connection status from JavaScript
+     */
+    #[On('connectionStatusUpdate')]
+    public function connectionStatusUpdate($data = null)
+    {
+        logger()->info('Connection status update', $data ?? []);
+        $this->connectionStatus = isset($data['status']) ? $data['status'] : 'connected';
+    }
+
+
 
     public function selectQueue($queueId)
 {
@@ -88,15 +157,18 @@ class CounterTransactionPage extends Component
             'counter_id' => $this->counter->id,
         ]);
 
-        // Broadcast queue status change
-        event(new QueueStatusChanged($queue->fresh()));
+
+
 
         DB::commit();
 
-        // $this->dialog()->success(
-        //     title: 'Ticket Serving',
-        //     description: "You are now serving ticket {$queue->ticket_number}."
-        // );
+        // Broadcast queue status change
+        event(new QueueStatusChanged($queue->fresh()));
+
+        $this->dialog()->success(
+            title: 'Ticket Serving',
+            description: "You are now serving ticket {$queue->ticket_number}."
+        );
 
         $this->loadQueue();
 
@@ -142,10 +214,12 @@ try {
         'queue_id' => null,
     ]);
 
-    // Broadcast queue status change
-    event(new QueueStatusChanged($this->currentTicket->fresh()));
+
 
     DB::commit();
+
+    // Broadcast queue status change
+    event(new QueueStatusChanged($this->currentTicket->fresh()));
 
     $this->dialog()->success(
         title: 'Cancelled',
@@ -191,12 +265,12 @@ public function confirmLogoutCounter()
             }
         }
 
-        // ✅ Also clear the counter's user_id
+
         $this->counter->update([
             'user_id' => null,
         ]);
 
-        // ✅ Clear user fields
+
         $user->update([
             'queue_id' => null,
             'counter_id' => null,
@@ -272,7 +346,7 @@ public function confirmResumeSelectedHold($queueId)
         $user->update([
             'queue_id' => $queue->id,
         ]);
-        
+
         // Broadcast queue status change
         event(new QueueStatusChanged($queue->fresh()));
     });
@@ -300,7 +374,7 @@ public function confirmHoldQueueWithReason()
         auth()->user()->update([
             'queue_id' => null,
         ]);
-        
+
         // Broadcast queue status change
         event(new QueueStatusChanged($this->currentTicket->fresh()));
     });
@@ -343,7 +417,7 @@ public function confirmCompleteQueue()
         auth()->user()->update([
             'queue_id' => null,
         ]);
-        
+
         // Broadcast queue status change
         event(new QueueStatusChanged($this->currentTicket->fresh()));
     });
@@ -403,26 +477,44 @@ public function loadQueue()
 
 
 
-
-
-    // Method removed - using selectQueue flow instead
-
-    // Method removed - using holdQueue() and confirmHoldQueueWithReason() instead
-
     public function skipCurrent()
     {
-        if ($this->currentTicket) {
+        if (!$this->currentTicket) {
+            // Nothing to skip
+            return;
+        }
+
+        $this->dialog()->confirm([
+            'title'       => 'Confirm Skip',
+            'description' => 'Are you sure you want to skip this ticket? The customer will need to get a new ticket.',
+            'acceptLabel' => 'Yes, Skip Ticket',
+            'cancelLabel' => 'Cancel',
+            'method'      => 'confirmSkipCurrent',
+        ]);
+    }
+
+    public function confirmSkipCurrent()
+    {
+        DB::transaction(function () {
             $this->currentTicket->update([
                 'status' => 'skipped',
                 'skipped_at' => now(),
             ]);
-            
+
+            auth()->user()->update([
+                'queue_id' => null,
+            ]);
+
             // Broadcast queue status change
             event(new QueueStatusChanged($this->currentTicket->fresh()));
-            
-            $this->notification()->success('Ticket skipped.');
-            $this->loadQueue();
-        }
+        });
+
+        $this->dialog()->success(
+            title: 'Ticket Skipped',
+            description: 'The ticket has been marked as skipped.'
+        );
+
+        $this->loadQueue();
     }
 
     public function toggleBreak()
@@ -465,6 +557,10 @@ public function loadQueue()
         $this->showBreakModal = false;
 
         $this->notification()->success('Break started.');
+
+        // Broadcast counter status change if needed
+        // No queue status changed here, but you might want to broadcast counter status
+        // if you have a separate event for counter status changes
     }
     public function resumeWork()
     {
@@ -486,6 +582,10 @@ public function loadQueue()
     $this->status = 'active';
     $this->breakMessage = null;
     $this->notification()->success('Work resumed.');
+
+    // Broadcast counter status change if needed
+    // No queue status changed here, but you might want to broadcast counter status
+    // if you have a separate event for counter status changes
 }
 
 
