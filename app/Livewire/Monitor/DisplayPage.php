@@ -25,7 +25,7 @@ class DisplayPage extends Component
     public $waitingQueues;
     public $lastEchoUpdateTime = null;
     public $pollingActive = false;
-    public $pollingInterval = 30000; // 30 seconds fallback polling interval
+    public $pollingInterval = 30000;
 
     /**
      * Initialize the component with the monitor.
@@ -79,7 +79,7 @@ class DisplayPage extends Component
         $currentTime = now()->timestamp;
         $timeSinceLastUpdate = $currentTime - ($this->lastEchoUpdateTime ?? $currentTime);
 
-        // If no Echo updates for 2 minutes, activate polling
+
         if ($timeSinceLastUpdate > 120) {
             $this->pollingActive = true;
             $this->loadQueues();
@@ -93,14 +93,14 @@ class DisplayPage extends Component
     {
         $serviceIds = $this->monitor->services->pluck('id');
 
-        // Get currently serving queues for this monitor's services
+
         $this->servingQueues = Queue::whereIn('service_id', $serviceIds)
             ->where('status', 'serving')
             ->with('counter')
             ->orderBy('called_at')
             ->get();
 
-        // Get waiting queues for this monitor's services (limited to 10)
+
         $this->waitingQueues = Queue::whereIn('service_id', $serviceIds)
             ->where('status', 'waiting')
             ->orderBy('created_at')
