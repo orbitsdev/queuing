@@ -69,6 +69,13 @@
 
             <!-- Waiting Queue Content -->
             <div class="h-full pt-4 px-4 pb-4">
+                <!-- Header with count information when there are more numbers than displayed -->
+                @if($remainingCount > 0)
+                <div class="bg-black text-white p-2 mb-3 rounded-lg text-center">
+                    <p class="text-lg">Showing {{ count($waitingQueues) }} of {{ $totalWaitingCount }} waiting numbers</p>
+                    <p class="text-sm text-yellow-300">+ {{ $remainingCount }} more numbers waiting</p>
+                </div>
+                @endif
                 <div class="grid {{ count($waitingQueues) > 9 ? 'grid-cols-4' : (count($waitingQueues) > 6 ? 'grid-cols-3' : 'grid-cols-2') }} gap-4 auto-rows-fr">
                  @forelse ($waitingQueues as $queue)
                         @if(count($waitingQueues) == 1)

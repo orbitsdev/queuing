@@ -23,6 +23,7 @@ class DisplayPage extends Component
     public $services;
     public $servingQueues;
     public $waitingQueues;
+    public $totalWaitingCount = 0;
     public $lastEchoUpdateTime = null;
     public $pollingActive = false;
     public $pollingInterval = 30000;
@@ -44,9 +45,8 @@ class DisplayPage extends Component
     public function handleQueueUpdate($event)
     {
 
-        if (isset($event['service_id'])) {
-            if (in_array($event['service_id'], $this->monitor->services->pluck('id')->toArray())) {
-                Log::info('Queue update received via Echo', [
+        if (isset($event['service_id']) && in_array($event['service_id'], $this->monitor->services->pluck('id')->toArray())) {
+            Log::info('Queue update received via Echo', [
                     'monitor_id' => $this->monitor->id,
                     'queue_id' => $event['id'] ?? null,
                     'status' => $event['status'] ?? null,
@@ -55,7 +55,6 @@ class DisplayPage extends Component
 
 
                 $this->refreshFromEcho($event);
-            }
         }
     }
 
@@ -101,10 +100,16 @@ class DisplayPage extends Component
             ->get();
 
 
+        // Get total count of waiting queues
+        $this->totalWaitingCount = Queue::whereIn('service_id', $serviceIds)
+            ->where('status', 'waiting')
+            ->count();
+            
+        // Get only the first 12 for display
         $this->waitingQueues = Queue::whereIn('service_id', $serviceIds)
             ->where('status', 'waiting')
             ->orderBy('created_at')
-            ->take(10)
+            ->take(12)
             ->get();
     }
 
@@ -118,6 +123,8 @@ class DisplayPage extends Component
         return view('livewire.monitor.display-page', [
             'servingQueues' => $this->servingQueues,
             'waitingQueues' => $this->waitingQueues,
+            'totalWaitingCount' => $this->totalWaitingCount,
+            'remainingCount' => $this->totalWaitingCount - count($this->waitingQueues)
         ]);
     }
 }
