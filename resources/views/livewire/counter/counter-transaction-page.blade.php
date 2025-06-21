@@ -29,11 +29,13 @@
                         <!-- Connection status indicator -->
                         <div class="flex items-center text-xs ml-2">
                             <span class="relative flex h-3 w-3 mr-1">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full {{ $connectionStatus === 'connected' ? 'bg-green-400' : 'bg-red-400' }} opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-3 w-3 {{ $connectionStatus === 'connected' ? 'bg-green-500' : 'bg-red-500' }}"></span>
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full 
+                                    {{ $connectionStatus === 'connected' ? 'bg-green-400' : ($connectionStatus === 'fallback' ? 'bg-yellow-400' : 'bg-red-400') }} opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3 
+                                    {{ $connectionStatus === 'connected' ? 'bg-green-500' : ($connectionStatus === 'fallback' ? 'bg-yellow-500' : 'bg-red-500') }}"></span>
                             </span>
-                            <span class="{{ $connectionStatus === 'connected' ? 'text-green-600' : 'text-red-600' }}">
-                                {{ $connectionStatus === 'connected' ? 'Live' : 'Offline' }}
+                            <span class="{{ $connectionStatus === 'connected' ? 'text-green-600' : ($connectionStatus === 'fallback' ? 'text-yellow-600' : 'text-red-600') }}">
+                                {{ $connectionStatus === 'connected' ? 'Live' : ($connectionStatus === 'fallback' ? 'Fallback' : 'Offline') }}
                             </span>
                         </div>
                     </div>
@@ -339,6 +341,13 @@
 
                 console.log('Branch ID:', branchId);
                 console.log('Service IDs:', serviceIds);
+                
+                // Track last event time for fallback polling
+                let lastEventTime = Date.now();
+                let pollingInterval = null;
+                let isInFallbackMode = false;
+                const FALLBACK_THRESHOLD = 2 * 60 * 1000; // 2 minutes without events
+                const POLLING_INTERVAL = 30 * 1000; // 30 seconds polling interval
 
                 // Debounce function to prevent rapid-fire updates
                 let updateTimeout = null;
@@ -346,9 +355,59 @@
                     clearTimeout(updateTimeout);
                     updateTimeout = setTimeout(function() {
                         console.log('Dispatching refreshFromEcho with data:', eventData);
+                        lastEventTime = Date.now(); // Update last event time
+                        
+                        // If we were in fallback mode, exit it
+                        if (isInFallbackMode) {
+                            exitFallbackMode();
+                        }
+                        
                         Livewire.dispatch('refreshFromEcho', eventData);
                     }, 100); // 100ms debounce
                 };
+                
+                // Function to enter fallback polling mode
+                function enterFallbackMode() {
+                    if (!isInFallbackMode) {
+                        isInFallbackMode = true;
+                        console.log('Entering fallback polling mode');
+                        Livewire.dispatch('connectionStatusUpdate', {status: 'fallback'});
+                        
+                        // Start polling
+                        pollingInterval = setInterval(function() {
+                            console.log('Fallback polling triggered');
+                            Livewire.dispatch('refreshFromEcho', {fallback: true});
+                        }, POLLING_INTERVAL);
+                    }
+                }
+                
+                // Function to exit fallback polling mode
+                function exitFallbackMode() {
+                    if (isInFallbackMode) {
+                        isInFallbackMode = false;
+                        console.log('Exiting fallback polling mode');
+                        
+                        // Stop polling
+                        if (pollingInterval) {
+                            clearInterval(pollingInterval);
+                            pollingInterval = null;
+                        }
+                        
+                        // Update connection status based on socket state
+                        updateConnectionStatus();
+                    }
+                }
+                
+                // Function to update connection status
+                function updateConnectionStatus() {
+                    if (window.Echo.connector.socket && window.Echo.connector.socket.connected) {
+                        console.log('WebSocket connection: Connected');
+                        Livewire.dispatch('connectionStatusUpdate', {status: 'connected'});
+                    } else {
+                        console.log('WebSocket connection: Disconnected');
+                        Livewire.dispatch('connectionStatusUpdate', {status: 'disconnected'});
+                    }
+                }
 
                 // Listen for queue updates on the combined channels for each service this counter handles
                 serviceIds.forEach(function(serviceId) {
@@ -363,13 +422,14 @@
                 });
 
                 // Update connection status indicator every 5 seconds
+                // Also check if we need to enter fallback mode
                 setInterval(function() {
-                    if (window.Echo.connector.socket && window.Echo.connector.socket.connected) {
-                        console.log('WebSocket connection: Connected');
-                        Livewire.dispatch('connectionStatusUpdate', {status: 'connected'});
-                    } else {
-                        console.log('WebSocket connection: Disconnected');
-                        Livewire.dispatch('connectionStatusUpdate', {status: 'disconnected'});
+                    updateConnectionStatus();
+                    
+                    // Check if we need to enter fallback mode
+                    const timeSinceLastEvent = Date.now() - lastEventTime;
+                    if (timeSinceLastEvent > FALLBACK_THRESHOLD && !isInFallbackMode) {
+                        enterFallbackMode();
                     }
                 }, 5000);
             });

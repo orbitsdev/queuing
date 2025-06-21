@@ -104,6 +104,9 @@ class CounterTransactionPage extends Component
 
     /**
      * Update connection status from JavaScript
+     * Status can be 'connected', 'disconnected', or 'fallback'
+     * Fallback mode activates after 2 minutes without WebSocket events
+     * and uses polling as a backup mechanism
      */
     #[On('connectionStatusUpdate')]
     public function connectionStatusUpdate($data = null)
