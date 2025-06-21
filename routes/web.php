@@ -1,8 +1,10 @@
 <?php
 
+use App\Events\NewQue;
 use App\Livewire\TestPage;
 use App\Livewire\Admin\Users;
 use App\Livewire\Admin\Queues;
+use App\Livewire\ReverTestPage;
 use App\Livewire\Admin\Branches;
 use App\Livewire\Admin\Counters;
 use App\Livewire\Admin\Services;
@@ -29,7 +31,7 @@ Route::get('dashboard', function() {
     if (!Auth::check()) {
         return redirect()->route('login');
     }
-    
+
     switch (Auth::user()->role) {
         case 'superadmin':
         case 'admin':
@@ -110,6 +112,8 @@ Route::get('/create-test-queue/{branch?}/{service?}', function($branchId = null,
         'status' => 'waiting',
     ]);
 
+    event(new NewQue($queue));
+
     return response()->json([
         'success' => true,
         'message' => 'Test queue created successfully',
@@ -129,6 +133,9 @@ Route::get('/create-test-queue/{branch?}/{service?}', function($branchId = null,
 //     Route::get('settings/password', Password::class)->name('settings.password');
 //     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
 // });
+
+//reverb test page
+Route::get('reverb-test', ReverTestPage::class)->name('reverb-test');
 
 require __DIR__.'/auth.php';
 
