@@ -12,7 +12,21 @@
             </div>
         </div>
         <div class="flex items-center">
-            <div class="text-2xl font-medium" x-data="{ time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }" x-init="setInterval(() => time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), 60000)" x-text="time"></div>
+            <div class="text-2xl font-medium" x-data="{ time: '' }" x-init="
+                updateClock = () => {
+                    // Create date object for Philippines (UTC+8)
+                    const options = {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true,
+                        timeZone: 'Asia/Manila'
+                    };
+                    time = new Date().toLocaleTimeString('en-US', options);
+                };
+                updateClock();
+                setInterval(updateClock, 1000);
+            " x-text="time">
+            </div>
         </div>
     </header>
 
@@ -127,18 +141,8 @@
         </div>
     </div>
 
-    <!-- Small indicator for real-time updates -->
-    <div class="fixed bottom-0 right-0 z-50 bg-black bg-opacity-50 text-white p-1 text-xs">
-        <div class="flex items-center">
-            <span class="relative flex h-2 w-2 mr-1">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span class="connection-indicator relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-            </span>
-            <span>Live</span>
-            <span class="ml-2" x-data="{ polling: false }" x-init="$watch('$wire.pollingActive', value => { polling = value })">
-                <span x-show="polling" class="text-yellow-400">(Fallback)</span>
-            </span>
-        </div>
+
+
     </div>
 
 <script>
@@ -169,7 +173,7 @@
         const debounceUpdate = function(eventData) {
             clearTimeout(updateTimeout);
             updateTimeout = setTimeout(function() {
-       
+
                 Livewire.dispatch('refreshFromEcho', eventData);
             }, 100); // 100ms debounce
         };
