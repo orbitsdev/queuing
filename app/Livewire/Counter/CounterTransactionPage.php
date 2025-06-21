@@ -465,7 +465,7 @@ public function loadQueue()
 
     $this->status = 'active';
     $this->breakMessage = null;
-$this->notification()->success('Work resumed.');
+    $this->notification()->success('Work resumed.');
 }
 
 

@@ -111,8 +111,7 @@ Route::get('/create-test-queue/{branch?}/{service?}', function($branchId = null,
         'ticket_number' => $formattedTicketNumber,
         'status' => 'waiting',
     ]);
-
-    event(new NewQue($queue));
+event(new NewQue($queue));
 
     return response()->json([
         'success' => true,
