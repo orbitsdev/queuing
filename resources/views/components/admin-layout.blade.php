@@ -12,8 +12,8 @@
         </div>
 
         {{-- Links --}}
-       
-        @can('superadmin_or_admin')
+
+            @can('superadmin_or_admin')
            @livewire('admin-nav')
         @endcan
         @can('staff')

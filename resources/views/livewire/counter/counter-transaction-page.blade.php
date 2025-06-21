@@ -25,7 +25,7 @@
                             {{ $status === 'active' ? 'bg-green-500 text-white' : 'bg-yellow-400 text-gray-900' }}">
                             {{ ucfirst($status) }}
                         </span>
-                        
+
                         <!-- Connection status indicator -->
                         <div class="flex items-center text-xs ml-2">
                             <span class="relative flex h-3 w-3 mr-1">
@@ -204,7 +204,7 @@
                                 >
                                     <!-- Absolute created time -->
                                     <div class="absolute top-0 rounded-sm right-0 text-[10px] font-bold {{ $status === 'break' ? 'text-gray-500' : 'bg-black text-white px-1.5 py-0.5 rounded-sm' }}">
-                                        {{ $next->created_at->format('h:i A') }}
+                                        {{ \Carbon\Carbon::parse($next->created_at)->timezone('Asia/Manila')->format('h:i A') }}
                                     </div>
 
                                     <!-- Big number -->
@@ -330,16 +330,16 @@
                     console.error('ERROR: window.Echo is not defined. Laravel Echo is not properly initialized!');
                     return;
                 }
-                
+
                 console.log('Echo initialized for counter transaction page');
-                
+
                 // Get branch ID and service IDs from the counter
                 var branchId = {{ $counter->branch_id }};
                 var serviceIds = {{ json_encode($counter->services->pluck('id')) }};
-                
+
                 console.log('Branch ID:', branchId);
                 console.log('Service IDs:', serviceIds);
-                
+
                 // Debounce function to prevent rapid-fire updates
                 let updateTimeout = null;
                 const debounceUpdate = function(eventData) {
@@ -349,19 +349,19 @@
                         Livewire.dispatch('refreshFromEcho', eventData);
                     }, 100); // 100ms debounce
                 };
-                
+
                 // Listen for queue updates on the combined channels for each service this counter handles
                 serviceIds.forEach(function(serviceId) {
                     const channelName = 'incoming-queue.' + branchId + '.' + serviceId;
                     console.log('Subscribing to channel:', channelName);
-                    
+
                     window.Echo.channel(channelName)
                         .listen('.queue.updated', function(event) {
                             console.log('Received queue update for branch ' + branchId + ', service ' + serviceId + ':', event);
                             debounceUpdate(event);
                         });
                 });
-                
+
                 // Update connection status indicator every 5 seconds
                 setInterval(function() {
                     if (window.Echo.connector.socket && window.Echo.connector.socket.connected) {
