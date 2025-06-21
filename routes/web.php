@@ -71,28 +71,28 @@ Route::middleware(['auth', 'verified', 'can:staff'])->prefix('counter')->group(f
 //display
 Route::get('/display/{monitor}', DisplayPage::class)->name('display.show');
 
-// Simple test route for generating queue tickets
+
 Route::get('/create-test-queue/{branch?}/{service?}', function($branchId = null, $serviceId = null) {
-    // Get the first branch or the one specified
+
     $branch = $branchId ? \App\Models\Branch::find($branchId) : \App\Models\Branch::first();
 
     if (!$branch) {
         return response()->json(['error' => 'Branch not found'], 404);
     }
 
-    // Get the first service for this branch or the one specified
+
     $service = $serviceId ? \App\Models\Service::find($serviceId) : \App\Models\Service::where('branch_id', $branch->id)->first();
 
     if (!$service) {
         return response()->json(['error' => 'Service not found'], 404);
     }
 
-    // Get the branch settings
+
     $setting = \App\Models\Setting::where('branch_id', $branch->id)->first();
     $base = $setting ? $setting->queue_number_base : 1;
     $prefix = $setting ? $setting->ticket_prefix : 'QUE';
 
-    // Count today's issued tickets for this branch
+
     $todayCount = \App\Models\Queue::where('branch_id', $branch->id)
         ->whereDate('created_at', today())
         ->count();

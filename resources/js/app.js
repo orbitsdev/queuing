@@ -18,15 +18,15 @@ window.Echo = new Echo({
     enabledTransports: ['ws', 'wss'],
 });
 
-// Log when WebSocket connection is established
-window.Echo.connector.pusher.connection.bind('connected', () => {
-    console.log('WebSocket connection established successfully!');
-});
+// // Log when WebSocket connection is established
+// window.Echo.connector.pusher.connection.bind('connected', () => {
+//     console.log('WebSocket connection established successfully!');
+// });
 
-// Log connection errors
-window.Echo.connector.pusher.connection.bind('error', (error) => {
-    console.error('WebSocket connection error:', error);
-});
+// // Log connection errors
+// window.Echo.connector.pusher.connection.bind('error', (error) => {
+//     console.error('WebSocket connection error:', error);
+// });
 
 // document.addEventListener('DOMContentLoaded', function () {
 //     const userID = window.userID;
