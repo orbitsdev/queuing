@@ -16,6 +16,14 @@
 }
 
 @layer components {
+  /* Queue display text protection */
+  .queue-number {
+    @apply overflow-hidden;
+    overflow-wrap: break-word;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  
   .nav-link {
     @apply flex items-center px-3 py-2 rounded-md transition-all duration-200;
     position: relative;

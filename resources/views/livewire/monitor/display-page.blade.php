@@ -39,7 +39,7 @@
 
                         <!-- Ticket Number block -->
                         <div class="col-span-2 flex items-center justify-center bg-black py-3 px-4">
-                            <div class="text-white text-4xl md:text-6xl font-black">
+                            <div class="text-white text-4xl md:text-6xl font-black queue-number">
                                 {{ $queue->number }}
                             </div>
                         </div>
@@ -73,25 +73,25 @@
                  @forelse ($waitingQueues as $queue)
                         @if(count($waitingQueues) == 1)
                         <div class="bg-[#001a71] text-white rounded-lg col-span-2 border-2 border-white flex items-center justify-center p-4 h-64">
-                            <div class="text-[15rem] font-extrabold">
+                            <div class="text-[15rem] font-extrabold queue-number">
                                 {{ $queue->number }}
                             </div>
                         </div>
                         @elseif(count($waitingQueues) == 2)
                         <div class="bg-[#001a71] text-white rounded-lg border-2 border-white flex items-center justify-center p-4 h-64">
-                            <div class="text-[12rem] font-extrabold">
+                            <div class="text-[12rem] font-extrabold queue-number">
                                 {{ $queue->number }}
                             </div>
                         </div>
                         @elseif(count($waitingQueues) == 3)
                         <div class="bg-[#001a71] text-white rounded-lg border-2 border-white flex items-center justify-center p-3 h-48">
-                            <div class="text-[10rem] font-extrabold">
+                            <div class="text-[10rem] font-extrabold queue-number">
                                 {{ $queue->number }}
                             </div>
                         </div>
                         @elseif(count($waitingQueues) <= 6)
                         <div class="bg-[#001a71] text-white rounded-lg border-2 border-white flex items-center justify-center p-2 h-40">
-                            <div class="text-9xl font-bold">
+                            <div class="text-9xl font-bold queue-number">
                                 {{ $queue->number }}
                             </div>
                         </div>
@@ -103,7 +103,7 @@
                         </div> --}}
                         @else
                         <div class="bg-[#001a71] text-white rounded-lg border-2 border-white flex items-center justify-center p-2 h-28">
-                            <div class="text-6xl font-bold">
+                            <div class="text-6xl font-bold queue-number">
                                 {{ $queue->number }}
                             </div>
                         </div>
