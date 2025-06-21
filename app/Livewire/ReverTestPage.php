@@ -3,23 +3,25 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\Attributes\On;
 
 class ReverTestPage extends Component
 {
-    public $lastEvent;
-
-    public function getListeners()
-    {
-        return [
-            'echo:incoming-queues,queue.created' => 'notifyNewQueue',
-        ];
-    }
-
-   public function notifyNewQueue($data)
+    public $count = 0;
+#[On('increaseCount')]
+public function increaseCount()
 {
-    $this->lastEvent = $data;
-    $this->dispatch('queue-added', queue: $data);
+    $this->count++;
 }
+
+#[On('decreaseCount')]
+public function decreaseCount($data)
+{
+    // dd($data);
+     $this->count -= $data;
+}
+
+
 
     public function render()
     {
