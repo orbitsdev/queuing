@@ -29,9 +29,9 @@
                         <!-- Connection status indicator -->
                         <div class="flex items-center text-xs ml-2">
                             <span class="relative flex h-3 w-3 mr-1">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full 
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full
                                     {{ $connectionStatus === 'connected' ? 'bg-green-400' : ($connectionStatus === 'fallback' ? 'bg-yellow-400' : 'bg-red-400') }} opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-3 w-3 
+                                <span class="relative inline-flex rounded-full h-3 w-3
                                     {{ $connectionStatus === 'connected' ? 'bg-green-500' : ($connectionStatus === 'fallback' ? 'bg-yellow-500' : 'bg-red-500') }}"></span>
                             </span>
                             <span class="{{ $connectionStatus === 'connected' ? 'text-green-600' : ($connectionStatus === 'fallback' ? 'text-yellow-600' : 'text-red-600') }}">
@@ -56,7 +56,7 @@
                 <div class="bg-white shadow rounded-lg p-8 space-y-8">
 
                     <!-- Now Serving -->
-                    <div class="relative w-fit mx-auto">
+                    <div class="relative w-full max-w-sm mx-auto">
                         @if ($status === 'break')
                             <div
                                 class="absolute inset-0 z-10 bg-black  flex items-center justify-center rounded-xl">
@@ -66,7 +66,7 @@
                                 </div>
                             </div>
                         @endif
-                        <div class="flex flex-col justify-between aspect-square w-80 h-80 mx-auto rounded-xl shadow-md border border-kiosqueeing-primary bg-white overflow-hidden">
+                        <div class="flex flex-col justify-between w-full mx-auto rounded-xl shadow-md border border-kiosqueeing-primary bg-white overflow-hidden" style="aspect-ratio: 4/3;">
                             <div class="flex-1 flex flex-col justify-center items-center space-y-1">
                                 @if ($currentTicket)
                                     <!-- Big number -->
@@ -101,15 +101,15 @@
 
                         <h2 class="text-2xl mt-4 uppercase font-medium text-gray-600 mb-4 text-center">Now Serving</h2>
 
-                        <div class="grid grid-cols-4 gap-4 mt-12">
+                        <div class="grid grid-cols-4 sm:grid-cols-4 gap-4 mt-8 ">
 
                             <!-- ✅ Complete -->
                             <button wire:click="completeQueue"
                                 wire:loading.attr="disabled"
                                 @disabled(!$currentTicket)
                                 class="{{ $currentTicket
-                                    ? 'px-5 py-3 bg-gray-700 text-white hover:bg-gray-800 transition rounded-lg flex flex-col items-center justify-center'
-                                    : 'px-5 py-3 bg-gray-200 text-gray-400 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
+                                    ? 'px-5 py-2  bg-gray-700 text-white hover:bg-gray-800 transition rounded-lg flex  items-center justify-center'
+                                    : 'px-5 py-2  bg-gray-200 text-gray-400 cursor-not-allowed rounded-lg flex  items-center justify-center'
                                 }}">
                                 ✅ Complete
                             </button>
@@ -119,8 +119,8 @@
                                 wire:loading.attr="disabled"
                                 @disabled(!$currentTicket)
                                 class="{{ $currentTicket
-                                    ? 'px-5 py-3 bg-gray-700 text-white hover:bg-gray-800 transition rounded-lg flex flex-col items-center justify-center'
-                                    : 'px-5 py-3 bg-gray-200 text-gray-400 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
+                                    ? 'px-5 py-2  bg-gray-700 text-white hover:bg-gray-800 transition rounded-lg flex  items-center justify-center'
+                                    : 'px-5 py-2  bg-gray-200 text-gray-400 cursor-not-allowed rounded-lg flex  items-center justify-center'
                                 }}">
                                 ⏸️ Hold
                             </button>
@@ -130,8 +130,8 @@
                                 wire:loading.attr="disabled"
                                 @disabled(!$currentTicket)
                                 class="{{ $currentTicket
-                                    ? 'px-5 py-3 bg-gray-700 text-white hover:bg-gray-800 transition rounded-lg flex flex-col items-center justify-center'
-                                    : 'px-5 py-3 bg-gray-200 text-gray-400 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
+                                    ? 'px-5 py-2  bg-gray-700 text-white hover:bg-gray-800 transition rounded-lg flex  items-center justify-center'
+                                    : 'px-5 py-2  bg-gray-200 text-gray-400 cursor-not-allowed rounded-lg flex  items-center justify-center'
                                 }}">
                                 ⏭️ Skip
                             </button>
@@ -141,8 +141,8 @@
                                 wire:loading.attr="disabled"
                                 @disabled(!$currentTicket)
                                 class="{{ $currentTicket
-                                    ? 'px-5 py-3 bg-gray-700 text-white hover:bg-gray-800 transition rounded-lg flex flex-col items-center justify-center'
-                                    : 'px-5 py-3 bg-gray-200 text-gray-400 cursor-not-allowed rounded-lg flex flex-col items-center justify-center'
+                                    ? 'px-5 py-2  bg-gray-700 text-white hover:bg-gray-800 transition rounded-lg flex  items-center justify-center'
+                                    : 'px-5 py-2  bg-gray-200 text-gray-400 cursor-not-allowed rounded-lg flex  items-center justify-center'
                                 }}">
                                 ❌ Cancel
                             </button>
@@ -159,7 +159,7 @@
 
                     <!-- Next Tickets -->
                     <div>
-                        <div class="flex justify-between items-center mb-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 sm:gap-0">
                             <div class="flex items-center gap-4">
                                 <h2 class="text-sm uppercase font-medium text-gray-500">Next Tickets</h2>
 
@@ -167,7 +167,7 @@
                                     Left Today: <strong>{{ $queueCountToday }}</strong>
                                 </span>
                             </div>
-                            <div class="flex gap-2">
+                            <div class="flex flex-wrap gap-2">
                                 <button
                                 wire:click="{{ $status === 'active' ? 'startBreak' : 'resumeWork' }}"
                                 wire:loading.attr="disabled"
@@ -191,14 +191,14 @@
                         </div>
 
 
-                        <div class="grid grid-cols-3 gap-4 mb-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-2">
                             @forelse ($nextTickets as $next)
                                 <button
                                     type="button"
                                     wire:click="selectQueue({{ $next->id }})"
                                     wire:loading.attr="disabled"
                                     @disabled($status === 'break')
-                                    class="relative flex flex-col items-center justify-center px-6 py-4 w-full rounded transition
+                                    class="relative flex flex-col items-center justify-center px-3 sm:px-6 py-4 w-full rounded transition
                                         {{ ($status === 'break')
                                             ? 'bg-gray-200 cursor-not-allowed'
                                             : 'bg-gradient-to-tr from-denim-700 via-denim-800 to-denim-900 hover:bg-gradient-to-tr hover:from-denim-800 hover:via-denim-900 hover:to-denim-950 hover:shadow-md text-white'
@@ -210,7 +210,7 @@
                                     </div>
 
                                     <!-- Big number -->
-                                    <div class="text-5xl font-bold {{ $status === 'break' ? 'text-gray-500' : 'text-white' }}">
+                                    <div class="text-4xl sm:text-5xl font-bold {{ $status === 'break' ? 'text-gray-500' : 'text-white' }}">
                                         {{ $next->number }}
                                     </div>
 
@@ -282,9 +282,9 @@
                         <div class="grid grid-cols-1 gap-2">
                             @forelse ($others as $other)
                                 <div
-                                    class="flex items-center bg-gray-50 border border-gray-200 rounded text-sm font-medium text-gray-800">
+                                    class="flex flex-wrap sm:flex-nowrap items-center bg-gray-50 border border-gray-200 rounded text-sm font-medium text-gray-800">
                                     <div
-                                        class="flex items-center rounded-l-lg bg-kiosqueeing-primary text-white uppercase px-4 py-2">
+                                        class="flex items-center rounded-t-lg sm:rounded-t-none sm:rounded-l-lg bg-kiosqueeing-primary text-white uppercase px-4 py-2 w-full sm:w-auto">
                                         {{ $other->counter->name }}
                                     </div>
                                     <div class="px-4 py-2">
@@ -341,7 +341,7 @@
 
                 console.log('Branch ID:', branchId);
                 console.log('Service IDs:', serviceIds);
-                
+
                 // Track last event time for fallback polling
                 let lastEventTime = Date.now();
                 let pollingInterval = null;
@@ -356,23 +356,23 @@
                     updateTimeout = setTimeout(function() {
                         console.log('Dispatching refreshFromEcho with data:', eventData);
                         lastEventTime = Date.now(); // Update last event time
-                        
+
                         // If we were in fallback mode, exit it
                         if (isInFallbackMode) {
                             exitFallbackMode();
                         }
-                        
+
                         Livewire.dispatch('refreshFromEcho', eventData);
                     }, 100); // 100ms debounce
                 };
-                
+
                 // Function to enter fallback polling mode
                 function enterFallbackMode() {
                     if (!isInFallbackMode) {
                         isInFallbackMode = true;
                         console.log('Entering fallback polling mode');
                         Livewire.dispatch('connectionStatusUpdate', {status: 'fallback'});
-                        
+
                         // Start polling
                         pollingInterval = setInterval(function() {
                             console.log('Fallback polling triggered');
@@ -380,24 +380,24 @@
                         }, POLLING_INTERVAL);
                     }
                 }
-                
+
                 // Function to exit fallback polling mode
                 function exitFallbackMode() {
                     if (isInFallbackMode) {
                         isInFallbackMode = false;
                         console.log('Exiting fallback polling mode');
-                        
+
                         // Stop polling
                         if (pollingInterval) {
                             clearInterval(pollingInterval);
                             pollingInterval = null;
                         }
-                        
+
                         // Update connection status based on socket state
                         updateConnectionStatus();
                     }
                 }
-                
+
                 // Function to update connection status
                 function updateConnectionStatus() {
                     if (window.Echo.connector.socket && window.Echo.connector.socket.connected) {
@@ -425,7 +425,7 @@
                 // Also check if we need to enter fallback mode
                 setInterval(function() {
                     updateConnectionStatus();
-                    
+
                     // Check if we need to enter fallback mode
                     const timeSinceLastEvent = Date.now() - lastEventTime;
                     if (timeSinceLastEvent > FALLBACK_THRESHOLD && !isInFallbackMode) {

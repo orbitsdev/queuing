@@ -28,7 +28,7 @@ Route::get('/', function () {
 
 
 // ✅ Main dashboard redirect
-Route::get('dashboard', function() {
+Route::get('dashboard', function () {
     if (!Auth::check()) {
         return redirect()->route('login');
     }
@@ -47,7 +47,7 @@ Route::get('test-page', TestPage::class)
     ->middleware(['auth', 'verified'])
     ->name('test-page');
 
-    // Admin Routes
+// Admin Routes
 Route::middleware(['auth', 'verified', 'can:superadmin_or_admin'])->prefix('admin')->group(function () {
     Route::get('dashboard', Dashboard::class)->name('admin.dashboard');
     Route::get('branches', Branches::class)->name('admin.branches');
@@ -61,9 +61,8 @@ Route::middleware(['auth', 'verified', 'can:superadmin_or_admin'])->prefix('admi
     Route::get('branches-for-monitor-management', BranchesListForMonitorMangement::class)->name('admin.branches-for-monitor-management');
     Route::get('monitors/{branch}', Monitors::class)->name('admin.monitors');
     Route::get('branch-queue-settings/{branch}', BranchQueueSettings::class)->name('admin.branch-queue-settings');
-
 });
-    // Admin Routes
+// Admin Routes
 Route::middleware(['auth', 'verified', 'can:staff'])->prefix('counter')->group(function () {
     Route::get('select', SelectCounter::class)->name('counter.select');
     Route::get('transaction', CounterTransactionPage::class)->middleware(['counter.assigned'])->name('counter.transaction');
@@ -73,7 +72,7 @@ Route::middleware(['auth', 'verified', 'can:staff'])->prefix('counter')->group(f
 Route::get('/display/{monitor}', DisplayPage::class)->name('display.show');
 
 
-Route::get('/create-test-queue/{branch?}/{service?}', function($branchId = null, $serviceId = null) {
+Route::get('/create-test-queue/{branch?}/{service?}', function ($branchId = null, $serviceId = null) {
 
     $branch = $branchId ? \App\Models\Branch::find($branchId) : \App\Models\Branch::first();
 
@@ -93,18 +92,12 @@ Route::get('/create-test-queue/{branch?}/{service?}', function($branchId = null,
     $base = $setting ? $setting->queue_number_base : 1;
     $prefix = $setting ? $setting->ticket_prefix : 'QUE';
 
-
     $todayCount = \App\Models\Queue::where('branch_id', $branch->id)
         ->whereDate('created_at', today())
         ->count();
 
-    // Calculate next number
     $nextNumber = $base + $todayCount;
-
-    // Format ticket number with prefix
     $formattedTicketNumber = $prefix . $nextNumber;
-
-    // Create the queue
     $queue = \App\Models\Queue::create([
         'branch_id' => $branch->id,
         'service_id' => $service->id,
@@ -112,8 +105,8 @@ Route::get('/create-test-queue/{branch?}/{service?}', function($branchId = null,
         'ticket_number' => $formattedTicketNumber,
         'status' => 'waiting',
     ]);
-// event(new NewQue($queue));
-event(new QueueStatusChanged($queue));
+
+    event(new QueueStatusChanged($queue));
     return response()->json([
         'success' => true,
         'message' => 'Test queue created successfully',
@@ -137,6 +130,4 @@ event(new QueueStatusChanged($queue));
 //reverb test page
 Route::get('reverb-test', ReverTestPage::class)->name('reverb-test');
 
-require __DIR__.'/auth.php';
-
-
+require __DIR__ . '/auth.php';
