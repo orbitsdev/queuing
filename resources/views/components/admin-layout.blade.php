@@ -8,7 +8,7 @@
         <div class="flex items-center px-4">
             <img src="{{ asset('images/queue_logo.png') }}" alt="Kiosqueeing Logo" class="h-16" />
             <span class="font-bold text-xl text-kiosqueeing-primar uppercase text-center"
-                x-show="sidebarOpen">Kiosk Queuing System</span>
+                x-show="sidebarOpen">KioskQ</span>
         </div>
 
         {{-- Links --}}
