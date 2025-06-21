@@ -156,13 +156,13 @@
 
         console.log('Branch ID:', branchId);
         console.log('Services:', services);
-        
+
         // Debounce function to prevent rapid-fire updates
         let updateTimeout = null;
         const debounceUpdate = function(eventData) {
             clearTimeout(updateTimeout);
             updateTimeout = setTimeout(function() {
-                console.log('Debounced update triggered', eventData);
+       
                 Livewire.dispatch('refreshFromEcho', eventData);
             }, 100); // 100ms debounce
         };
@@ -175,9 +175,9 @@
                     debounceUpdate(event);
                 });
         });
-        
+
         // Note: We're now using the combined channel format: incoming-queue.{branch_id}.{service_id}
-        
+
         // Update the connection status indicator
         const updateConnectionStatus = function() {
             const indicator = document.querySelector('.connection-indicator');
@@ -191,7 +191,7 @@
                 }
             }
         };
-        
+
         // Check connection status periodically
         setInterval(updateConnectionStatus, 5000);
     });
