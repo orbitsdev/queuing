@@ -15,7 +15,8 @@ window.Echo = new Echo({
     wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
     wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
     forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
-    enabledTransports: ['ws', 'wss'],
+    enabledTransports: ['ws'],
+    // enabledTransports: ['ws', 'wss'],
 });
 
 // Log when WebSocket connection is established
@@ -27,24 +28,4 @@ window.Echo.connector.pusher.connection.bind('connected', () => {
 window.Echo.connector.pusher.connection.bind('error', (error) => {
     console.error('WebSocket connection error:', error);
 });
-
-// document.addEventListener('DOMContentLoaded', function () {
-//     const userID = window.userID;
-
-//     // Debug the channel subscription
-//     console.log("Subscribing to channel: incoming-queus");
-
-//     window.Echo.channel('incoming-queus')
-//         .listen('.queue.created', (response) => {
-//             console.log("Event received:", response);
-//         })
-//         .listen('App\\Events\\NewQue', (response) => {
-//             console.log("Event received via full class name:", response);
-//         });
-
-//     // Add a subscription success handler
-//     window.Echo.connector.pusher.connection.bind('message', (message) => {
-//         console.log('Pusher message received:', message);
-//     });
-// });
 
