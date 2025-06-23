@@ -1,5 +1,3 @@
-<<<<<<< Updated upstream
-=======
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 window.Pusher = Pusher;
@@ -23,4 +21,3 @@ window.Echo.connector.pusher.connection.bind('connected', () => {
 window.Echo.connector.pusher.connection.bind('error', (error) => {
     console.error('WebSocket connection error:', error);
 });
->>>>>>> Stashed changes
