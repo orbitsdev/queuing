@@ -136,8 +136,11 @@ class KioskController extends Controller
         $queue->status = 'waiting';
         $queue->save();
 
-        // Broadcast the queue status change event
+        // Broadcast the queue status changed event
         event(new QueueStatusChanged($queue));
+
+        // Load relationships before returning the resource
+        $queue->load(['service', 'branch']);
 
         return ApiResponse::success(
             new QueueResource($queue),
