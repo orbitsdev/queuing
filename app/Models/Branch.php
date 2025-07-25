@@ -11,7 +11,7 @@ use App\Models\Setting;
 use App\Observers\BranchObserver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
-
+use Illuminate\Database\Eloquent\Casts\Attribute;
 #[ObservedBy([BranchObserver::class])]
 class Branch extends Model
 {
@@ -45,4 +45,10 @@ class Branch extends Model
     {
         return $this->hasMany(Monitor::class);
     }
+
+
+    public function adminCount(): Attribute
+{
+    return Attribute::get(fn () => $this->users()->where('role', 'admin')->count());
+}
 }

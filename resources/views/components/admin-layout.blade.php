@@ -12,13 +12,16 @@
         </div>
 
         {{-- Links --}}
-
-            @can('superadmin_or_admin')
-           @livewire('admin-nav')
+        @can('superadmin')
+            @livewire('super-admin.super-admin-nav')
+        @endcan
+        @can('admin')
+            @livewire('admin-nav')
         @endcan
         @can('staff')
-           @livewire('staff-nav')
+            @livewire('staff-nav')
         @endcan
+
 
         {{-- Sidebar footer --}}
         <div class="p-4 border-t border-gray-200">
@@ -52,7 +55,7 @@
                 </button>
 
                 <h1 class="text-lg font-semibold text-kiosqueeing-primary">
-                   @yield('nav-title', 'Dashboard')
+                    @yield('nav-title', 'Dashboard')
                 </h1>
 
             </div>
