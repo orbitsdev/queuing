@@ -37,7 +37,7 @@ Route::get('dashboard', function () {
     switch (Auth::user()->role) {
         case 'superadmin':
         case 'admin':
-            return redirect()->route('admin.branches');
+            return redirect()->route('admin.dashboard');
         case 'staff':
             return redirect()->route('counter.transaction');
     }

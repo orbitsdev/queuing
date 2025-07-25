@@ -6,6 +6,7 @@ use App\Models\Queue;
 use App\Models\Branch;
 use App\Models\Counter;
 use App\Models\Service;
+use App\Models\User;
 
 use Livewire\Attributes\Title;
 
@@ -24,11 +25,10 @@ class Dashboard extends Component  implements HasForms, HasActions
     use InteractsWithForms;
 
     #[Title('Admin Dashboard')]
-    public $totalQueues;
-    public $activeCounters;
     public $totalServices;
-    public $branches;
-    public $queuesByStatus;
+    public $totalBranches;
+    public $totalMonitors;
+    public $totalUsers;
 
 
     public function testAction(): Action
@@ -49,18 +49,10 @@ class Dashboard extends Component  implements HasForms, HasActions
 
     public function loadDashboardStats()
     {
-        $this->totalQueues = Queue::whereDate('created_at', today())->count();
-        $this->activeCounters = Counter::where('active', true)->count();
         $this->totalServices = Service::count();
-        $this->branches = Branch::withCount(['queues' => function($query) {
-            $query->whereDate('created_at', today());
-        }])->get();
-        
-        $this->queuesByStatus = Queue::whereDate('created_at', today())
-            ->selectRaw('status, count(*) as count')
-            ->groupBy('status')
-            ->pluck('count', 'status')
-            ->toArray();
+        $this->totalBranches = Branch::count();
+        $this->totalMonitors = Counter::count();
+        $this->totalUsers = User::count();
     }
 
     public function render()
