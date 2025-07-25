@@ -4,6 +4,7 @@ use App\Events\NewQue;
 use App\Livewire\TestPage;
 use App\Livewire\Admin\Users;
 use App\Livewire\Admin\Queues;
+use App\Livewire\Branch\Manage;
 use App\Livewire\ReverTestPage;
 use App\Livewire\Admin\Branches;
 use App\Livewire\Admin\Counters;
@@ -22,7 +23,7 @@ use App\Livewire\Counter\CounterTransactionPage;
 use App\Livewire\Monitor\BranchesListForMonitorMangement;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('dashboard');
 })->name('home');
 
 
@@ -57,10 +58,10 @@ Route::middleware(['auth', 'verified', 'can:superadmin_or_admin'])->prefix('admi
     Route::get('queues', Queues::class)->name('admin.queues');
     Route::get('branch-settings', ListSettings::class)->name('admin.branch-settings');
     Route::get('settings/{branch}', Settings::class)->name('admin.settings');
-
     Route::get('branches-for-monitor-management', BranchesListForMonitorMangement::class)->name('admin.branches-for-monitor-management');
     Route::get('monitors/{branch}', Monitors::class)->name('admin.monitors');
     Route::get('branch-queue-settings/{branch}', BranchQueueSettings::class)->name('admin.branch-queue-settings');
+    Route::get('branch/{branch}', Manage::class)->name('admin.branch');
 });
 // Admin Routes
 Route::middleware(['auth', 'verified', 'can:staff'])->prefix('counter')->group(function () {

@@ -72,7 +72,7 @@ class KioskController extends Controller
         if (!$branch) {
             return ApiResponse::error('Branch not found', 404);
         }
-
+// 
         $services = Service::where('branch_id', $branch->id)
             ->orderBy('name')
             ->get();
