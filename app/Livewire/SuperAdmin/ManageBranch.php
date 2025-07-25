@@ -85,9 +85,9 @@ class ManageBranch extends Component implements HasForms, HasTable
                             $query->where('role','admin');
                         },
                         'setting',
-                        'counters',
+                        'counters.services',
                         'services',
-                        'monitors'
+                        'monitors.services'
                     ]);
                         return view('livewire.super-admin.view-branch-details', ['record' => $record]);
                     })

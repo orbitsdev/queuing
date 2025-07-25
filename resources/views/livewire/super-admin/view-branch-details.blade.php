@@ -150,7 +150,17 @@
                             <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{{ $counter->name }}</td>
                             <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">{{ $counter->number }}</td>
                             <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                              {{ $counter->services->count() }}
+                              @if($counter->services->count() > 0)
+                                <div class="flex flex-wrap gap-1">
+                                  @foreach($counter->services as $service)
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded-full">
+                                      {{ $service->name }}
+                                    </span>
+                                  @endforeach
+                                </div>
+                              @else
+                                <span class="text-gray-400">No services assigned</span>
+                              @endif
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                               @if($counter->status)
@@ -208,7 +218,17 @@
                             <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{{ $monitor->name }}</td>
                             <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">{{ $monitor->location }}</td>
                             <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                              {{ $monitor->services->count() }}
+                              @if($monitor->services->count() > 0)
+                                <div class="flex flex-wrap gap-1">
+                                  @foreach($monitor->services as $service)
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded-full">
+                                      {{ $service->name }}
+                                    </span>
+                                  @endforeach
+                                </div>
+                              @else
+                                <span class="text-gray-400">No services assigned</span>
+                              @endif
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                               @if($monitor->status)
