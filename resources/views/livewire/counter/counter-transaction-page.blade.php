@@ -41,10 +41,11 @@
                     </div>
 
                     @if ($status === 'break')
-                        <div class="mt-2 md:mt-0 md:ml-2 px-4 py-2 bg-yellow-50 text-yellow-800 border border-yellow-300 rounded-md text-sm shadow-sm">
-                            <strong>Break Notice:</strong> {{ $breakMessage ?? 'Not available' }}
-                        </div>
-                    @endif
+    <div class="mt-2 md:mt-0 md:ml-2 px-4 py-2 bg-yellow-50 text-yellow-800 border border-yellow-300 rounded-md text-sm shadow-sm">
+        <strong>Break Notice:</strong> {{ $breakMessage ?? 'Not available' }}
+    </div>
+@endif
+
                 </div>
             </div>
 
