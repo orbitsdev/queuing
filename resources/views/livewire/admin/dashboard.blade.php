@@ -18,7 +18,7 @@
         <p class="text-2xl font-semibold text-white">{{ $totalServices }}</p>
         <div class="absolute inset-x-0 bottom-0 px-4 py-4 backdrop-blur-sm bg-white/10 sm:px-6">
           <div class="text-sm">
-            <a href="#" class="font-medium text-white hover:text-gray-100">View all<span class="sr-only"> Total Services stats</span></a>
+            <a href="{{ route('admin.services') }}" class="font-medium text-white hover:text-gray-100">View all<span class="sr-only"> Total Services stats</span></a>
           </div>
         </div>
       </dd>
@@ -58,7 +58,7 @@
         <p class="text-2xl font-semibold text-white">{{ $totalMonitors }}</p>
         <div class="absolute inset-x-0 bottom-0 px-4 py-4 backdrop-blur-sm bg-white/10 sm:px-6">
           <div class="text-sm">
-            <a href="#" class="font-medium text-white hover:text-gray-100">View all<span class="sr-only"> Total Monitors stats</span></a>
+            <a href="{{ route('admin.monitors') }}" class="font-medium text-white hover:text-gray-100">View all<span class="sr-only"> Total Monitors stats</span></a>
           </div>
         </div>
       </dd>
@@ -78,7 +78,7 @@
         <p class="text-2xl font-semibold text-white">{{ $totalUsers }}</p>
         <div class="absolute inset-x-0 bottom-0 px-4 py-4 backdrop-blur-sm bg-white/10 sm:px-6">
           <div class="text-sm">
-            <a href="#" class="font-medium text-white hover:text-gray-100">View all<span class="sr-only"> Total Users stats</span></a>
+            <a href="{{ route('admin.users') }}" class="font-medium text-white hover:text-gray-100">View all<span class="sr-only"> Total Users stats</span></a>
           </div>
         </div>
       </dd>

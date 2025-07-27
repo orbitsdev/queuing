@@ -75,6 +75,17 @@ class BranchSettingManagement extends Component implements HasForms
 
     public function save()
     {
+        $this->dialog()->confirm([
+            'title'       => 'Confirm Save',
+            'description' => 'Are you sure you want to save these settings? Changes will take effect immediately.',
+            'acceptLabel' => 'Yes, Save Settings',
+            'cancelLabel' => 'Cancel',
+            'method'      => 'confirmSave',
+        ]);
+    }
+    
+    public function confirmSave()
+    {
         $this->setting->update($this->form->getState());
         $this->dialog()->success(
             title: 'Settings Updated',
