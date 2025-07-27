@@ -436,11 +436,20 @@ class CounterTransactionPage extends Component
         $allowedServiceIds = $this->counter->services()->pluck('services.id');
 
         // ✅ 1️⃣ Current ticket for this counter
-        if (auth()->user()->queue_id) {
-            $this->currentTicket = Queue::find(auth()->user()->queue_id);
-        } else {
-            $this->currentTicket = null;
-        }
+       if (auth()->user()->queue_id) {
+    $queue = Queue::find(auth()->user()->queue_id);
+
+    if ($queue) {
+        $this->currentTicket = $queue;
+    } else {
+        // Queue was deleted (probably by reset), clear user reference
+        auth()->user()->update(['queue_id' => null]);
+        $this->currentTicket = null;
+    }
+} else {
+    $this->currentTicket = null;
+}
+
 
         // ✅ 2️⃣ Next tickets matching allowed services
         $this->nextTickets = Queue::todayQueues()
