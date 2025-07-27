@@ -83,7 +83,51 @@ class BranchSettingManagement extends Component implements HasForms
             'method'      => 'confirmSave',
         ]);
     }
-    
+
+
+
+public function confirmReset()
+{
+    $this->dialog()->confirm([
+        'title'       => 'Are you sure?',
+        'description' => 'This will reset all current queue numbers.',
+        'acceptLabel' => 'Yes, reset now',
+        'method'      => 'resetNow',
+    ]);
+}
+
+public function resetNow()
+{
+    $branch = Auth::user()->branch;
+    $setting = $branch->setting;
+
+    if (!$setting) {
+        $this->dialog()->error(
+            title: 'Missing Settings',
+            description: "This branch does not have settings yet."
+        );
+        return;
+    }
+
+    // 1. Reset queue counters
+    foreach ($branch->services as $service) {
+        $service->last_ticket_number = $setting->queue_number_base ?? 1;
+        $service->save();
+
+        // 2. Delete today's active queue records
+        $service->queues()
+            ->whereDate('created_at', today())
+            ->whereIn('status', ['waiting', 'called', 'serving', 'held'])
+            ->delete();
+    }
+
+    $this->dialog()->success(
+        title: 'Queues Fully Reset',
+        description: "All queue numbers cleared. New tickets will start at {$setting->queue_number_base}."
+    );
+}
+
+
     public function confirmSave()
     {
         $this->setting->update($this->form->getState());

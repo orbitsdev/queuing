@@ -10,11 +10,20 @@
         <div class="max-w-7xl mx-auto">
             <form wire:submit="save">
                 {{ $this->form }}
-                <div class="mt-4">
+                <div class="mt-4 flex items-center gap-4">
                     <x-filament::button type="submit" wire:loading.attr="disabled">
                         Save
                     </x-filament::button>
+
+                    <x-filament::button
+                        color="gray"
+                        wire:click="confirmReset"
+                        wire:loading.attr="disabled"
+                    >
+                        Reset Queues Now
+                    </x-filament::button>
                 </div>
+
             </form>
         </div>
         <x-filament-actions::modals />
