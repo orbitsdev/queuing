@@ -35,10 +35,6 @@ class Counter extends Model
 }
 
 
-    public function scopeCurrentBranch($query)
-    {
-        return $query->where('branch_id', Auth::user()->branch_id);
-    }
 
     public function services()
 {
@@ -48,6 +44,11 @@ class Counter extends Model
 public function counterServices()
 {
     return $this->hasMany(CounterService::class);
+}
+
+public function scopeCurrentBranch($query)
+{
+    return $query->where('branch_id', Auth::user()->branch_id);
 }
 
 

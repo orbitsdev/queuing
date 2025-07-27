@@ -8,28 +8,31 @@ use App\Models\Counter;
 use App\Models\Service;
 use Livewire\Component;
 
+use Filament\Tables\Table;
+use Filament\Actions\Action;
 use Livewire\Attributes\Rule;
 use Livewire\Attributes\Title;
 use WireUi\Traits\WireUiActions;
-use Filament\Actions\Action;
-use Filament\Tables\Actions\Action as TableAction;
 use Filament\Tables\Grouping\Group;
-use Filament\Forms\Components\Select;
+use Illuminate\Support\Facades\Auth;
 
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Contracts\HasTable;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Actions\Action as TableAction;
 use Filament\Actions\Concerns\InteractsWithActions;
-use Filament\Tables\Table;
+
+
 class Queues extends Component implements HasForms, HasTable, HasActions
 {
     use InteractsWithTable;
@@ -56,21 +59,12 @@ class Queues extends Component implements HasForms, HasTable, HasActions
                     ->description('Enter the ticket details')
                     ->columns(2)
                     ->schema([
-                        Select::make('branch_id')
-                            ->label('Branch')
-                            ->placeholder('Select branch')
-                            ->options(Branch::all()->pluck('name', 'id'))
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdated(fn (callable $set) => $set('service_id', null))
-                            ->columnSpan(1),
+
                         Select::make('service_id')
                             ->label('Service')
                             ->placeholder('Select service')
                             ->options(function (callable $get) {
-                                $branchId = $get('branch_id');
-                                if (!$branchId) return [];
-                                return Service::where('branch_id', $branchId)->pluck('name', 'id');
+                                return Service::where('branch_id', Auth::user()->branch_id)->pluck('name', 'id');
                             })
                             ->required()
                             ->columnSpan(1),
@@ -98,9 +92,11 @@ class Queues extends Component implements HasForms, HasTable, HasActions
                             ->columnSpan(1),
                     ]),
             ])
+
             ->action(function (array $data): void {
+
                 // Generate a number for the ticket
-                $data['number'] = Queue::where('branch_id', $data['branch_id'])
+                $data['number'] = Queue::where('branch_id', Auth::user()->branch_id)
                     ->where('service_id', $data['service_id'])
                     ->whereDate('created_at', now()->toDateString())
                     ->count() + 1;
@@ -116,20 +112,11 @@ class Queues extends Component implements HasForms, HasTable, HasActions
   public function table(Table $table): Table
     {
        return $table
-            ->query(Queue::query())
-            ->groups([
-                Group::make('branch.name')
-                    ->label('Branch')
-                    ->getTitleFromRecordUsing(fn (Queue $queue) => $queue->branch?->name ?? 'Unassigned')
-                    ->collapsible(),
-            ])
-            ->defaultGroup('branch.name')
+            ->query(Queue::query()->currentBranch())
+
+
             ->filters([
-                SelectFilter::make('branch_id')
-                    ->label('Branch')
-                    ->options(Branch::pluck('name', 'id'))
-                    ->placeholder('All Branches')
-                    ->indicator('Branch'),
+
                 SelectFilter::make('status')
                     ->label('Status')
                     ->options([

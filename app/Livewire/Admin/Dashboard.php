@@ -26,7 +26,7 @@ class Dashboard extends Component  implements HasForms, HasActions
 
     #[Title('Admin Dashboard')]
     public $totalServices;
-    public $totalBranches;
+    // public $totalBranches;
     public $totalMonitors;
     public $totalUsers;
 
@@ -38,7 +38,7 @@ class Dashboard extends Component  implements HasForms, HasActions
             ->requiresConfirmation()
             ->action(function () {
                 dd('test');
-              
+
             });
     }
 
@@ -49,10 +49,10 @@ class Dashboard extends Component  implements HasForms, HasActions
 
     public function loadDashboardStats()
     {
-        $this->totalServices = Service::count();
-        $this->totalBranches = Branch::count();
-        $this->totalMonitors = Counter::count();
-        $this->totalUsers = User::count();
+        $this->totalServices = Service::currentBranch()->count();
+        // $this->totalBranches = Branch::count();
+        $this->totalMonitors = Counter::currentBranch()->count();
+        $this->totalUsers = User::currentBranch()->count();
     }
 
     public function render()

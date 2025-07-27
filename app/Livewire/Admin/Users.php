@@ -11,6 +11,7 @@ use Livewire\Attributes\Title;
 use WireUi\Traits\WireUiActions;
 use Filament\Tables\Grouping\Group;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
@@ -19,12 +20,12 @@ use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Validation\Rules\Password;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Notifications\Notification;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Actions\Action as TableAction;
@@ -41,10 +42,10 @@ class Users extends Component implements HasForms, HasTable, HasActions
 
     // filament actions
     public function createAction(): Action
-    {   
+    {
         return Action::make('create')
         ->size('xs')
-        
+
         ->label('Create User')
         ->button('dark-gray')
         ->icon('heroicon-o-plus')
@@ -62,7 +63,7 @@ class Users extends Component implements HasForms, HasTable, HasActions
                         ->required()
                         ->maxLength(255)
                         ->columnSpan(1),
-                        
+
                     TextInput::make('email')
                         ->label('Email Address')
                         ->placeholder('Enter email address')
@@ -72,22 +73,22 @@ class Users extends Component implements HasForms, HasTable, HasActions
                         ->maxLength(255)
                         ->columnSpan(1),
                 ]),
-                
+
             Section::make('Access Details')
                 ->description('Set user role and branch assignment')
                 ->columns(2)
                 ->schema([
-                    Select::make('branch_id')
-                        ->label('Branch')
-                        ->options(Branch::pluck('name', 'id'))
-                        ->required()
-                        ->placeholder('Select a branch')
-                        ->columnSpan(1),
-                        
+                    // Select::make('branch_id')
+                    //     ->label('Branch')
+                    //     ->options(Branch::pluck('name', 'id'))
+                    //     ->required()
+                    //     ->placeholder('Select a branch')
+                    //     ->columnSpan(1),
+
                     Select::make('role')
                         ->label('Role')
                         ->options([
-                            'superadmin' => 'Super Admin',
+                            // 'superadmin' => 'Super Admin',
                             'admin' => 'Branch Admin',
                             'staff' => 'Staff',
                         ])
@@ -95,7 +96,7 @@ class Users extends Component implements HasForms, HasTable, HasActions
                         ->placeholder('Select a role')
                         ->columnSpan(1),
                 ]),
-                
+
             Section::make('Password')
                 ->description('Set the initial password for this user')
                 ->columns(2)
@@ -104,13 +105,15 @@ class Users extends Component implements HasForms, HasTable, HasActions
                         ->label('Password')
                         ->password()
                         ->required()
+                                                ->revealable()
                         ->rule(Password::defaults())
                         ->autocomplete('new-password')
                         ->columnSpan(1),
-                        
+
                     TextInput::make('password_confirmation')
                         ->label('Confirm Password')
                         ->password()
+                        ->revealable()
                         ->required()
                         ->same('password')
                         ->autocomplete('new-password')
@@ -121,23 +124,23 @@ class Users extends Component implements HasForms, HasTable, HasActions
             User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
-                'branch_id' => $data['branch_id'],
+                'branch_id' => Auth::user()->branch_id,
                 'role' => $data['role'],
                 'password' => Hash::make($data['password']),
             ]);
-            
+
             $this->dialog()->success(
                 title: 'User Created',
                 description: 'The new user has been successfully added to the system'
             );
         });
     }
-   
+
 
     public function table(Table $table): Table
     {
         return $table
-            ->query(User::query())
+            ->query(User::query()->notDefaultAdmin()->currentBranch())
             ->columns([
                 TextColumn::make('name')
                     ->label('Name')
@@ -171,32 +174,32 @@ class Users extends Component implements HasForms, HasTable, HasActions
             ])
 
             ->headerActions([
-               
+
             ])
                 // Group users by branch with default for unassigned users
-                ->groups([
-                       Group::make('branch.name')
-                        ->label('Branch')
-                        ->getTitleFromRecordUsing(fn ($record) => $record->branch ? $record->branch->name : 'Unassigned')
-                        ->collapsible()
-                ])
-                ->defaultGroup('branch.name')
+                // ->groups([
+                //        Group::make('branch.name')
+                //         ->label('Branch')
+                //         ->getTitleFromRecordUsing(fn ($record) => $record->branch ? $record->branch->name : 'Unassigned')
+                //         ->collapsible()
+                // ])
+                // ->defaultGroup('branch.name')
                 ->filters([
                     SelectFilter::make('role')
                     ->label('Role')
                     ->options([
                         'superadmin' => 'Super Admin',
-                        'admin' => 'Branch Admin',
+                        'admin' => 'Admin',
                         'staff' => 'Staff',
                     ])
                     ->placeholder('All Roles')
                     ->indicator('Role'),
-                    
-                SelectFilter::make('branch_id')
-                    ->label('Branch')
-                    ->options(fn () => Branch::pluck('name', 'id')->toArray())
-                    ->placeholder('All Branches')
-                    ->indicator('Branch')
+
+                // SelectFilter::make('branch_id')
+                //     ->label('Branch')
+                //     ->options(fn () => Branch::pluck('name', 'id')->toArray())
+                //     ->placeholder('All Branches')
+                //     ->indicator('Branch')
             ])
             ->actions([
               //filament table action group
@@ -211,49 +214,49 @@ class Users extends Component implements HasForms, HasTable, HasActions
                 ->modalContent(function (User $record) {
                     // Get total tickets processed
                     $ticketsProcessed = $record->queues()->count();
-                    
+
                     // Get tickets processed today
                     $ticketsToday = $record->queues()
                         ->whereDate('created_at', now()->toDateString())
                         ->count();
-                        
+
                     // Calculate average processing time (in minutes)
                     // Based on the queues that have been completed
                     $completedQueues = $record->queues()
                         ->where('status', 'completed')
                         ->get();
-                        
+
                     $averageProcessingTime = 'N/A';
                     if ($completedQueues->count() > 0) {
                         $totalMinutes = 0;
                         $count = 0;
-                        
+
                         foreach ($completedQueues as $queue) {
                             // Using created_at and updated_at as approximation
                             // since we don't have specific timestamp fields
                             $startTime = $queue->created_at;
                             $endTime = $queue->updated_at;
-                            
+
                             if ($startTime && $endTime) {
                                 $minutes = $startTime->diffInMinutes($endTime);
                                 $totalMinutes += $minutes;
                                 $count++;
                             }
                         }
-                        
+
                         if ($count > 0) {
                             $avg = $totalMinutes / $count;
                             $averageProcessingTime = number_format($avg, 1) . ' min';
                         }
                     }
-                    
+
                     // Get recent queues
                     $recentQueues = $record->queues()
                         ->with(['service'])
                         ->latest()
                         ->take(5)
                         ->get();
-                        
+
                     return view('livewire.admin.user-details-modal', [
                         'user' => $record,
                         'ticketsProcessed' => $ticketsProcessed,
@@ -265,7 +268,7 @@ class Users extends Component implements HasForms, HasTable, HasActions
                 ->modalSubmitAction(false)
                 ->modalCancelAction(fn ($action) => $action->label('Close')),
               ActionGroup::make([
-                
+
                 EditAction::make('edit')
                 ->size('xs')
                 ->label('Edit')
@@ -291,7 +294,7 @@ class Users extends Component implements HasForms, HasTable, HasActions
                                     ->required()
                                     ->maxLength(255)
                                     ->columnSpan(1),
-                                    
+
                                 TextInput::make('email')
                                     ->label('Email Address')
                                     ->placeholder('Enter email address')
@@ -301,23 +304,23 @@ class Users extends Component implements HasForms, HasTable, HasActions
                                     ->maxLength(255)
                                     ->columnSpan(1),
                             ]),
-                            
+
                         Section::make('Access Details')
                             ->description('Update user role and branch assignment')
                             ->columns(2)
                             ->schema([
-                                Select::make('branch_id')
-                                    ->label('Branch')
-                                    ->options(Branch::pluck('name', 'id'))
-                                    ->required()
-                                    ->placeholder('Select a branch')
-                                    ->columnSpan(1),
-                                    
+                                // Select::make('branch_id')
+                                //     ->label('Branch')
+                                //     ->options(Branch::pluck('name', 'id'))
+                                //     ->required()
+                                //     ->placeholder('Select a branch')
+                                //     ->columnSpan(1),
+
                                 Select::make('role')
                                     ->label('Role')
                                     ->options([
-                                        'superadmin' => 'Super Admin',
-                                        'admin' => 'Branch Admin',
+                                        // 'superadmin' => 'Super Admin',
+                                        'admin' => 'Admin',
                                         'staff' => 'Staff',
                                     ])
                                     ->required()
@@ -326,9 +329,9 @@ class Users extends Component implements HasForms, HasTable, HasActions
                             ]),
                     ];
                 }),
-                
-            
-                
+
+
+
             Action::make('reset_password')
             ->size('xs')
                 ->label('Reset Password')
@@ -349,7 +352,7 @@ class Users extends Component implements HasForms, HasTable, HasActions
                                 ->rule(Password::defaults())
                                 ->autocomplete('new-password')
                                 ->columnSpan(1),
-                                
+
                             TextInput::make('password_confirmation')
                                 ->label('Confirm Password')
                                 ->password()
@@ -363,7 +366,7 @@ class Users extends Component implements HasForms, HasTable, HasActions
                     $record->update([
                         'password' => Hash::make($data['password']),
                     ]);
-                    
+
                     $this->dialog()->success(
                         title: 'Password Reset',
                         description: 'The user\'s password has been successfully reset'
@@ -373,8 +376,8 @@ class Users extends Component implements HasForms, HasTable, HasActions
                DeleteAction::make()
                    ->visible(function (User $record) {
                        // Only visible if not superadmin and doesn't have queues or branch
-                       return $record->role !== 'superadmin' && 
-                              !$record->queues()->exists() && 
+                       return $record->role !== 'superadmin' &&
+                              !$record->queues()->exists() &&
                               $record->id !== auth()->guard()->id();
                    })
                    ->requiresConfirmation()
@@ -396,7 +399,7 @@ class Users extends Component implements HasForms, HasTable, HasActions
             ]);
     }
 
-    
+
     public function render()
     {
         return view('livewire.admin.users');

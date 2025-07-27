@@ -11,6 +11,7 @@ use Filament\Actions\Action;
 use WireUi\Traits\WireUiActions;
 use Filament\Actions\CreateAction;
 use Filament\Tables\Grouping\Group;
+use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
@@ -20,8 +21,10 @@ use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Actions\Contracts\HasActions;
@@ -63,15 +66,7 @@ class Counters extends Component implements HasForms, HasTable, HasActions
                             ->maxLength(255)
                             ->unique(ignoreRecord: true)
                             ->columnSpan(1),
-                        Select::make('branch_id')
-                            ->label('Branch')
-                            ->relationship('branch', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->placeholder('Select branch')
-                            ->required()
-                            ->helperText('Branch where this counter is located')
-                            ->columnSpan(1),
+
                     ]),
                 Section::make('Allowed Services')
                     ->description('Assign which services this counter can handle')
@@ -117,6 +112,10 @@ class Counters extends Component implements HasForms, HasTable, HasActions
                             ->columnSpan(2),
                     ]),
             ])
+              ->using(function (array $data, string $model): Model {
+                  $data['branch_id'] =  Auth::user()->branch_id ?? null;
+                      return $model::create($data);
+    })
             ->after(function (Counter $record) {
                 $this->dialog()->success(
                     title: 'Counter Created',
@@ -131,30 +130,26 @@ class Counters extends Component implements HasForms, HasTable, HasActions
     {
         return $table
             ->query(Counter::query())
-            ->groups([
-                Group::make('branch.name')
-                    ->label('Branch')
-                    ->getTitleFromRecordUsing(fn ($record) => $record->branch ? $record->branch->name : 'Unassigned')
-                    ->collapsible()
-            ])
-            ->defaultGroup('branch.name')
+
             ->columns([
+                ToggleColumn::make('active')
+->label('Active/Inactive'),
                 TextColumn::make('name')
                     ->label('Name')
                     ->searchable(isIndividual: true)
                     ->sortable(),
-                TextColumn::make('branch.name')
-                    ->label('Branch')
-                    ->searchable(isIndividual: true)
-                    ->sortable(),
-                TextColumn::make('is_priority')
-                    ->label('Priority')
-                    ->formatStateUsing(fn (bool $state): string => $state ? 'Yes' : 'No')
-                    ->sortable(),
-                TextColumn::make('active')
-                    ->label('Status')
-                    ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
-                    ->sortable(),
+                // TextColumn::make('branch.name')
+                //     ->label('Branch')
+                //     ->searchable(isIndividual: true)
+                //     ->sortable(),
+                // TextColumn::make('is_priority')
+                //     ->label('Priority')
+                //     ->formatStateUsing(fn (bool $state): string => $state ? 'Yes' : 'No')
+                //     ->sortable(),
+                    //Toggle Column
+
+
+
                 TextColumn::make('services.name')
                     ->badge()
                     ->wrap()
@@ -167,10 +162,7 @@ class Counters extends Component implements HasForms, HasTable, HasActions
                     ->sortable(),
             ])
             ->filters([
-                SelectFilter::make('branch_id')
-                ->relationship('branch', 'name')
-                ->searchable()
-                ->preload()
+
             ])
             ->actions([
                 // ViewAction::make()
@@ -193,15 +185,7 @@ class Counters extends Component implements HasForms, HasTable, HasActions
                                     ->maxLength(255)
                                     ->unique(ignoreRecord: true)
                                     ->columnSpan(1),
-                                Select::make('branch_id')
-                                    ->label('Branch')
-                                    ->relationship(name: 'branch', titleAttribute: 'name')
-                                    ->searchable()
-                                    ->preload()
-                                    ->placeholder('Select branch')
-                                    ->required()
-                                    ->helperText('Branch where this counter is located')
-                                    ->columnSpan(1),
+
                             ]),
                         Section::make('Allowed Services')
                             ->description('Assign which services this counter can handle')

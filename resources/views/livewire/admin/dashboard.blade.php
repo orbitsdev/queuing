@@ -23,7 +23,7 @@
         </div>
       </dd>
     </div>
-
+{{--
     <!-- Total Branches -->
     <div class="overflow-hidden relative px-4 pt-5 pb-12 bg-gradient-to-br rounded-lg shadow sm:px-6 sm:pt-6 from-denim-600 to-denim-800">
       <dt>
@@ -42,7 +42,7 @@
           </div>
         </div>
       </dd>
-    </div>
+    </div> --}}
 
     <!-- Total Monitors -->
     <div class="overflow-hidden relative px-4 pt-5 pb-12 bg-gradient-to-br rounded-lg shadow sm:px-6 sm:pt-6 from-denim-600 to-denim-800">

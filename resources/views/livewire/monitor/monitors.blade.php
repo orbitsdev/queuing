@@ -3,12 +3,12 @@
     <x-admin-layout>
         <div class="mb-6">
             <!-- Back navigation -->
-            <div class="mb-2">
+            {{-- <div class="mb-2">
                 <a href="{{ route('admin.branches-for-monitor-management') }}" class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800">
                     <x-icon name="arrow-left" class="w-4 h-4 mr-1" />
                     Back to Branches
                 </a>
-            </div>
+            </div> --}}
 
             <!-- Header with title and action button -->
             <div class="flex items-center mb-3">

@@ -11,6 +11,7 @@ use Livewire\Attributes\Title;
 use WireUi\Traits\WireUiActions;
 use Filament\Tables\Grouping\Group;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
@@ -71,15 +72,16 @@ class Services extends Component implements HasForms, HasTable, HasActions
                             ->placeholder('Enter service description')
                             ->rows(3)
                             ->columnSpan(2),
-                        Select::make('branch_id')
-                            ->label('Branch')
-                            ->placeholder('Select branch')
-                            ->options(Branch::all()->pluck('name', 'id'))
-                            ->required()
-                            ->columnSpan(2)
+                        // Select::make('branch_id')
+                        //     ->label('Branch')
+                        //     ->placeholder('Select branch')
+                        //     ->options(Branch::all()->pluck('name', 'id'))
+                        //     ->required()
+                        //     ->columnSpan(2)
                     ]),
             ])
             ->action(function (array $data): void {
+                $data['branch_id'] = Auth::user()->branch_id;
                 Service::create($data);
                 $this->dialog()->success(
                     title: 'Service Created',
@@ -91,14 +93,7 @@ class Services extends Component implements HasForms, HasTable, HasActions
     public function table(Table $table): Table
     {
         return $table
-            ->query(Service::query())
-            ->groups([
-                Group::make('branch.name')
-                    ->label('Branch')
-                    ->getTitleFromRecordUsing(fn ($record) => $record->branch ? $record->branch->name : 'Unassigned')
-                    ->collapsible()
-            ])
-            ->defaultGroup('branch.name')
+        ->query(Service::query()->currentBranch())
             ->columns([
                 TextColumn::make('name')
                     ->label('Name')
@@ -112,9 +107,9 @@ class Services extends Component implements HasForms, HasTable, HasActions
                     ->label('Description')
                     ->searchable(isIndividual:true)
                     ->sortable(),
-                TextColumn::make('branch.name')
-                    ->label('Branch')
-                    ->sortable(),
+                // TextColumn::make('branch.name')
+                //     ->label('Branch')
+                //     ->sortable(),
                 TextColumn::make('created_at')
                     ->label('Created')
                     ->date('M d, Y')
@@ -122,11 +117,11 @@ class Services extends Component implements HasForms, HasTable, HasActions
             ])
 
             ->filters([
-                SelectFilter::make('branch_id')
-                    ->label('Branch')
-                    ->options(fn () => Branch::pluck('name', 'id')->toArray())
-                    ->placeholder('All Branches')
-                    ->indicator('Branch')
+                // SelectFilter::make('branch_id')
+                //     ->label('Branch')
+                //     ->options(fn () => Branch::pluck('name', 'id')->toArray())
+                //     ->placeholder('All Branches')
+                //     ->indicator('Branch')
             ])
             ->actions([
                 EditAction::make()
@@ -159,12 +154,12 @@ class Services extends Component implements HasForms, HasTable, HasActions
                                     ->placeholder('Enter service description')
                                     ->rows(3)
                                     ->columnSpan(2),
-                                Select::make('branch_id')
-                                    ->label('Branch')
-                                    ->placeholder('Select branch')
-                                    ->options(Branch::all()->pluck('name', 'id'))
-                                    ->required()
-                                    ->columnSpan(2)
+                                // Select::make('branch_id')
+                                //     ->label('Branch')
+                                //     ->placeholder('Select branch')
+                                //     ->options(Branch::all()->pluck('name', 'id'))
+                                //     ->required()
+                                //     ->columnSpan(2)
                             ])
                     ])
                     ->after(function () {

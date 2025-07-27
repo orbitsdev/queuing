@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
-use App\Models\Branch;
-use App\Models\Service;
-use App\Models\Counter;
 use App\Models\User;
+use App\Models\Branch;
+use App\Models\Counter;
+use App\Models\Service;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
 
 class Queue extends Model
@@ -47,5 +48,10 @@ class Queue extends Model
     public function scopeTodayQueues($query)
     {
         return $query->whereDate('created_at', now()->toDateString());
+    }
+
+    public function scopeCurrentBranch($query)
+    {
+        return $query->where('branch_id', Auth::user()->branch_id);
     }
 }

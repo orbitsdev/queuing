@@ -10,19 +10,22 @@ use Livewire\Component;
 use Filament\Tables\Table;
 use Filament\Forms\Components;
 use Livewire\Attributes\Title;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
 use WireUi\Traits\WireUiActions;
 use Filament\Actions\CreateAction;
 use Illuminate\Contracts\View\View;
-use Filament\Tables\Columns\TextColumn;
+use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Actions\Concerns\InteractsWithActions;
+
 
 class Monitors extends Component implements HasForms, HasTable, HasActions
 {
@@ -31,13 +34,13 @@ class Monitors extends Component implements HasForms, HasTable, HasActions
     use InteractsWithTable;
     use InteractsWithActions;
 
-    public Branch $branch;
+    // public Branch $branch;
 
     #[Title('Monitor Management')]
 
-    public function mount(Branch $branch)
+    public function mount()
     {
-        $this->branch = $branch;
+        // $this->branch = $branch;
     }
 
     public function createAction(): CreateAction
@@ -62,7 +65,7 @@ class Monitors extends Component implements HasForms, HasTable, HasActions
                             ->relationship(
                                 name: 'services',
                                 titleAttribute: 'name',
-                                modifyQueryUsing: fn (Builder $query) => $query->where('branch_id', $this->branch->id),
+                                modifyQueryUsing: fn (Builder $query) => $query->where('branch_id', Auth::user()->branch_id),
                             )
                                 ->multiple()
                                 ->preload()
@@ -70,11 +73,14 @@ class Monitors extends Component implements HasForms, HasTable, HasActions
                                 ->label('Services')
                                 ->helperText('Select one or more services for this monitor')
                                 ->columnSpan(2),
-                        Components\Hidden::make('branch_id')
-                            ->default(fn () => $this->branch->id),
+
                     ])
                     ->columns(2)
             ])
+          ->using(function (array $data, string $model): Model {
+            $data['branch_id'] = Auth::user()->branch_id;
+               return $model::create($data);
+    })
             ->after(function (Monitor $record) {
                 // Sync the services with pivot data
                 if (request()->has('data.services')) {
@@ -95,7 +101,7 @@ class Monitors extends Component implements HasForms, HasTable, HasActions
     public function table(Table $table): Table
     {
         return $table
-            ->query(Monitor::query()->where('branch_id', $this->branch->id))
+            ->query(Monitor::query()->currentBranch())
             ->columns([
                 TextColumn::make('name')
                 ->searchable(isIndividual: true)
@@ -185,7 +191,7 @@ class Monitors extends Component implements HasForms, HasTable, HasActions
                                     ->relationship(
                                         name: 'services',
                                         titleAttribute: 'name',
-                                        modifyQueryUsing: fn (Builder $query) => $query->where('branch_id', $this->branch->id),
+                                        modifyQueryUsing: fn (Builder $query) => $query->where('branch_id', Auth::user()->branch_id),
                                     )
                                     ->multiple()
                                     ->preload()
@@ -232,7 +238,7 @@ class Monitors extends Component implements HasForms, HasTable, HasActions
     public function render(): View
     {
         return view('livewire.monitor.monitors', [
-            'branch' => $this->branch,
+            'branch' =>Auth::user()->branch,
         ]);
     }
 }

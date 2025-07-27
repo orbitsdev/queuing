@@ -19,6 +19,7 @@ use App\Livewire\Monitor\DisplayPage;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Counter\SelectCounter;
 use App\Livewire\Admin\BranchQueueSettings;
+use App\Livewire\Admin\BranchSettingManagement;
 use App\Livewire\Counter\CounterTransactionPage;
 use App\Livewire\Monitor\BranchesListForMonitorMangement;
 
@@ -52,7 +53,7 @@ Route::get('test-page', TestPage::class)
 // Admin Routes
 Route::middleware(['auth', 'verified', 'can:superadmin_or_admin'])->prefix('admin')->group(function () {
     Route::get('dashboard', Dashboard::class)->name('admin.dashboard');
-    Route::get('branches', Branches::class)->name('admin.branches');
+    // Route::get('branches', Branches::class)->name('admin.branches');
     Route::get('services', Services::class)->name('admin.services');
     Route::get('counters', Counters::class)->name('admin.counters');
     Route::get('users', Users::class)->name('admin.users');
@@ -60,9 +61,10 @@ Route::middleware(['auth', 'verified', 'can:superadmin_or_admin'])->prefix('admi
     Route::get('branch-settings', ListSettings::class)->name('admin.branch-settings');
     Route::get('settings/{branch}', Settings::class)->name('admin.settings');
     Route::get('branches-for-monitor-management', BranchesListForMonitorMangement::class)->name('admin.branches-for-monitor-management');
-    Route::get('monitors/{branch}', Monitors::class)->name('admin.monitors');
+    Route::get('monitors', Monitors::class)->name('admin.monitors');
     Route::get('branch-queue-settings/{branch}', BranchQueueSettings::class)->name('admin.branch-queue-settings');
     Route::get('branch/{branch}', Manage::class)->name('admin.branch');
+    Route::get('branch-setting-management', BranchSettingManagement::class)->name('admin.branch-setting-management');
 });
 // Admin Routes
 Route::middleware(['auth', 'verified', 'can:staff'])->prefix('counter')->group(function () {

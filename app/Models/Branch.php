@@ -9,9 +9,11 @@ use App\Models\Monitor;
 use App\Models\Service;
 use App\Models\Setting;
 use App\Observers\BranchObserver;
+use Illuminate\Container\Attributes\Auth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+
 #[ObservedBy([BranchObserver::class])]
 class Branch extends Model
 {
@@ -48,7 +50,9 @@ class Branch extends Model
 
 
     public function adminCount(): Attribute
-{
-    return Attribute::get(fn () => $this->users()->where('role', 'admin')->count());
-}
+    {
+        return Attribute::get(fn() => $this->users()->where('role', 'admin')->count());
+    }
+    // scpope by branch
+   
 }
