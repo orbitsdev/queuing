@@ -51,7 +51,7 @@ Route::get('test-page', TestPage::class)
     ->name('test-page');
 
 // Admin Routes
-Route::middleware(['auth', 'verified', 'can:superadmin_or_admin'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'verified', 'can:admin'])->prefix('admin')->group(function () {
     Route::get('dashboard', Dashboard::class)->name('admin.dashboard');
     // Route::get('branches', Branches::class)->name('admin.branches');
     Route::get('services', Services::class)->name('admin.services');
