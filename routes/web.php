@@ -35,8 +35,8 @@ Route::get('dashboard', function () {
         return redirect()->route('login');
     }
 
+    dd(Auth::user()->role);
     switch (Auth::user()->role) {
-        dd(Auth::user()->role);
         case 'superadmin':
             return redirect()->route('superadmin.dashboard');
         case 'admin':
