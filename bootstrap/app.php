@@ -16,7 +16,6 @@ return Application::configure(basePath: dirname(__DIR__))
          then: function () {
         Route::middleware('web')
         ->prefix('superadmin')
-        ->middleware('can:superadmin')
         ->name('superadmin.')
         ->group(base_path('routes/superadmin.php'));
 
