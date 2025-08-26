@@ -35,6 +35,11 @@ return new class extends Migration
             $table->index('status');
             $table->index('service_id');
             $table->index('counter_id');
+            $table->index('branch_id');
+            $table->index('created_at');
+            $table->index(['branch_id', 'status']);
+            $table->index(['branch_id', 'created_at']);
+            $table->index(['branch_id', 'service_id', 'status']);
         });
     }
 

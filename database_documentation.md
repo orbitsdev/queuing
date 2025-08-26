@@ -37,7 +37,7 @@ This document provides a comprehensive overview of the database structure for th
   ```
 
 **Additional Features**:
-- Uses `BranchObserver` for model events
+- Uses `BranchObserver` for model events via `#[ObservedBy([BranchObserver::class])]` attribute
 - Has computed attribute `adminCount` that returns the count of admin users in the branch
 
 ### Counter Model
@@ -69,6 +69,7 @@ This document provides a comprehensive overview of the database structure for th
 **Additional Features**:
 - Has accessor `getQueueCountAttribute()` that returns the count of queues for the counter
 - Has scope `scopeCurrentBranch($query)` to filter counters by the authenticated user's branch
+- Has a circular relationship with User model (counter belongs to user, user belongs to counter)
 
 ### CounterService Model
 
@@ -151,7 +152,11 @@ This document provides a comprehensive overview of the database structure for th
 **Additional Features**:
 - Has scope `scopeTodayQueues($query)` to filter queues created today
 - Has scope `scopeCurrentBranch($query)` to filter queues by the authenticated user's branch
-- Has fillable fields for tracking queue status and timestamps
+- Has fillable fields for tracking queue status and timestamps including:
+  - branch_id, service_id, counter_id, user_id
+  - ticket_number, status
+  - called_at, serving_at, served_at, skipped_at, hold_started_at, cancelled_at
+  - hold_reason
 
 ### Service Model
 
@@ -227,7 +232,8 @@ This document provides a comprehensive overview of the database structure for th
 - Has method `initials()` to get user's initials from name
 - Has scope `scopeNotSuperAdmin()` to filter out superadmin users
 - Has scope `scopeCurrentBranch($query)` to filter users by the authenticated user's branch
-- Has scope `scopeNotDefaultAdmin($query)` to filter out the default admin user
+- Has scope `scopeNotDefaultAdmin($query)` to filter out the default admin user (admin@kiosqueeing.local)
+- Has password and email_verified_at attributes with proper casting
 
 ## Database Schema
 
@@ -268,6 +274,8 @@ Schema::create('counters', function (Blueprint $table) {
 });
 ```
 
+**Note**: The `user_id` foreign key is added in a separate migration that establishes a circular relationship between users and counters.
+
 **Fields**:
 - `id`: bigint, unsigned, auto-increment, primary key
 - `branch_id`: bigint, unsigned, foreign key to branches.id with cascade delete
@@ -296,6 +304,8 @@ Schema::create('users', function (Blueprint $table) {
     $table->timestamps();
 });
 ```
+
+**Note**: The `counter_id` foreign key is added in a separate migration that establishes a circular relationship between users and counters.
 
 **Fields**:
 - `id`: bigint, unsigned, auto-increment, primary key
@@ -514,6 +524,7 @@ Monitor * --- * Service (through monitor_service)
 6. User emails must be unique across the system
 7. When a branch is deleted, all related records (services, counters, queues, settings, monitors) are deleted (cascade delete)
 8. When a counter or user is deleted, related queues are preserved but their references are set to null (null on delete)
+9. Circular relationship between users and counters (a counter can have one user, and a user can be assigned to one counter)
 
 ## Special Notes
 
@@ -522,3 +533,5 @@ Monitor * --- * Service (through monitor_service)
 3. The User model has role-based access control with three roles: superadmin, admin, and staff
 4. Several models have scopes to filter by the current user's branch for security and data isolation
 5. The queuing system uses a combination of raw numbers and formatted ticket numbers with prefixes
+6. The system includes additional tables for password reset tokens and sessions that are created in the users migration
+7. The MonitorService model explicitly sets its table name to 'monitor_service' and defines fillable fields

@@ -8,4 +8,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('app:reset-queues-daily')->everyMinute(); // ✅ correct
+Schedule::command('app:expire-old-queues --hours=24')->hourly(); // Expire old queues hourly
 

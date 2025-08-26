@@ -21,7 +21,7 @@ class SettingSeeder extends Seeder
                 'ticket_prefix' => 'QUE',
                 'print_logo' => true,
                 'queue_reset_daily' => true,
-                'queue_reset_time' => '00:00',
+                'queue_reset_time' => '04:00',
                 'default_break_message' => 'Not available',
                 'queue_number_base' => 1,
             ]
@@ -36,7 +36,7 @@ class SettingSeeder extends Seeder
                     'ticket_prefix' => 'QUE',
                     'print_logo' => true,
                     'queue_reset_daily' => true,
-                    'queue_reset_time' => '00:00',
+                    'queue_reset_time' => '04:00',
                     'default_break_message' => 'Not available',
                     'queue_number_base' => 1,
                 ]

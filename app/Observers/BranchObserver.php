@@ -28,7 +28,7 @@ class BranchObserver
                 'ticket_prefix' => $globalSettings->ticket_prefix ?? 'QUE',
                 'print_logo' => $globalSettings->print_logo ?? true,
                 'queue_reset_daily' => $globalSettings->queue_reset_daily ?? true,
-                'queue_reset_time' => $globalSettings->queue_reset_time ?? '00:00',
+                'queue_reset_time' => $globalSettings->queue_reset_time ?? '04:00',
                 'queue_number_base' => $globalSettings->queue_number_base ?? 1,
                 'default_break_message' => $globalSettings->default_break_message
                     ?? 'On break, please proceed to another counter.',
