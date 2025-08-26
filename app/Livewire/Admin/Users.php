@@ -140,7 +140,7 @@ class Users extends Component implements HasForms, HasTable, HasActions
     public function table(Table $table): Table
     {
         return $table
-            ->query(User::query()->notDefaultAdmin()->currentBranch())
+            ->query(User::query()->notDefaultAdmin()->currentBranch()->notEqualCurrentAuthAdminUser()->where('role', '!=', 'superadmin'))
             ->columns([
                 TextColumn::make('name')
                     ->label('Name')

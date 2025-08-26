@@ -52,7 +52,7 @@ class Dashboard extends Component  implements HasForms, HasActions
         $this->totalServices = Service::currentBranch()->count();
         // $this->totalBranches = Branch::count();
         $this->totalMonitors = Counter::currentBranch()->count();
-        $this->totalUsers = User::currentBranch()->count();
+        $this->totalUsers = User::currentBranch()->notEqualCurrentAuthAdminUser()->notDefaultAdmin()->where('role', '!=', 'superadmin')->count();
     }
 
     public function render()

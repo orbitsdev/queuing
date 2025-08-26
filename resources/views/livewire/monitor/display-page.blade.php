@@ -141,10 +141,6 @@
         </div>
     </div>
 
-
-
-    </div>
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Check if Echo is properly initialized

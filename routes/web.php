@@ -71,10 +71,12 @@ Route::middleware(['auth', 'verified', 'can:admin'])->prefix('admin')->group(fun
 Route::middleware(['auth', 'verified', 'can:staff'])->prefix('counter')->group(function () {
     Route::get('select', SelectCounter::class)->name('counter.select');
     Route::get('transaction', CounterTransactionPage::class)->middleware(['counter.assigned'])->name('counter.transaction');
+    Route::get('monitors', \App\Livewire\Monitor\Monitors::class)->name('counter.monitors');
 });
 
-//display
+//display - public routes that don't require authentication
 Route::get('/display/{monitor}', DisplayPage::class)->name('display.show');
+Route::get('/monitors', \App\Livewire\Display\MonitorSelection::class)->name('monitors.selection');
 
 
 Route::get('/create-test-queue/{branch?}/{service?}', function ($branchId = null, $serviceId = null) {
@@ -135,8 +137,7 @@ Route::get('/create-test-queue/{branch?}/{service?}', function ($branchId = null
 //reverb test page
 Route::get('reverb-test', ReverTestPage::class)->name('reverb-test');
 
-//display
-Route::get('/display/{monitor}', DisplayPage::class)->name('display.show');
+
 
 //create new queue for testing
 Route::get('/create-test-queue/{branch?}/{service?}', function ($branchId = null, $serviceId = null) {

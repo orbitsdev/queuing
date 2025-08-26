@@ -243,7 +243,7 @@ class CounterTransactionPage extends Component
     {
         $this->dialog()->confirm([
             'title'       => 'Confirm Logout',
-            'description' => 'Are you sure you want to logout from this counter? Any assigned queue will be released.',
+            'description' => 'Are you sure you want to change counter? Any assigned queue will be released.',
             'acceptLabel' => 'Yes, Logout',
             'method'      => 'confirmLogoutCounter',
         ]);

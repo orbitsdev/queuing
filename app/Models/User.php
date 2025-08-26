@@ -88,6 +88,10 @@ public function scopeNotDefaultAdmin($query)
 {
     return $query->where('email', '!=', 'admin@kiosqueeing.local');
 }
-
+//nut current auth admin user
+public function scopeNotEqualCurrentAuthAdminUser($query)
+{
+    return $query->where('id', '!=', Auth::user()->id);
+}
 
 }

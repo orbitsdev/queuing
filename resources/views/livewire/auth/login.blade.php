@@ -26,7 +26,7 @@
                     autofocus
                     autocomplete="email"
                     placeholder="email@example.com"
-                    class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 @error('email') outline-red-500 @else outline-gray-300 @enderror placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-kiosqueeing-primary sm:text-sm/6"
+                    class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 @error('email') border-red-500 @else border-gray-300 @enderror placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-kiosqueeing-primary sm:text-sm/6"
                 />
                 @error('email')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>

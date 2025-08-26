@@ -2,6 +2,7 @@
     @php
         $navItems = [
             ['label' => 'Counter', 'route' => 'counter.transaction', 'icon' => 'computer-desktop'],
+            ['label' => 'Monitors', 'route' => 'counter.monitors', 'icon' => 'tv'],
         ];
     @endphp
 
