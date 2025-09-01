@@ -176,19 +176,18 @@ class Users extends Component implements HasForms, HasTable, HasActions
             ->headerActions([
 
             ])
-                // Group users by branch with default for unassigned users
-                // ->groups([
-                //        Group::make('branch.name')
-                //         ->label('Branch')
-                //         ->getTitleFromRecordUsing(fn ($record) => $record->branch ? $record->branch->name : 'Unassigned')
-                //         ->collapsible()
-                // ])
-                // ->defaultGroup('branch.name')
+                // Group users by role
+                ->groups([
+                       Group::make('role')
+                        ->label('Role')
+                        ->getTitleFromRecordUsing(fn ($record) => ucfirst($record->role))
+                        ->collapsible()
+                ])
+                ->defaultGroup('role')
                 ->filters([
                     SelectFilter::make('role')
                     ->label('Role')
                     ->options([
-                        'superadmin' => 'Super Admin',
                         'admin' => 'Admin',
                         'staff' => 'Staff',
                     ])

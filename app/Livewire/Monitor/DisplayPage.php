@@ -100,16 +100,18 @@ class DisplayPage extends Component
             ->get();
 
 
-        // Get total count of waiting queues
+        // Get total count of waiting queues for today only
         $this->totalWaitingCount = Queue::whereIn('service_id', $serviceIds)
             ->where('status', 'waiting')
+            ->whereDate('created_at', now()->toDateString())
             ->count();
-            
-        // Get only the first 12 for display
+
+        // Get only the first 12 for display, filtered by today's date
         $this->waitingQueues = Queue::whereIn('service_id', $serviceIds)
             ->where('status', 'waiting')
+            ->whereDate('created_at', now()->toDateString())
             ->orderBy('created_at')
-            ->take(12)
+            ->take(16)
             ->get();
     }
 

@@ -531,7 +531,7 @@ class CounterTransactionPage extends Component
             ->where('branch_id', $this->counter->branch_id)
             ->whereIn('status', ['called', 'serving'])
             ->where('counter_id', '!=', $this->counter->id)
-            ->with('counter')
+            ->with(['counter', 'service'])
             ->get();
 
         // ✅ 5️⃣ Count all waiting tickets for allowed services

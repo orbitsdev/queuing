@@ -277,23 +277,40 @@
 
 
                     <!-- Currently Serving By Others -->
-                    <div>
-                        <h2 class="text-sm uppercase font-medium text-gray-500 mb-4">Currently Serving by Other Counters
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+                        <h2 class="text-sm uppercase font-semibold text-gray-600 mb-4 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Currently Serving by Other Counters
                         </h2>
-                        <div class="grid grid-cols-1 gap-2">
+                        <div class="grid grid-cols-1 gap-3">
                             @forelse ($others as $other)
-                                <div
-                                    class="flex flex-wrap sm:flex-nowrap items-center bg-gray-50 border border-gray-200 rounded text-sm font-medium text-gray-800">
-                                    <div
-                                        class="flex items-center rounded-t-lg sm:rounded-t-none sm:rounded-l-lg bg-kiosqueeing-primary text-white uppercase px-4 py-2 w-full sm:w-auto">
-                                        {{ $other->counter->name }}
+                                <div class="flex flex-wrap sm:flex-nowrap items-center bg-gray-50 hover:bg-gray-100 transition-colors duration-150 border border-gray-200 rounded-lg overflow-hidden">
+                                    <div class="flex items-center bg-kiosqueeing-primary text-white uppercase px-4 py-3 w-full sm:w-auto">
+                                        <span class="font-bold">{{ $other->counter->name }}</span>
                                     </div>
-                                    <div class="px-4 py-2">
-                                        {{ $other->ticket_number }}
+                                    <div class="px-4 py-3 flex flex-col">
+                                        <div class="flex items-center">
+                                            <span class="text-2xl font-bold">{{ $other->number }}</span>
+                                            <span class="ml-2 text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                                                {{ $other->ticket_number }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="px-4 py-3 ml-auto">
+                                        <span class="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium">
+                                            {{ $other->service->name ?? 'No Service' }}
+                                        </span>
                                     </div>
                                 </div>
                             @empty
-                                <p class="text-gray-500 text-sm">No other counters serving right now.</p>
+                                <div class="flex flex-col items-center justify-center py-6 bg-gray-50 rounded-lg border border-gray-200 border-dashed">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <p class="text-sm font-medium text-gray-500">No other counters serving right now</p>
+                                </div>
                             @endforelse
                         </div>
                     </div>

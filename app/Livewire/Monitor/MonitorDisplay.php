@@ -28,14 +28,14 @@ class MonitorDisplay extends Component
     {
         // Get the services associated with this monitor
         $serviceIds = $this->monitor->services->pluck('id')->toArray();
-        
+
         // Get waiting queues for the services
         $this->waitingQueues = Queue::whereIn('service_id', $serviceIds)
             ->where('status', 'waiting')
             ->orderBy('created_at')
             ->get()
             ->groupBy('service_id');
-            
+
         // Get currently serving counters
         $this->servingCounters = Counter::where('branch_id', $this->monitor->branch_id)
             ->where('is_active', true)
