@@ -44,8 +44,14 @@ class ResetQueuesDaily extends Command
                     (!$setting->last_reset_at || !$setting->last_reset_at->isToday())
                 ) {
                     foreach ($branch->services as $service) {
+                        // 1. Reset queue counters
                         $service->last_ticket_number = $setting->queue_number_base ?? 1;
                         $service->save();
+                        
+                        // 2. Delete ALL of today's queue records regardless of status
+                        $service->queues()
+                            ->whereDate('created_at', today())
+                            ->delete();
                     }
 
                     $setting->last_reset_at = $now;

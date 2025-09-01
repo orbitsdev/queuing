@@ -5,6 +5,7 @@ namespace App\Livewire\Counter;
 use App\Events\QueueStatusChanged;
 use App\Models\Queue;
 use App\Models\Setting;
+use App\Services\TransactionHistoryService;
 use Livewire\Component;
 use WireUi\Traits\WireUiActions;
 use Illuminate\Support\Facades\DB;
@@ -147,6 +148,7 @@ class CounterTransactionPage extends Component
             }
 
             // ✅ Mark as SERVING immediately
+            $oldStatus = $queue->status;
             $queue->update([
                 'counter_id' => $this->counter->id,
                 'user_id'    => auth()->id(),
@@ -159,9 +161,15 @@ class CounterTransactionPage extends Component
                 'queue_id'   => $queue->id,
                 'counter_id' => $this->counter->id,
             ]);
-
-
-
+            
+            // Log transaction history
+            TransactionHistoryService::logQueueTransaction(
+                $queue,
+                'serving',
+                $oldStatus,
+                'serving',
+                ['counter_name' => $this->counter->name]
+            );
 
             DB::commit();
 
@@ -206,6 +214,7 @@ class CounterTransactionPage extends Component
     {
         DB::beginTransaction();
         try {
+            $oldStatus = $this->currentTicket->status;
             $this->currentTicket->update([
                 'counter_id' => null,
                 'user_id' => null,
@@ -215,8 +224,15 @@ class CounterTransactionPage extends Component
             auth()->user()->update([
                 'queue_id' => null,
             ]);
-
-
+            
+            // Log transaction history
+            TransactionHistoryService::logQueueTransaction(
+                $this->currentTicket,
+                'cancelled',
+                $oldStatus,
+                'waiting',
+                ['counter_name' => $this->counter->name]
+            );
 
             DB::commit();
 
@@ -335,7 +351,8 @@ class CounterTransactionPage extends Component
             if (!$queue) {
                 throw new \Exception('This hold ticket is no longer available.');
             }
-
+            
+            $oldStatus = $queue->status;
             $queue->update([
                 'status'      => 'serving',
                 'called_at'   => now(),
@@ -346,6 +363,19 @@ class CounterTransactionPage extends Component
             $user->update([
                 'queue_id' => $queue->id,
             ]);
+            
+            // Log transaction history
+            TransactionHistoryService::logQueueTransaction(
+                $queue,
+                'resumed',
+                $oldStatus,
+                'serving',
+                [
+                    'counter_name' => $this->counter->name,
+                    'hold_duration' => $queue->hold_started_at ? 
+                        now()->diffInMinutes($queue->hold_started_at) : null
+                ]
+            );
 
             // Broadcast queue status change
             event(new QueueStatusChanged($queue->fresh()));
@@ -365,6 +395,7 @@ class CounterTransactionPage extends Component
     public function confirmHoldQueueWithReason()
     {
         DB::transaction(function () {
+            $oldStatus = $this->currentTicket->status;
             $this->currentTicket->update([
                 'status' => 'held',
                 'hold_started_at' => now(),
@@ -374,6 +405,18 @@ class CounterTransactionPage extends Component
             auth()->user()->update([
                 'queue_id' => null,
             ]);
+            
+            // Log transaction history
+            TransactionHistoryService::logQueueTransaction(
+                $this->currentTicket,
+                'held',
+                $oldStatus,
+                'held',
+                [
+                    'counter_name' => $this->counter->name,
+                    'hold_reason' => $this->holdReason ?? 'Held by staff'
+                ]
+            );
 
             // Broadcast queue status change
             event(new QueueStatusChanged($this->currentTicket->fresh()));
@@ -409,6 +452,7 @@ class CounterTransactionPage extends Component
     {
         DB::transaction(function () {
             // ✅ Mark as SERVED
+            $oldStatus = $this->currentTicket->status;
             $this->currentTicket->update([
                 'status'     => 'served',
                 'served_at'  => now(),
@@ -417,6 +461,19 @@ class CounterTransactionPage extends Component
             auth()->user()->update([
                 'queue_id' => null,
             ]);
+            
+            // Log transaction history
+            TransactionHistoryService::logQueueTransaction(
+                $this->currentTicket,
+                'served',
+                $oldStatus,
+                'served',
+                [
+                    'counter_name' => $this->counter->name,
+                    'service_time' => $this->currentTicket->serving_at ? 
+                        now()->diffInMinutes($this->currentTicket->serving_at) : null
+                ]
+            );
 
             // Broadcast queue status change
             event(new QueueStatusChanged($this->currentTicket->fresh()));
@@ -505,6 +562,7 @@ class CounterTransactionPage extends Component
     public function confirmSkipCurrent()
     {
         DB::transaction(function () {
+            $oldStatus = $this->currentTicket->status;
             $this->currentTicket->update([
                 'status' => 'skipped',
                 'skipped_at' => now(),
@@ -513,6 +571,15 @@ class CounterTransactionPage extends Component
             auth()->user()->update([
                 'queue_id' => null,
             ]);
+            
+            // Log transaction history
+            TransactionHistoryService::logQueueTransaction(
+                $this->currentTicket,
+                'skipped',
+                $oldStatus,
+                'skipped',
+                ['counter_name' => $this->counter->name]
+            );
 
             // Broadcast queue status change
             event(new QueueStatusChanged($this->currentTicket->fresh()));
@@ -529,6 +596,8 @@ class CounterTransactionPage extends Component
     public function toggleBreak()
     {
         $newStatus = !$this->counter->active;
+        $oldStatus = $this->counter->active ? 'active' : 'break';
+        
         $this->counter->update([
             'active' => $newStatus,
             'break_message' => $newStatus
@@ -538,6 +607,13 @@ class CounterTransactionPage extends Component
 
         $this->status = $newStatus ? 'break' : 'active';
         $this->breakMessage = $this->counter->break_message;
+        
+        // Log counter status change
+        TransactionHistoryService::logCounterStatusChange(
+            $this->counter,
+            !$newStatus, // isActive is opposite of newStatus (which is break status)
+            $newStatus ? $this->breakMessage : null
+        );
     }
 
     // Method removed - using triggerResumeSelectedHold() and confirmResumeSelectedHold() instead
@@ -558,6 +634,8 @@ class CounterTransactionPage extends Component
     }
     public function confirmStartBreak()
     {
+        $oldStatus = $this->counter->active ? 'active' : 'break';
+        
         $this->counter->update([
             'active' => false,
             'break_message' => $this->breakInputMessage,
@@ -567,6 +645,13 @@ class CounterTransactionPage extends Component
         $this->breakMessage = $this->breakInputMessage;
 
         $this->showBreakModal = false;
+        
+        // Log counter status change
+        TransactionHistoryService::logCounterStatusChange(
+            $this->counter,
+            false, // not active
+            $this->breakInputMessage
+        );
 
         $this->notification()->success('Break started.');
 
@@ -586,6 +671,8 @@ class CounterTransactionPage extends Component
 
     public function confirmResumeWork()
     {
+        $oldStatus = $this->counter->active ? 'active' : 'break';
+        
         $this->counter->update([
             'active' => true,
             'break_message' => null,
@@ -593,6 +680,14 @@ class CounterTransactionPage extends Component
 
         $this->status = 'active';
         $this->breakMessage = null;
+        
+        // Log counter status change
+        TransactionHistoryService::logCounterStatusChange(
+            $this->counter,
+            true, // active
+            null
+        );
+        
         $this->notification()->success('Work resumed.');
 
         // Broadcast counter status change if needed

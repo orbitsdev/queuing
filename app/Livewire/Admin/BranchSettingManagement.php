@@ -114,10 +114,9 @@ public function resetNow()
         $service->last_ticket_number = $setting->queue_number_base ?? 1;
         $service->save();
 
-        // 2. Delete today's active queue records
+        // 2. Delete ALL of today's queue records regardless of status
         $service->queues()
             ->whereDate('created_at', today())
-            ->whereIn('status', ['waiting', 'called', 'serving', 'held'])
             ->delete();
     }
 

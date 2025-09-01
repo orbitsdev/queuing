@@ -157,6 +157,15 @@ This document provides a comprehensive overview of the database structure for th
   - ticket_number, status
   - called_at, serving_at, served_at, skipped_at, hold_started_at, cancelled_at
   - hold_reason
+- Implements comprehensive queue management methods:
+  - `batchUpdateStatus()`: Update multiple queues to a new status
+  - `batchComplete()`: Mark multiple queues as completed
+  - `batchSkip()`: Mark multiple queues as skipped
+  - `bulkProcessByStatus()`: Process queues by status and date range
+  - `expireOldQueues()`: Expire waiting queues older than specified time
+  - `getBranchStats()`: Get queue statistics for a branch
+  - `calculateAverageWaitTime()`: Calculate average wait time for a branch
+  - `calculateAverageServiceTime()`: Calculate average service time for a branch
 
 ### Service Model
 
@@ -208,6 +217,8 @@ This document provides a comprehensive overview of the database structure for th
 - Has static method `global()` to get global settings (where branch_id is null)
 - Has static method `forBranch(Branch $branch)` to get settings for a specific branch with fallback to global
 - Has type casting for boolean and integer fields
+- Implements caching for settings with `clearCache()` method
+- Automatically clears cache when settings are saved or deleted
 
 ### User Model
 
@@ -233,6 +244,7 @@ This document provides a comprehensive overview of the database structure for th
 - Has scope `scopeNotSuperAdmin()` to filter out superadmin users
 - Has scope `scopeCurrentBranch($query)` to filter users by the authenticated user's branch
 - Has scope `scopeNotDefaultAdmin($query)` to filter out the default admin user (admin@kiosqueeing.local)
+- Has scope `scopeNotEqualCurrentAuthAdminUser($query)` to filter out the current authenticated admin user
 - Has password and email_verified_at attributes with proper casting
 
 ## Database Schema
@@ -372,6 +384,11 @@ Schema::create('queues', function (Blueprint $table) {
     $table->index('status');
     $table->index('service_id');
     $table->index('counter_id');
+    $table->index('branch_id');
+    $table->index('created_at');
+    $table->index(['branch_id', 'status']);
+    $table->index(['branch_id', 'created_at']);
+    $table->index(['branch_id', 'service_id', 'status']);
 });
 ```
 
@@ -393,7 +410,9 @@ Schema::create('queues', function (Blueprint $table) {
 - `hold_started_at`: timestamp, nullable, when queue was put on hold
 - `skipped_at`: timestamp, nullable, when queue was skipped
 - `cancelled_at`: timestamp, nullable, when queue was cancelled
-- Indexes on `number`, `ticket_number`, `status`, `service_id`, `counter_id` for faster queries
+- Comprehensive indexing strategy including:
+  - Single column indexes: `number`, `ticket_number`, `status`, `service_id`, `counter_id`, `branch_id`, `created_at`
+  - Compound indexes: `[branch_id, status]`, `[branch_id, created_at]`, `[branch_id, service_id, status]`
 
 ### settings Table
 
@@ -492,9 +511,48 @@ Schema::create('monitor_service', function (Blueprint $table) {
 - `updated_at`: timestamp, last update date
 - Unique constraint on `monitor_id` and `service_id` to prevent duplicate assignments
 
+### Additional Tables
+
+#### password_reset_tokens Table
+
+```php
+Schema::create('password_reset_tokens', function (Blueprint $table) {
+    $table->string('email')->primary();
+    $table->string('token');
+    $table->timestamp('created_at')->nullable();
+});
+```
+
+**Fields**:
+- `email`: varchar(255), primary key, user's email address
+- `token`: varchar(255), reset token
+- `created_at`: timestamp, nullable, token creation date
+
+#### sessions Table
+
+```php
+Schema::create('sessions', function (Blueprint $table) {
+    $table->string('id')->primary();
+    $table->foreignId('user_id')->nullable()->index();
+    $table->string('ip_address', 45)->nullable();
+    $table->text('user_agent')->nullable();
+    $table->longText('payload');
+    $table->integer('last_activity')->index();
+});
+```
+
+**Fields**:
+- `id`: varchar(255), primary key, session identifier
+- `user_id`: bigint, unsigned, nullable, foreign key to users.id
+- `ip_address`: varchar(45), nullable, user's IP address
+- `user_agent`: text, nullable, user's browser information
+- `payload`: longtext, session data
+- `last_activity`: integer, indexed, timestamp of last activity
+
 ## Entity Relationship Diagram (ERD)
 
 ```
+# Primary Relationships
 Branch 1 --- * Service
 Branch 1 --- * Counter
 Branch 1 --- * Queue
@@ -502,17 +560,54 @@ Branch 1 --- * User
 Branch 1 --- 1 Setting
 Branch 1 --- * Monitor
 
-Service * --- * Counter (through counter_service)
-Service 1 --- * Queue
-Service * --- * Monitor (through monitor_service)
+# Many-to-Many Relationships
+Counter * --- * Service (via counter_service pivot)
+Monitor * --- * Service (via monitor_service pivot with sort_order)
 
-Counter 1 --- * Queue
-Counter 1 --- 1 User
+# Circular Relationship
+Counter 1 --- 1 User (circular: counter belongs to user, user belongs to counter)
 
-User 1 --- * Queue
+# Queue Relationships
+Queue * --- 1 Service
+Queue * --- 1 Counter (nullable with nullOnDelete)
+Queue * --- 1 User (nullable with nullOnDelete)
 
-Monitor * --- * Service (through monitor_service)
 ```
+
+## Key Design Decisions
+
+1. **Branch-Centric Architecture**
+   - All major entities (services, counters, queues, users, monitors) belong to a branch
+   - Branch deletion cascades to all related entities
+   - Global settings with branch-specific overrides
+
+2. **Circular Relationship**
+   - Users and counters have a circular relationship (each can belong to the other)
+   - Implemented with nullable foreign keys and separate migrations
+
+3. **Queue Status Tracking**
+   - Comprehensive status enum with multiple states
+   - Dedicated timestamp columns for each status change
+   - Hold reason field for tracking why a queue was put on hold
+
+4. **Performance Optimization**
+   - Extensive indexing strategy on the queues table
+   - Single column indexes for frequently queried fields
+   - Compound indexes for common query patterns
+   - Settings caching implementation
+
+5. **Data Integrity**
+   - Cascade delete for most relationships to maintain referential integrity
+   - Null on delete for counter_id and user_id in queues to preserve historical data
+   - Unique constraints on pivot tables to prevent duplicate assignments
+
+6. **Monitor Configuration**
+   - Monitors can display multiple services with customizable sort order
+   - Services can appear on multiple monitors
+
+## Conclusion
+
+This database schema provides a robust foundation for the KiosQueeing system, supporting all required functionality while maintaining data integrity and performance. The relationships between models are carefully designed to support the branch-centric architecture and role-based access control system. The comprehensive queue status tracking enables detailed analytics and reporting capabilities.
 
 ## Key Database Constraints
 
