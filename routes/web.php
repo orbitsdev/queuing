@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Route;
 use App\Livewire\Counter\SelectCounter;
 use App\Livewire\Admin\BranchQueueSettings;
 use App\Livewire\Admin\BranchSettingManagement;
+use App\Livewire\Admin\TransactionHistories;
 use App\Livewire\Counter\CounterTransactionPage;
 use App\Livewire\Monitor\BranchesListForMonitorMangement;
 
@@ -66,7 +67,9 @@ Route::middleware(['auth', 'verified', 'can:admin'])->prefix('admin')->group(fun
     Route::get('branch-queue-settings/{branch}', BranchQueueSettings::class)->name('admin.branch-queue-settings');
     Route::get('branch/{branch}', Manage::class)->name('admin.branch');
     Route::get('branch-setting-management', BranchSettingManagement::class)->name('admin.branch-setting-management');
+    Route::get('transaction-histories', TransactionHistories::class)->name('admin.transaction-histories');
 });
+
 // Admin Routes
 Route::middleware(['auth', 'verified', 'can:staff'])->prefix('counter')->group(function () {
     Route::get('select', SelectCounter::class)->name('counter.select');

@@ -9,6 +9,7 @@ use App\Services\TransactionHistoryService;
 use Livewire\Component;
 use WireUi\Traits\WireUiActions;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 // use filament notficaiton
 use Filament\Notifications\Notification;
 use Livewire\Attributes\On;
@@ -38,7 +39,7 @@ class CounterTransactionPage extends Component
 
     public function mount()
     {
-        $this->counter = auth()->user()->counter;
+        $this->counter = Auth::user()->counter;
 
         if (!$this->counter) {
             return redirect()->route('counter.select');
@@ -151,13 +152,13 @@ class CounterTransactionPage extends Component
             $oldStatus = $queue->status;
             $queue->update([
                 'counter_id' => $this->counter->id,
-                'user_id'    => auth()->id(),
+                'user_id'    => Auth::id(),
                 'status'     => 'serving',
                 'called_at'  => now(),
                 'serving_at' => now(),
             ]);
 
-            auth()->user()->update([
+            Auth::user()->update([
                 'queue_id'   => $queue->id,
                 'counter_id' => $this->counter->id,
             ]);
@@ -221,7 +222,7 @@ class CounterTransactionPage extends Component
                 'status' => 'waiting',
             ]);
 
-            auth()->user()->update([
+            Auth::user()->update([
                 'queue_id' => null,
             ]);
             
@@ -267,7 +268,7 @@ class CounterTransactionPage extends Component
     public function confirmLogoutCounter()
     {
         DB::transaction(function () {
-            $user = auth()->user();
+            $user = Auth::user();
 
             // If user has a queue, reset it
             if ($user->queue_id) {
@@ -359,7 +360,7 @@ class CounterTransactionPage extends Component
                 'serving_at'  => now(),
             ]);
 
-            $user = auth()->user();
+            $user = Auth::user();
             $user->update([
                 'queue_id' => $queue->id,
             ]);
@@ -402,7 +403,7 @@ class CounterTransactionPage extends Component
                 'hold_reason' => $this->holdReason ?? 'Held by staff',
             ]);
 
-            auth()->user()->update([
+            Auth::user()->update([
                 'queue_id' => null,
             ]);
             
@@ -458,7 +459,7 @@ class CounterTransactionPage extends Component
                 'served_at'  => now(),
             ]);
 
-            auth()->user()->update([
+            Auth::user()->update([
                 'queue_id' => null,
             ]);
             
@@ -493,14 +494,14 @@ class CounterTransactionPage extends Component
         $allowedServiceIds = $this->counter->services()->pluck('services.id');
 
         // ✅ 1️⃣ Current ticket for this counter
-       if (auth()->user()->queue_id) {
-    $queue = Queue::find(auth()->user()->queue_id);
+       if (Auth::user()->queue_id) {
+    $queue = Queue::find(Auth::user()->queue_id);
 
     if ($queue) {
         $this->currentTicket = $queue;
     } else {
         // Queue was deleted (probably by reset), clear user reference
-        auth()->user()->update(['queue_id' => null]);
+        Auth::user()->update(['queue_id' => null]);
         $this->currentTicket = null;
     }
 } else {
@@ -568,7 +569,7 @@ class CounterTransactionPage extends Component
                 'skipped_at' => now(),
             ]);
 
-            auth()->user()->update([
+            Auth::user()->update([
                 'queue_id' => null,
             ]);
             
