@@ -8,6 +8,8 @@ use App\Models\Service;
 use App\Models\TransactionHistory;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Filament\Tables\Actions\Action as TableAction;
+use Filament\Support\Enums\ActionSize;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Actions\Action;
@@ -46,6 +48,96 @@ class TransactionHistories extends Component implements HasForms, HasTable
                 ->with(['queue', 'user', 'counter', 'service', 'branch'])
                 ->where('branch_id', Auth::user() ? Auth::user()->branch_id : null)
                 ->orderBy('transaction_time', 'desc'))
+            ->headerActions([
+                TableAction::make('export')
+                    ->label('Download CSV')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
+                    ->size(ActionSize::Small)
+                    ->action(function (array $data, $livewire) {
+                        // Get filtered records
+                        $query = $livewire->getFilteredTableQuery();
+                        
+                        // Prepare CSV data
+                        $records = $query->get();
+                        $csvData = [];
+                        
+                        // Add headers
+                        $csvData[] = [
+                            'Time', 'Ticket Number', 'Raw Number', 'Action', 'Status Change',
+                            'Service', 'Counter', 'Staff', 'Branch', 'Details'
+                        ];
+                        
+                        // Add records
+                        foreach ($records as $record) {
+                            $statusChange = '';
+                            if ($record->status_before && $record->status_after) {
+                                $statusChange = ucfirst($record->status_before) . ' → ' . ucfirst($record->status_after);
+                            }
+                            
+                            // Format metadata
+                            $details = '';
+                            if (!empty($record->metadata)) {
+                                $data = $record->metadata;
+                                if (is_string($data)) {
+                                    $decoded = json_decode($data, true);
+                                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                        $data = $decoded;
+                                    }
+                                }
+                                
+                                if (is_array($data)) {
+                                    $result = [];
+                                    foreach ($data as $key => $value) {
+                                        if ($key === 'counter_name') {
+                                            $result[] = "Counter: $value";
+                                        } elseif ($key === 'hold_reason') {
+                                            $result[] = "Reason: $value";
+                                        } elseif ($key === 'service_time' && $value) {
+                                            $result[] = "Service time: $value min";
+                                        } elseif ($key === 'hold_duration' && $value) {
+                                            $result[] = "Hold duration: $value min";
+                                        } elseif ($key === 'break_message' && $value) {
+                                            $result[] = "Break reason: $value";
+                                        }
+                                    }
+                                    $details = implode(', ', $result);
+                                }
+                            }
+                            
+                            $csvData[] = [
+                                $record->transaction_time->format('M d, Y g:i A'),
+                                $record->ticket_number,
+                                $record->raw_number ?? '',
+                                ucfirst($record->action),
+                                $statusChange,
+                                $record->service->name ?? '',
+                                $record->counter->name ?? '',
+                                $record->user->name ?? '',
+                                $record->branch->name ?? '',
+                                $details
+                            ];
+                        }
+                        
+                        // Generate CSV
+                        $filename = 'transaction-history-' . now()->format('Y-m-d') . '.csv';
+                        $headers = [
+                            'Content-Type' => 'text/csv',
+                            'Content-Disposition' => "attachment; filename=$filename",
+                        ];
+                        
+                        // Create CSV content
+                        $callback = function() use ($csvData) {
+                            $file = fopen('php://output', 'w');
+                            foreach ($csvData as $row) {
+                                fputcsv($file, $row);
+                            }
+                            fclose($file);
+                        };
+                        
+                        return response()->stream($callback, 200, $headers);
+                    })
+            ])
             ->actions([
                 Action::make('view')
                     ->icon('heroicon-o-eye')
