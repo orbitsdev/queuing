@@ -65,10 +65,13 @@
             <div class="relative" x-data="{ open: false }">
                 <button @click="open = !open" @click.away="open = false"
                     class="flex items-center space-x-2 focus:outline-none">
-                    <span class="font-medium text-sm text-kiosqueeing-text">Admin</span>
+                    <div class="flex flex-col items-end mr-2">
+                        <span class="font-medium text-sm text-kiosqueeing-text">{{ auth()->user()->name }}</span>
+                        <span class="text-xs text-blue-600">{{ auth()->user()->branch ? '['.auth()->user()->branch->code.'] ' : '' }}{{ auth()->user()->branch ? auth()->user()->branch->name : '' }}</span>
+                    </div>
                     <div
                         class="w-8 h-8 rounded-full bg-kiosqueeing-primary text-white flex items-center justify-center">
-                        A
+                        {{ auth()->user()->initials() }}
                     </div>
                 </button>
 
