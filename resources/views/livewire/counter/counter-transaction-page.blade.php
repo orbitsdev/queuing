@@ -276,7 +276,7 @@
 
 
 
-                    <!-- Currently Serving By Others -->
+                    <!-- Currently Serving By Others
                     <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
                         <h2 class="text-sm uppercase font-semibold text-gray-600 mb-4 flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -313,7 +313,7 @@
                                 </div>
                             @endforelse
                         </div>
-                    </div>
+                    </div> -->
 
                 </div>
 
