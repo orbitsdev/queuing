@@ -65,6 +65,7 @@ class Services extends Component implements HasForms, HasTable, HasActions
                             ->label('Service Code')
                             ->placeholder('Enter service code')
                             ->required()
+                       ->unique(Service::class, 'code') // <-- important
                             ->maxLength(10)
                             ->columnSpan(1),
                         Textarea::make('description')
@@ -93,7 +94,7 @@ class Services extends Component implements HasForms, HasTable, HasActions
     public function table(Table $table): Table
     {
         return $table
-        ->query(Service::query()->currentBranch())
+        ->query(Service::query()->currentBranch()->latest())
             ->columns([
                 TextColumn::make('name')
                     ->label('Name')
@@ -147,6 +148,7 @@ class Services extends Component implements HasForms, HasTable, HasActions
                                     ->label('Service Code')
                                     ->placeholder('Enter service code')
                                     ->required()
+                                    ->unique(ignoreRecord: true)
                                     ->maxLength(10)
                                     ->columnSpan(1),
                                 Textarea::make('description')

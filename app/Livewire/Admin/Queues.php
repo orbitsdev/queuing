@@ -31,7 +31,9 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Actions\Action as TableAction;
 use Filament\Actions\Concerns\InteractsWithActions;
-
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Database\Eloquent\Builder;
 
 class Queues extends Component implements HasForms, HasTable, HasActions
 {
@@ -112,7 +114,7 @@ class Queues extends Component implements HasForms, HasTable, HasActions
   public function table(Table $table): Table
     {
        return $table
-            ->query(Queue::query()->currentBranch())
+            ->query(Queue::query()->currentBranch()->latest())
 
 
             ->filters([
@@ -127,7 +129,7 @@ class Queues extends Component implements HasForms, HasTable, HasActions
                         'served' => 'Served',
                         'skipped' => 'Skipped',
                         'cancelled' => 'Cancelled',
-                        'expired' => 'Expired',
+
                         'completed' => 'Completed',
                     ])
                     ->placeholder('All Status')
@@ -142,6 +144,28 @@ class Queues extends Component implements HasForms, HasTable, HasActions
                     ->options(Counter::pluck('name', 'id'))
                     ->placeholder('All Counters')
                     ->indicator('Counter'),
+
+
+Filter::make('created_at')
+    ->form([
+        DatePicker::make('created_from')->native(false)->default(today())->label('Date From'),
+        DatePicker::make('created_until')->native(false)->label('Date Until'),
+    ])
+    ->query(function (Builder $query, array $data): Builder {
+        return $query
+            ->when(
+                $data['created_from'],
+                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+            )
+            ->when(
+                $data['created_until'],
+                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+            );
+    })
+
+
+
+
             ])
             ->columns([
                 TextColumn::make('number')
