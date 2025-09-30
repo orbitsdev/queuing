@@ -45,10 +45,11 @@
             <!-- Now Serving Content -->
             <div class=" overflow-y-auto mt-6">
                 @forelse ($servingQueues as $queue)
+
                     <div class="animate-pulse grid grid-cols-5 border-2 rounded overflow-hidden border-b-2 border-white mb-4 last:mb-0">
                         <!-- Counter Name block -->
                         <div class="bg-[#cee1ff] text-black text-4xl md:text-4xl font-bold py-4 px-4 col-span-3 flex items-center justify-center text-center uppercase">
-                            {{ $queue->counter->name ?? 'COUNTER' }}
+                            {{ $queue->counter?->name ?? 'This is counter is not available'}}
                         </div>
 
                         <!-- Ticket Number block -->
