@@ -36,10 +36,12 @@
                         <div
                             wire:click="assign({{ $counter->id }})"
                             wire:loading.attr="disabled"
-                            class="relative cursor-pointer transition transform hover:scale-[1.02] rounded-xl overflow-hidden {{ $counter->user_id ? 'pointer-events-none' : '' }}"
+                            class="relative cursor-pointer transition transform hover:scale-[1.02] rounded-xl overflow-hidden "
+                            {{-- class="relative cursor-pointer transition transform hover:scale-[1.02] rounded-xl overflow-hidden {{ $counter->user_id ? 'pointer-events-none' : '' }}" --}}
                         >
                             <!-- Card Background -->
-                            <div class="{{ $counter->user_id ? 'bg-gray-300 text-gray-700' : 'bg-gradient-to-tr from-denim-700 via-denim-800 to-denim-900 text-white' }} p-6 md:p-8 h-full flex flex-col justify-between rounded-xl shadow-md">
+                            {{-- <div class="{{ $counter->user_id ? 'bg-gray-300 text-gray-700' : 'bg-gradient-to-tr from-denim-700 via-denim-800 to-denim-900 text-white' }} p-6 md:p-8 h-full flex flex-col justify-between rounded-xl shadow-md"> --}}
+                            <div class="bg-gradient-to-tr from-denim-700 via-denim-800 to-denim-900 text-white p-6 md:p-8 h-full flex flex-col justify-between rounded-xl shadow-md">
 
                                 <div>
                                     <h3 class="text-xl font-semibold mb-3">{{ $counter->name }}</h3>
@@ -47,7 +49,8 @@
                                     <!-- Services -->
                                     <div class="flex flex-wrap gap-2 mb-4">
                                         @forelse ($counter->services as $service)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $counter->user_id ? 'bg-gray-700 text-gray-200 border-gray-600' : 'bg-white text-denim-800 border-denim-300' }} border shadow-sm">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium  bg-white text-denim-800 border-denim-300 border shadow-sm">
+                                            {{-- <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $counter->user_id ? 'bg-gray-700 text-gray-200 border-gray-600' : 'bg-white text-denim-800 border-denim-300' }} border shadow-sm"> --}}
                                                 {{ $service->name }}
                                             </span>
                                         @empty
@@ -58,16 +61,18 @@
 
                                 <!-- Status -->
                                 <p class="text-sm">
-                                    @if ($counter->user_id)
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-700">
-                                            Occupied by {{ $counter->user->name }}
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                            Available
-                                        </span>
-                                    @endif
-                                </p>
+    @if ($counter->users->isNotEmpty())
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-700">
+            Occupied by
+            {{ $counter->users->pluck('name')->join(', ') }}
+        </span>
+    @else
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+            Available
+        </span>
+    @endif
+</p>
+
 
                                 <!-- Overlay loading when assigning -->
                                 <div wire:loading wire:target="assign" class="absolute inset-0 bg-black/40 flex items-center justify-center rounded-xl">

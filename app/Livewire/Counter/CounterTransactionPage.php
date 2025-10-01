@@ -170,7 +170,7 @@ class CounterTransactionPage extends Component
                 'serving',
                 $oldStatus,
                 'serving',
-                ['counter_name' => $this->counter->name]
+                ['counter_name' => Auth::user()->name]
             );
 
             DB::commit();
@@ -190,7 +190,7 @@ class CounterTransactionPage extends Component
 
             $this->dialog()->error(
                 title: 'System Error',
-                description: 'Something went wrong. Please try again.'.$e->getMessage()
+                description: 'Something went wrong. Please try again.' . $e->getMessage()
             );
         }
     }
@@ -233,7 +233,7 @@ class CounterTransactionPage extends Component
                 'cancelled',
                 $oldStatus,
                 'waiting',
-                ['counter_name' => $this->counter->name]
+                ['counter_name' => Auth::user()->name]
             );
 
             DB::commit();
@@ -307,6 +307,7 @@ class CounterTransactionPage extends Component
     public function holdQueue()
     {
         if (!$this->currentTicket) {
+            $this->showNoQueSelected();
             return;
         }
 
@@ -344,13 +345,14 @@ class CounterTransactionPage extends Component
     public function confirmResumeSelectedHold($queueId)
     {
         DB::transaction(function () use ($queueId) {
-            $queue = \App\Models\Queue::where('id', $queueId)
+            $queue = Queue::where('id', $queueId)
                 ->where('status', 'held')
                 ->where('counter_id', $this->counter->id)
                 ->lockForUpdate()
                 ->first();
 
             if (!$queue) {
+
                 throw new \Exception('This hold ticket is no longer available.');
             }
 
@@ -373,7 +375,7 @@ class CounterTransactionPage extends Component
                 $oldStatus,
                 'serving',
                 [
-                    'counter_name' => $this->counter->name,
+                    'counter_name' => Auth::user()->name,
                     'hold_duration' => $queue->hold_started_at ?
                         now()->diffInMinutes($queue->hold_started_at) : null
                 ]
@@ -415,7 +417,7 @@ class CounterTransactionPage extends Component
                 $oldStatus,
                 'held',
                 [
-                    'counter_name' => $this->counter->name,
+                    'counter_name' => Auth::user()->name,
                     'hold_reason' => $this->holdReason ?? 'Held by staff'
                 ]
             );
@@ -439,6 +441,8 @@ class CounterTransactionPage extends Component
     public function completeQueue()
     {
         if (!$this->currentTicket) {
+
+            $this->showNoQueSelected();
             // Nothing to complete
             return;
         }
@@ -471,7 +475,7 @@ class CounterTransactionPage extends Component
                 $oldStatus,
                 'served',
                 [
-                    'counter_name' => $this->counter->name,
+                    'counter_name' => Auth::user()->name,
                     'service_time' => $this->currentTicket->serving_at ?
                         now()->diffInMinutes($this->currentTicket->serving_at) : null
                 ]
@@ -492,22 +496,22 @@ class CounterTransactionPage extends Component
     public function loadQueue()
     {
         // ✅ Always get fresh allowed services for this counter
-        $allowedServiceIds = $this->counter->services()->pluck('services.id');
+          $allowedServiceIds = $this->counter->services->pluck('id');
 
         // ✅ 1️⃣ Current ticket for this counter
-       if (Auth::user()->queue_id) {
-    $queue = Queue::find(Auth::user()->queue_id);
+        if (Auth::user()->queue_id) {
+            $queue = Queue::find(Auth::user()->queue_id);
 
-    if ($queue) {
-        $this->currentTicket = $queue;
-    } else {
-        // Queue was deleted (probably by reset), clear user reference
-        Auth::user()->update(['queue_id' => null]);
-        $this->currentTicket = null;
-    }
-} else {
-    $this->currentTicket = null;
-}
+            if ($queue) {
+                $this->currentTicket = $queue;
+            } else {
+                // Queue was deleted (probably by reset), clear user reference
+                Auth::user()->update(['queue_id' => null]);
+                $this->currentTicket = null;
+            }
+        } else {
+            $this->currentTicket = null;
+        }
 
 
         // ✅ 2️⃣ Next tickets matching allowed services
@@ -518,6 +522,7 @@ class CounterTransactionPage extends Component
             ->whereNull('counter_id')
             ->orderBy('created_at')
             ->take(3)
+            ->with(['service', 'counter'])
             ->get();
 
         // ✅ 3️⃣ Hold tickets (always valid, tied to this counter)
@@ -525,15 +530,16 @@ class CounterTransactionPage extends Component
             ->where('counter_id', $this->counter->id)
             ->where('status', 'held')
             ->orderBy('hold_started_at')
+             ->with(['service', 'counter'])
             ->get();
 
-        // ✅ 4️⃣ Tickets served by other counters (no filter)
-        $this->others = Queue::todayQueues()
-            ->where('branch_id', $this->counter->branch_id)
-            ->whereIn('status', ['called', 'serving'])
-            ->where('counter_id', '!=', $this->counter->id)
-            ->with(['counter', 'service'])
-            ->get();
+        // // ✅ 4️⃣ Tickets served by other counters (no filter)
+        // $this->others = Queue::todayQueues()
+        //     ->where('branch_id', $this->counter->branch_id)
+        //     ->whereIn('status', ['called', 'serving'])
+        //     ->where('counter_id', '!=', $this->counter->id)
+        //     ->with(['counter', 'service'])
+        //     ->get();
 
         // ✅ 5️⃣ Count all waiting tickets for allowed services
         $this->queueCountToday = Queue::todayQueues()
@@ -543,12 +549,19 @@ class CounterTransactionPage extends Component
             ->count();
     }
 
+    public function showNoQueSelected(){
+           $this->dialog()->error(
+                title: 'No Ticket',
+                description: 'There is no active ticket to complete.'
+            );
+    }
 
 
     public function skipCurrent()
     {
         if (!$this->currentTicket) {
             // Nothing to skip
+            $this->showNoQueSelected();
             return;
         }
 
@@ -561,43 +574,43 @@ class CounterTransactionPage extends Component
         ]);
     }
 
-  public function anounceNumber()
-{
-    try {
-        if (!$this->currentTicket) {
+    public function anounceNumber()
+    {
+        try {
+            if (!$this->currentTicket) {
+                Notification::make()
+                    ->title('No active ticket selected')
+                    ->danger()
+                    ->send();
+                return;
+            }
+
+            $ticket = $this->currentTicket->fresh();
+
+            if (!$ticket) {
+                Notification::make()
+                    ->title('Ticket not found')
+                    ->danger()
+                    ->send();
+                return;
+            }
+
+            event(new CallNumber($ticket));
+
             Notification::make()
-                ->title('No active ticket selected')
+                ->title('Number announced successfully')
+                ->success()
+                ->send();
+        } catch (\Throwable $e) {
+
+
+            Notification::make()
+                ->title('Failed to announce number')
+                ->body('Please try again or contact support.')
                 ->danger()
                 ->send();
-            return;
         }
-
-        $ticket = $this->currentTicket->fresh();
-
-        if (!$ticket) {
-            Notification::make()
-                ->title('Ticket not found')
-                ->danger()
-                ->send();
-            return;
-        }
-
-        event(new CallNumber($ticket));
-
-        Notification::make()
-            ->title('Number announced successfully')
-            ->success()
-            ->send();
-    } catch (\Throwable $e) {
-     
-
-        Notification::make()
-            ->title('Failed to announce number')
-            ->body('Please try again or contact support.')
-            ->danger()
-            ->send();
     }
-}
 
 
 
@@ -620,7 +633,7 @@ class CounterTransactionPage extends Component
                 'skipped',
                 $oldStatus,
                 'skipped',
-                ['counter_name' => $this->counter->name]
+                ['counter_name' => Auth::user()->name]
             );
 
             // Broadcast queue status change

@@ -95,6 +95,7 @@ class DisplayPage extends Component
 
         $this->servingQueues = Queue::whereIn('service_id', $serviceIds)
             ->where('status', 'serving')
+      ->today()
             ->with('counter')
             ->orderBy('called_at')
             ->get();

@@ -36,6 +36,7 @@ class Counter extends Model
 
 
 
+
     public function services()
 {
     return $this->belongsToMany(Service::class, 'counter_service', 'counter_id', 'service_id');
@@ -51,6 +52,10 @@ public function scopeCurrentBranch($query)
     return $query->where('branch_id', Auth::user()->branch_id);
 }
 
+
+public function users(){
+    return $this->hasMany(User::class);
+}
 
 
 }

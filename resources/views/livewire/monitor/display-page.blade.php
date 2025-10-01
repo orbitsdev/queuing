@@ -238,8 +238,8 @@
                 window.Echo.channel('incoming-queue.' + branchId + '.' + service.id)
                     .listen('.queue.updated', function(event) {
                         console.log('Received queue update for branch ');
-                        // console.log('Received queue update for branch ' + branchId + ', service ' + service.name + ':', event);
-                        debounceUpdate(event);
+                        console.log('Received queue update for branch ' + branchId + ', service ' + service.name + ':', event);
+                         debounceUpdate(event);
                     });
             });
 

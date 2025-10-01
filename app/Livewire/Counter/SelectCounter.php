@@ -17,7 +17,7 @@ class SelectCounter extends Component
     public function getCountersProperty()
     {
         return Counter::currentBranch()
-            ->with(['user', 'services'])
+            ->with(['users', 'services'])
             ->where(function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%')
                     ->orWhereHas('services', fn ($q) =>
@@ -39,38 +39,39 @@ class SelectCounter extends Component
     {
         $counter = Counter::findOrFail($counterId);
 
-        if ($counter->user_id) {
-            return;
-        }
+        // if ($counter->user_id) {
+        //     return;
+        // }
 
         $this->dialog()->confirm([
             'title' => 'Confirm Counter Selection',
             'description' => "Are you sure you want to use {$counter->name}?",
             'acceptLabel' => 'Yes, Use This Counter',
             'method' => 'confirmAssign',
-            'params' => $counterId,
+            'params' => $counter,
         ]);
     }
 
-    public function confirmAssign($counterId)
+    public function confirmAssign(Counter $counter)
     {
-        $counter = Counter::findOrFail($counterId);
+        // dd($counter->toArray());
 
-        if ($counter->user_id) {
-            $this->dialog()->error(
-                title: 'Counter Occupied',
-                description: 'This counter was just taken by someone else. Please choose another.'
-            );
-            return;
-        }
+        // if ($counter->user_id) {
+        //     $this->dialog()->error(
+        //         title: 'Counter Occupied',
+        //         description: 'This counter was just taken by someone else. Please choose another.'
+        //     );
+        //     return;
+        // }
 
         $user = auth()->user();
         $user->update(['counter_id' => $counter->id]);
-        $counter->update(['user_id' => $user->id]);
+        //since it is 1 to many the trancaiton will be change
+        // $counter->update(['user_id' => $user->id]);
 
         $this->dialog()->success(
             title: 'Counter Assigned',
-            description: "You are now using {$counter->name}."
+            description: "You are now using {$user->counter?->name}."
         );
 
         return redirect()->route('counter.transaction');

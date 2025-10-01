@@ -278,7 +278,7 @@
                                 <option value="">Select a Hold Ticket</option>
                                 @foreach ($holdTickets as $hold)
                                     <option value="{{ $hold->id }}">
-                                        {{ $hold->ticket_number }} - {{ $hold->service->name ?? 'No Service' }}
+                                        {{ $hold->number }} - {{ $hold->service->name ?? 'No Service' }} ({{ $hold->hold_reason ??'' }})
                                     </option>
                                 @endforeach
                             </select>
@@ -301,7 +301,7 @@
 
                 </div>
 
-    
+
 
 
         <x-modal-card title="Hold Ticket" wire:model.defer="showHoldModal" align="center">
