@@ -162,7 +162,7 @@ class CounterTransactionPage extends Component
                 'queue_id'   => $queue->id,
                 'counter_id' => $this->counter->id,
             ]);
-            
+
             // Log transaction history
             TransactionHistoryService::logQueueTransaction(
                 $queue,
@@ -189,7 +189,7 @@ class CounterTransactionPage extends Component
 
             $this->dialog()->error(
                 title: 'System Error',
-                description: 'Something went wrong. Please try again.'
+                description: 'Something went wrong. Please try again.'.$e->getMessage()
             );
         }
     }
@@ -225,7 +225,7 @@ class CounterTransactionPage extends Component
             Auth::user()->update([
                 'queue_id' => null,
             ]);
-            
+
             // Log transaction history
             TransactionHistoryService::logQueueTransaction(
                 $this->currentTicket,
@@ -352,7 +352,7 @@ class CounterTransactionPage extends Component
             if (!$queue) {
                 throw new \Exception('This hold ticket is no longer available.');
             }
-            
+
             $oldStatus = $queue->status;
             $queue->update([
                 'status'      => 'serving',
@@ -364,7 +364,7 @@ class CounterTransactionPage extends Component
             $user->update([
                 'queue_id' => $queue->id,
             ]);
-            
+
             // Log transaction history
             TransactionHistoryService::logQueueTransaction(
                 $queue,
@@ -373,7 +373,7 @@ class CounterTransactionPage extends Component
                 'serving',
                 [
                     'counter_name' => $this->counter->name,
-                    'hold_duration' => $queue->hold_started_at ? 
+                    'hold_duration' => $queue->hold_started_at ?
                         now()->diffInMinutes($queue->hold_started_at) : null
                 ]
             );
@@ -406,7 +406,7 @@ class CounterTransactionPage extends Component
             Auth::user()->update([
                 'queue_id' => null,
             ]);
-            
+
             // Log transaction history
             TransactionHistoryService::logQueueTransaction(
                 $this->currentTicket,
@@ -462,7 +462,7 @@ class CounterTransactionPage extends Component
             Auth::user()->update([
                 'queue_id' => null,
             ]);
-            
+
             // Log transaction history
             TransactionHistoryService::logQueueTransaction(
                 $this->currentTicket,
@@ -471,7 +471,7 @@ class CounterTransactionPage extends Component
                 'served',
                 [
                     'counter_name' => $this->counter->name,
-                    'service_time' => $this->currentTicket->serving_at ? 
+                    'service_time' => $this->currentTicket->serving_at ?
                         now()->diffInMinutes($this->currentTicket->serving_at) : null
                 ]
             );
@@ -572,7 +572,7 @@ class CounterTransactionPage extends Component
             Auth::user()->update([
                 'queue_id' => null,
             ]);
-            
+
             // Log transaction history
             TransactionHistoryService::logQueueTransaction(
                 $this->currentTicket,
@@ -598,7 +598,7 @@ class CounterTransactionPage extends Component
     {
         $newStatus = !$this->counter->active;
         $oldStatus = $this->counter->active ? 'active' : 'break';
-        
+
         $this->counter->update([
             'active' => $newStatus,
             'break_message' => $newStatus
@@ -608,7 +608,7 @@ class CounterTransactionPage extends Component
 
         $this->status = $newStatus ? 'break' : 'active';
         $this->breakMessage = $this->counter->break_message;
-        
+
         // Log counter status change
         TransactionHistoryService::logCounterStatusChange(
             $this->counter,
@@ -636,7 +636,7 @@ class CounterTransactionPage extends Component
     public function confirmStartBreak()
     {
         $oldStatus = $this->counter->active ? 'active' : 'break';
-        
+
         $this->counter->update([
             'active' => false,
             'break_message' => $this->breakInputMessage,
@@ -646,7 +646,7 @@ class CounterTransactionPage extends Component
         $this->breakMessage = $this->breakInputMessage;
 
         $this->showBreakModal = false;
-        
+
         // Log counter status change
         TransactionHistoryService::logCounterStatusChange(
             $this->counter,
@@ -673,7 +673,7 @@ class CounterTransactionPage extends Component
     public function confirmResumeWork()
     {
         $oldStatus = $this->counter->active ? 'active' : 'break';
-        
+
         $this->counter->update([
             'active' => true,
             'break_message' => null,
@@ -681,14 +681,14 @@ class CounterTransactionPage extends Component
 
         $this->status = 'active';
         $this->breakMessage = null;
-        
+
         // Log counter status change
         TransactionHistoryService::logCounterStatusChange(
             $this->counter,
             true, // active
             null
         );
-        
+
         $this->notification()->success('Work resumed.');
 
         // Broadcast counter status change if needed
