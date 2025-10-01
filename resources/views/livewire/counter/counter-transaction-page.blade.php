@@ -148,6 +148,26 @@
                                 ❌ Cancel
                             </button>
 
+                         <button wire:click="anounceNumber"
+        wire:loading.attr="disabled"
+        @disabled(!$currentTicket)
+        class="block col-span-4 {{ $currentTicket
+            ? 'px-5 py-2 bg-gray-700 text-white hover:bg-gray-800 transition rounded-lg flex items-center justify-center'
+            : 'px-5 py-2 bg-gray-200 text-gray-400 cursor-not-allowed rounded-lg flex items-center justify-center'
+        }}">
+    <span wire:loading.remove wire:target="anounceNumber">🔊 Call Number</span>
+
+    <!-- Spinner while processing -->
+    <span wire:loading wire:target="anounceNumber" class="flex items-center gap-2">
+        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        <span>Announcing...</span>
+    </span>
+</button>
+
+
                         </div>
 
 
@@ -169,12 +189,12 @@
                                 </span>
                             </div>
                             <div class="flex flex-wrap gap-2">
-                                <button
+                                {{-- <button
                                 wire:click="{{ $status === 'active' ? 'startBreak' : 'resumeWork' }}"
                                 wire:loading.attr="disabled"
                                 class="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition">
                                 {{ $status === 'active' ? 'Start Break' : 'Resume Work' }}
-                            </button>
+                            </button> --}}
 
 
 
@@ -276,50 +296,14 @@
 
 
 
-                    <!-- Currently Serving By Others
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-                        <h2 class="text-sm uppercase font-semibold text-gray-600 mb-4 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Currently Serving by Other Counters
-                        </h2>
-                        <div class="grid grid-cols-1 gap-3">
-                            @forelse ($others as $other)
-                                <div class="flex flex-wrap sm:flex-nowrap items-center bg-gray-50 hover:bg-gray-100 transition-colors duration-150 border border-gray-200 rounded-lg overflow-hidden">
-                                    <div class="flex items-center bg-kiosqueeing-primary text-white uppercase px-4 py-3 w-full sm:w-auto">
-                                        <span class="font-bold">{{ $other->counter->name }}</span>
-                                    </div>
-                                    <div class="px-4 py-3 flex flex-col">
-                                        <div class="flex items-center">
-                                            <span class="text-2xl font-bold">{{ $other->number }}</span>
-                                            <span class="ml-2 text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
-                                                {{ $other->ticket_number }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="px-4 py-3 ml-auto">
-                                        <span class="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium">
-                                            {{ $other->service->name ?? 'No Service' }}
-                                        </span>
-                                    </div>
-                                </div>
-                            @empty
-                                <div class="flex flex-col items-center justify-center py-6 bg-gray-50 rounded-lg border border-gray-200 border-dashed">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <p class="text-sm font-medium text-gray-500">No other counters serving right now</p>
-                                </div>
-                            @endforelse
-                        </div>
-                    </div> -->
+                    </div>
+
 
                 </div>
 
-            </div>
+    
 
-        </div>
+
         <x-modal-card title="Hold Ticket" wire:model.defer="showHoldModal" align="center">
             <div class="space-y-4">
                 <x-input label="Hold Reason (optional)" placeholder="Explain why you are putting this on hold"
@@ -357,8 +341,8 @@
                 var branchId = {{ $counter->branch_id }};
                 var serviceIds = {{ json_encode($counter->services->pluck('id')) }};
 
-                console.log('Branch ID:', branchId);
-                console.log('Service IDs:', serviceIds);
+                // console.log('Branch ID:', branchId);
+                // console.log('Service IDs:', serviceIds);
 
                 // Track last event time for fallback polling
                 let lastEventTime = Date.now();
@@ -432,6 +416,7 @@
                     const channelName = 'incoming-queue.' + branchId + '.' + serviceId;
                     console.log('Subscribing to channel:', channelName);
 
+
                     window.Echo.channel(channelName)
                         .listen('.queue.updated', function(event) {
                             console.log('Received queue update for branch ' + branchId + ', service ' + serviceId + ':', event);
@@ -451,7 +436,11 @@
                     }
                 }, 5000);
             });
+
+
           </script>
+
+
 
     </x-admin-layout>
 </div>

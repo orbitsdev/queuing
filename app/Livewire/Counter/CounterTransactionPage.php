@@ -2,17 +2,18 @@
 
 namespace App\Livewire\Counter;
 
-use App\Events\QueueStatusChanged;
 use App\Models\Queue;
 use App\Models\Setting;
-use App\Services\TransactionHistoryService;
 use Livewire\Component;
-use WireUi\Traits\WireUiActions;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-// use filament notficaiton
-use Filament\Notifications\Notification;
+use App\Events\CallNumber;
 use Livewire\Attributes\On;
+use WireUi\Traits\WireUiActions;
+use App\Events\QueueStatusChanged;
+use Illuminate\Support\Facades\DB;
+// use filament notficaiton
+use Illuminate\Support\Facades\Auth;
+use Filament\Notifications\Notification;
+use App\Services\TransactionHistoryService;
 
 class CounterTransactionPage extends Component
 {
@@ -559,6 +560,46 @@ class CounterTransactionPage extends Component
             'method'      => 'confirmSkipCurrent',
         ]);
     }
+
+  public function anounceNumber()
+{
+    try {
+        if (!$this->currentTicket) {
+            Notification::make()
+                ->title('No active ticket selected')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        $ticket = $this->currentTicket->fresh();
+
+        if (!$ticket) {
+            Notification::make()
+                ->title('Ticket not found')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        event(new CallNumber($ticket));
+
+        Notification::make()
+            ->title('Number announced successfully')
+            ->success()
+            ->send();
+    } catch (\Throwable $e) {
+     
+
+        Notification::make()
+            ->title('Failed to announce number')
+            ->body('Please try again or contact support.')
+            ->danger()
+            ->send();
+    }
+}
+
+
 
     public function confirmSkipCurrent()
     {

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the database optimization features implemented in the KiosQueuing system to improve performance, especially when handling large numbers of queue records.
+This document outlines the database optimization features implemented in the QUEWIE system to improve performance, especially when handling large numbers of queue records.
 
 ## 1. Database Indexing
 

@@ -375,9 +375,7 @@ class Users extends Component implements HasForms, HasTable, HasActions
                DeleteAction::make()
                    ->visible(function (User $record) {
                        // Only visible if not superadmin and doesn't have queues or branch
-                       return $record->role !== 'superadmin' &&
-                              !$record->queues()->exists() &&
-                              $record->id !== auth()->guard()->id();
+                       return $record->role !== 'superadmin' && $record->id !== auth()->guard()->id();
                    })
                    ->requiresConfirmation()
                    ->modalHeading('Delete User')

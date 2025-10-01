@@ -113,7 +113,7 @@
     </div>
 
     <div class="mt-6 text-center text-gray-600">
-        <p>© {{ date('Y') }} KioskQueuing. All rights reserved.</p>
+        <p>© {{ date('Y') }} QUEWIE. All rights reserved.</p>
     </div>
 </div>
 

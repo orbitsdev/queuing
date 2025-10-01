@@ -2,8 +2,8 @@
     <!-- System Logo/Name -->
     <div class="text-center mb-6">
         <div class="flex flex-col items-center justify-center">
-            <img src="{{ asset('images/queue_logo.png') }}" alt="KiosQueuing Logo" class="h-20 mb-2">
-            <span class="text-2xl font-bold text-kiosqueeing-primary">KiosQueuing</span>
+            <img src="{{ asset('images/queue_logo.png') }}" alt="QUEWIE Logo" class="h-20 mb-2">
+            <span class="text-2xl font-bold text-kiosqueeing-primary">QUEWIE</span>
             <p class="text-sm text-gray-500">Queue Management System</p>
         </div>
     </div>
@@ -123,7 +123,7 @@
     @if (Route::has('register'))
         <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">
             {{ __('Don\'t have an account?') }}
-            <a href="{{ route('register') }}" wire:navigate class="text-kiosqueeing-primary hover:text-kiosqueeing-primary/80">
+            <a href="{{ route('register') }}"  class="text-kiosqueeing-primary hover:text-kiosqueeing-primary/80">
                 {{ __('Sign up') }}
             </a>
         </div>
