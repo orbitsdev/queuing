@@ -26,6 +26,7 @@ use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Validation\Rules\Password;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Tables\Actions\Action as TAction;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Actions\Action as TableAction;
@@ -325,52 +326,59 @@ class Users extends Component implements HasForms, HasTable, HasActions
                                     ->required()
                                     ->placeholder('Select a role')
                                     ->columnSpan(1),
+
                             ]),
                     ];
                 }),
 
 
 
-            Action::make('reset_password')
-            ->size('xs')
-                ->label('Reset Password')
-                ->icon('heroicon-o-key')
-                ->color('gray')
-                ->modalWidth('md')
-                ->modalHeading('Reset User Password')
-                ->modalDescription('Set a new password for this user.')
-                ->form([
-                    Section::make('New Password')
-                        ->description('Enter the new password for this user')
-                        ->columns(2)
-                        ->schema([
-                            TextInput::make('password')
-                                ->label('New Password')
-                                ->password()
-                                ->required()
-                                ->rule(Password::defaults())
-                                ->autocomplete('new-password')
-                                ->columnSpan(1),
+           TAction::make('reset_password')
+           ->visible(function (User $record) {
+                       // Only visible if not superadmin and doesn't have queues or branch
+                       return $record->role !== 'superadmin' && $record->id !== auth()->guard()->id();
+                   })
+    ->size('xs')
+    ->label('Reset Password')
+    ->icon('heroicon-o-key')
+    ->color('gray')
+    ->modalWidth('md')
+    ->modalHeading('Reset User Password')
+    ->modalDescription('Set a new password for this user.')
+    ->form([
+        Section::make('New Password')
+            ->description('Enter the new password for this user')
+            ->columns(2)
+            ->schema([
+                TextInput::make('password')
+                    ->label('New Password')
+                    ->password()
+                    ->required()
+                    ->rule(Password::defaults())
+                    ->autocomplete('new-password')
+                    ->columnSpan(1),
 
-                            TextInput::make('password_confirmation')
-                                ->label('Confirm Password')
-                                ->password()
-                                ->required()
-                                ->same('password')
-                                ->autocomplete('new-password')
-                                ->columnSpan(1),
-                        ]),
-                ])
-                ->action(function (array $data, User $record) {
-                    $record->update([
-                        'password' => Hash::make($data['password']),
-                    ]);
+                TextInput::make('password_confirmation')
+                    ->label('Confirm Password')
+                    ->password()
+                    ->required()
+                    ->same('password')
+                    ->autocomplete('new-password')
+                    ->columnSpan(1),
+            ]),
+    ])
+    ->action(function (array $data, User $record) {
+        $record->update([
+            'password' => Hash::make($data['password']),
+        ]);
+    })
+    ->successNotification(
+        Notification::make()
+            ->title('Password Reset')
+            ->body('The user\'s password has been successfully reset')
+            ->success()
+    ),
 
-                    $this->dialog()->success(
-                        title: 'Password Reset',
-                        description: 'The user\'s password has been successfully reset'
-                    );
-                }),
                 //Delete Action
                DeleteAction::make()
                    ->visible(function (User $record) {

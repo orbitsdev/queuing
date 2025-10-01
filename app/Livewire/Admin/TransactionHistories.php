@@ -57,24 +57,24 @@ class TransactionHistories extends Component implements HasForms, HasTable
                     ->action(function (array $data, $livewire) {
                         // Get filtered records
                         $query = $livewire->getFilteredTableQuery();
-                        
+
                         // Prepare CSV data
                         $records = $query->get();
                         $csvData = [];
-                        
+
                         // Add headers
                         $csvData[] = [
                             'Time', 'Ticket Number', 'Raw Number', 'Action', 'Status Change',
                             'Service', 'Counter', 'Staff', 'Branch', 'Details'
                         ];
-                        
+
                         // Add records
                         foreach ($records as $record) {
                             $statusChange = '';
                             if ($record->status_before && $record->status_after) {
                                 $statusChange = ucfirst($record->status_before) . ' → ' . ucfirst($record->status_after);
                             }
-                            
+
                             // Format metadata
                             $details = '';
                             if (!empty($record->metadata)) {
@@ -85,7 +85,7 @@ class TransactionHistories extends Component implements HasForms, HasTable
                                         $data = $decoded;
                                     }
                                 }
-                                
+
                                 if (is_array($data)) {
                                     $result = [];
                                     foreach ($data as $key => $value) {
@@ -104,7 +104,7 @@ class TransactionHistories extends Component implements HasForms, HasTable
                                     $details = implode(', ', $result);
                                 }
                             }
-                            
+
                             $csvData[] = [
                                 $record->transaction_time->format('M d, Y g:i A'),
                                 $record->ticket_number,
@@ -118,14 +118,14 @@ class TransactionHistories extends Component implements HasForms, HasTable
                                 $details
                             ];
                         }
-                        
+
                         // Generate CSV
                         $filename = 'transaction-history-' . now()->format('Y-m-d') . '.csv';
                         $headers = [
                             'Content-Type' => 'text/csv',
                             'Content-Disposition' => "attachment; filename=$filename",
                         ];
-                        
+
                         // Create CSV content
                         $callback = function() use ($csvData) {
                             $file = fopen('php://output', 'w');
@@ -134,7 +134,7 @@ class TransactionHistories extends Component implements HasForms, HasTable
                             }
                             fclose($file);
                         };
-                        
+
                         return response()->stream($callback, 200, $headers);
                     })
             ])
@@ -149,88 +149,89 @@ class TransactionHistories extends Component implements HasForms, HasTable
                     ->modalContent(fn (TransactionHistory $record) => view('livewire.admin.partials.transaction-details', ['transaction' => $record]))
             ])
             ->columns([
-                TextColumn::make('transaction_time')
-                    ->label('Time')
-                    ->dateTime('M d, Y g:i A')
-                    ->sortable(),
-                TextColumn::make('ticket_number')
-                    ->label('Ticket')
-                    ->description(fn (TransactionHistory $record): string => $record->raw_number ?? '')
-                    ->searchable(),
-                TextColumn::make('action')
-                    ->label('Action')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'serving' => 'success',
-                        'served' => 'success',
-                        'called' => 'warning',
-                        'held' => 'orange',
-                        'resumed' => 'info',
-                        'skipped' => 'danger',
-                        'cancelled' => 'gray',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn (string $state): string => ucfirst($state))
-                    ->sortable(),
-                TextColumn::make('status_change')
-                    ->label('Status Change')
-                    ->formatStateUsing(function (TransactionHistory $record): string {
-                        if (!$record->status_before || !$record->status_after) {
-                            return '';
-                        }
-                        return ucfirst($record->status_before) . ' → ' . ucfirst($record->status_after);
-                    }),
-                TextColumn::make('service.name')
-                    ->label('Service')
-                    ->sortable(),
-                TextColumn::make('counter.name')
-                    ->label('Counter')
-                    ->sortable(),
-                TextColumn::make('user.name')
-                    ->label('Staff')
-                    ->sortable(),
-                TextColumn::make('metadata')
-                    ->label('Details')
-                    ->formatStateUsing(function ($state) {
-                        if (empty($state)) {
-                            return '';
-                        }
+               TextColumn::make('transaction_time')
+    ->label('Time')
+    ->dateTime('M d, Y g:i A')
+    ->sortable(),
 
-                        // Handle different types of metadata
-                        $data = $state;
+TextColumn::make('user.name')
+    ->label('Staff')
+    ->sortable(),
 
-                        // If it's a string, try to decode it as JSON
-                        if (is_string($state)) {
-                            $decoded = json_decode($state, true);
-                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                                $data = $decoded;
-                            } else {
-                                return $state; // Return as is if not valid JSON
-                            }
-                        }
+TextColumn::make('counter.name')
+    ->label('Counter')
+    ->sortable(),
 
-                        // If it's not an array at this point, convert to string and return
-                        if (!is_array($data)) {
-                            return (string)$data;
-                        }
+TextColumn::make('service.name')
+    ->label('Service')
+    ->sortable(),
 
-                        $result = [];
-                        foreach ($data as $key => $value) {
-                            if ($key === 'counter_name') {
-                                $result[] = "Counter: $value";
-                            } elseif ($key === 'hold_reason') {
-                                $result[] = "Reason: $value";
-                            } elseif ($key === 'service_time' && $value) {
-                                $result[] = "Service time: $value min";
-                            } elseif ($key === 'hold_duration' && $value) {
-                                $result[] = "Hold duration: $value min";
-                            } elseif ($key === 'break_message' && $value) {
-                                $result[] = "Break reason: $value";
-                            }
-                        }
+TextColumn::make('ticket_number')
+    ->label('Ticket')
+    ->description(fn (TransactionHistory $record): string => $record->raw_number ?? '')
+    ->searchable(),
 
-                        return empty($result) ? json_encode($data) : implode(', ', $result);
-                    }),
+TextColumn::make('action')
+    ->label('Action')
+    ->badge()
+    ->color(fn (string $state): string => match ($state) {
+        'serving' => 'success',
+        'served' => 'success',
+        'called' => 'warning',
+        'held' => 'orange',
+        'resumed' => 'info',
+        'skipped' => 'danger',
+        'cancelled' => 'gray',
+        default => 'gray',
+    })
+    ->formatStateUsing(fn (string $state): string => ucfirst($state))
+    ->sortable(),
+
+TextColumn::make('raw_number')
+    ->label('Queue Number')
+   ->searchable(),
+
+TextColumn::make('metadata')
+    ->label('Details')
+    ->formatStateUsing(function ($state) {
+        if (empty($state)) {
+            return '';
+        }
+
+        $data = $state;
+
+        // Try JSON decode if it's a string
+        if (is_string($state)) {
+            $decoded = json_decode($state, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $data = $decoded;
+            } else {
+                return $state;
+            }
+        }
+
+        if (!is_array($data)) {
+            return (string) $data;
+        }
+
+        $result = [];
+        foreach ($data as $key => $value) {
+            if ($key === 'counter_name') {
+                $result[] = "Counter: $value";
+            } elseif ($key === 'hold_reason') {
+                $result[] = "Reason: $value";
+            } elseif ($key === 'service_time' && $value) {
+                $result[] = "Service time: $value min";
+            } elseif ($key === 'hold_duration' && $value) {
+                $result[] = "Hold duration: $value min";
+            } elseif ($key === 'break_message' && $value) {
+                $result[] = "Break reason: $value";
+            }
+        }
+
+        return empty($result) ? json_encode($data) : implode(', ', $result);
+    }),
+
             ])
             ->filters([
                 SelectFilter::make('service_id')
