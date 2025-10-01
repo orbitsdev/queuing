@@ -20,7 +20,7 @@
         @php
             $isActive = request()->routeIs($item['route']);
         @endphp
-        <a href="{{ $item['route'] !== '#' ? route($item['route']) : '#' }}" wire:navigate wire:ignore
+        <a href="{{ $item['route'] !== '#' ? route($item['route']) : '#' }}" 
             class="group nav-link {{ $isActive ? 'active' : 'inactive' }}">
             @svg('heroicon-o-' . $item['icon'], [
                 'class' => 'nav-icon ' . ($isActive ? 'active' : 'inactive group-hover:text-kiosqueeing-primary'),
