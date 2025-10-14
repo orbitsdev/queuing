@@ -151,7 +151,7 @@
                          <button wire:click="anounceNumber"
         wire:loading.attr="disabled"
         @disabled(!$currentTicket)
-        class="block col-span-4 {{ $currentTicket
+        class="block col-span-2 {{ $currentTicket
             ? 'px-5 py-2 bg-gray-700 text-white hover:bg-gray-800 transition rounded-lg flex items-center justify-center'
             : 'px-5 py-2 bg-gray-200 text-gray-400 cursor-not-allowed rounded-lg flex items-center justify-center'
         }}">
@@ -166,6 +166,9 @@
         <span>Announcing...</span>
     </span>
 </button>
+
+{{ $this->forwardQue }}
+
 
 
                         </div>
@@ -327,6 +330,7 @@
                 <x-button primary label="Start Break" wire:click="confirmStartBreak" />
             </x-slot>
         </x-modal-card>
+            <x-filament-actions::modals />
         <script>
           document.addEventListener('DOMContentLoaded', function() {
                 // Check if Echo is properly initialized

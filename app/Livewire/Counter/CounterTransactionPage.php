@@ -3,21 +3,32 @@
 namespace App\Livewire\Counter;
 
 use App\Models\Queue;
+use App\Models\Service;
 use App\Models\Setting;
 use Livewire\Component;
 use App\Events\CallNumber;
 use Livewire\Attributes\On;
+use Filament\Actions\Action;
 use WireUi\Traits\WireUiActions;
 use App\Events\QueueStatusChanged;
-use Illuminate\Support\Facades\DB;
 // use filament notficaiton
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Actions\Contracts\HasActions;
 use App\Services\TransactionHistoryService;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Actions\Concerns\InteractsWithActions;
 
-class CounterTransactionPage extends Component
+class CounterTransactionPage extends Component implements HasForms, HasActions
 {
     use WireUiActions;
+    use InteractsWithActions;
+    use InteractsWithForms;
 
     public $counter;
     public $currentTicket;
@@ -37,6 +48,8 @@ class CounterTransactionPage extends Component
 
     // Real-time update tracking
     public $connectionStatus = 'connected';
+
+    public $forwardQueueData;
 
     public function mount()
     {
@@ -496,7 +509,7 @@ class CounterTransactionPage extends Component
     public function loadQueue()
     {
         // ✅ Always get fresh allowed services for this counter
-          $allowedServiceIds = $this->counter->services->pluck('id');
+        $allowedServiceIds = $this->counter->services->pluck('id');
 
         // ✅ 1️⃣ Current ticket for this counter
         if (Auth::user()->queue_id) {
@@ -530,7 +543,7 @@ class CounterTransactionPage extends Component
             ->where('counter_id', $this->counter->id)
             ->where('status', 'held')
             ->orderBy('hold_started_at')
-             ->with(['service', 'counter'])
+            ->with(['service', 'counter'])
             ->get();
 
         // // ✅ 4️⃣ Tickets served by other counters (no filter)
@@ -549,11 +562,12 @@ class CounterTransactionPage extends Component
             ->count();
     }
 
-    public function showNoQueSelected(){
-           $this->dialog()->error(
-                title: 'No Ticket',
-                description: 'There is no active ticket to complete.'
-            );
+    public function showNoQueSelected()
+    {
+        $this->dialog()->error(
+            title: 'No Ticket',
+            description: 'There is no active ticket to complete.'
+        );
     }
 
 
@@ -757,6 +771,98 @@ class CounterTransactionPage extends Component
     }
 
 
+  public function forwardQue(): Action
+{
+    return Action::make('forwardQue')
+        ->label('Forward')
+        ->extraAttributes(function () {
+    if (!$this->currentTicket) {
+        // Disabled style
+        return [
+            'class' => 'col-span-2 px-5 py-2  bg-gray-200 text-gray-400 cursor-not-allowed rounded-lg flex  items-center justify-center',
+        ];
+    }
+
+    // Enabled style
+    return [
+        'class' => 'col-span-2 text-gray-300 px-5 py-2  bg-gray-700 text-white hover:bg-gray-800 transition rounded-lg flex  items-center justify-center',
+    ];
+})
+
+        ->icon('heroicon-o-arrow-right')
+
+        ->modalWidth('3xl')
+        ->disabled(fn () => !$this->currentTicket)
+        ->form([
+            Select::make('new_service_id')
+                ->label('Forward to Service')
+                ->options(Service::currentBranch()->pluck('name', 'id'))
+                ->searchable()
+                ->required(),
+
+            Textarea::make('reason')
+                ->label('Reason for Forwarding')
+                ->default('Wrong service selected')
+                ->rows(3)
+                ->required(),
+        ])
+        ->requiresConfirmation()
+        ->modalHeading('Forward Current Ticket')
+        ->modalDescription('Confirm forwarding this ticket to another service. This will move it to the selected queue.')
+        ->action(function (array $data): void {
+            $queue = $this->currentTicket;
+
+            if (!$queue) {
+                Notification::make()
+                    ->title('No Active Ticket')
+                    ->body('Please select a ticket before forwarding.')
+                    ->danger()
+                    ->send();
+                return;
+            }
+
+            if (in_array($queue->status, ['served', 'cancelled'])) {
+                Notification::make()
+                    ->title('Cannot Forward')
+                    ->body('This ticket is already completed or cancelled.')
+                    ->warning()
+                    ->send();
+                return;
+            }
+
+            DB::transaction(function () use ($queue, $data) {
+
+
+                // ✅ Update queue info
+                $queue->update([
+                    'previous_service_id' => $queue->service_id,
+                    'service_id'          => $data['new_service_id'],
+                    'is_forwarded'        => true,
+                    'forward_reason'      => $data['reason'],
+                    'forwarded_by'        => Auth::id(),
+                    'status'              => 'waiting',
+                    'counter_id'          => null,
+                ]);
+
+                Auth::user()->update([
+                    'queue_id' => null,
+                ]);
+
+
+
+                // ✅ Broadcast to monitors and counters
+                event(new QueueStatusChanged($queue->fresh()));
+            });
+
+            Notification::make()
+                ->title('Queue Forwarded')
+                ->body("Ticket {$queue->ticket_number} has been forwarded to the new service successfully.")
+                ->success()
+                ->send();
+
+            $this->loadQueue();
+        });
+}
     public function render()
     {
         return view('livewire.counter.counter-transaction-page');
