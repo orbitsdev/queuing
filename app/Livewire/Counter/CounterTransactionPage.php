@@ -45,6 +45,7 @@ class CounterTransactionPage extends Component implements HasForms, HasActions
     public $breakInputMessage = '';
     public $showBreakModal = false;
     public $queueCountToday = 0;
+    public $forwardedCountToday = 0;
 
     // Real-time update tracking
     public $connectionStatus = 'connected';
@@ -560,6 +561,12 @@ class CounterTransactionPage extends Component implements HasForms, HasActions
             ->where('status', 'waiting')
             ->whereIn('service_id', $allowedServiceIds)
             ->count();
+        $this->forwardedCountToday = Queue::todayQueues()
+            ->where('branch_id', $this->counter->branch_id)
+            ->where('status', 'waiting')
+            ->where('is_forwarded', true) // ✅ only forwarded tickets
+            ->whereIn('service_id', $allowedServiceIds)
+            ->count();
     }
 
     public function showNoQueSelected()
@@ -771,98 +778,98 @@ class CounterTransactionPage extends Component implements HasForms, HasActions
     }
 
 
-  public function forwardQue(): Action
-{
-    return Action::make('forwardQue')
-        ->label('Forward')
-        ->extraAttributes(function () {
-    if (!$this->currentTicket) {
-        // Disabled style
-        return [
-            'class' => 'col-span-2 px-5 py-2  bg-gray-200 text-gray-400 cursor-not-allowed rounded-lg flex  items-center justify-center',
-        ];
-    }
+    public function forwardQue(): Action
+    {
+        return Action::make('forwardQue')
+            ->label('Forward')
+            ->extraAttributes(function () {
+                if (!$this->currentTicket) {
+                    // Disabled style
+                    return [
+                        'class' => 'col-span-2 px-5 py-2  bg-gray-200 text-gray-400 cursor-not-allowed rounded-lg flex  items-center justify-center',
+                    ];
+                }
 
-    // Enabled style
-    return [
-        'class' => 'col-span-2 text-gray-300 px-5 py-2  bg-gray-700 text-white hover:bg-gray-800 transition rounded-lg flex  items-center justify-center',
-    ];
-})
+                // Enabled style
+                return [
+                    'class' => 'col-span-2 text-gray-300 px-5 py-2  bg-gray-700 text-white hover:bg-gray-800 transition rounded-lg flex  items-center justify-center',
+                ];
+            })
 
-        ->icon('heroicon-o-arrow-right')
+            ->icon('heroicon-o-arrow-right')
 
-        ->modalWidth('3xl')
-        ->disabled(fn () => !$this->currentTicket)
-        ->form([
-            Select::make('new_service_id')
-                ->label('Forward to Service')
-                ->options(Service::currentBranch()->pluck('name', 'id'))
-                ->searchable()
-                ->required(),
+            ->modalWidth('3xl')
+            ->disabled(fn() => !$this->currentTicket)
+            ->form([
+                Select::make('new_service_id')
+                    ->label('Forward to Service')
+                    ->options(Service::currentBranch()->pluck('name', 'id'))
+                    ->searchable()
+                    ->required(),
 
-            Textarea::make('reason')
-                ->label('Reason for Forwarding')
-                ->default('Wrong service selected')
-                ->rows(3)
-                ->required(),
-        ])
-        ->requiresConfirmation()
-        ->modalHeading('Forward Current Ticket')
-        ->modalDescription('Confirm forwarding this ticket to another service. This will move it to the selected queue.')
-        ->action(function (array $data): void {
-            $queue = $this->currentTicket;
+                Textarea::make('reason')
+                    ->label('Reason for Forwarding')
+                    ->default('Wrong service selected')
+                    ->rows(3)
+                    ->required(),
+            ])
+            ->requiresConfirmation()
+            ->modalHeading('Forward Current Ticket')
+            ->modalDescription('Confirm forwarding this ticket to another service. This will move it to the selected queue.')
+            ->action(function (array $data): void {
+                $queue = $this->currentTicket;
 
-            if (!$queue) {
+                if (!$queue) {
+                    Notification::make()
+                        ->title('No Active Ticket')
+                        ->body('Please select a ticket before forwarding.')
+                        ->danger()
+                        ->send();
+                    return;
+                }
+
+                if (in_array($queue->status, ['served', 'cancelled'])) {
+                    Notification::make()
+                        ->title('Cannot Forward')
+                        ->body('This ticket is already completed or cancelled.')
+                        ->warning()
+                        ->send();
+                    return;
+                }
+
+                DB::transaction(function () use ($queue, $data) {
+
+
+                    // ✅ Update queue info
+                    $queue->update([
+                        'previous_service_id' => $queue->service_id,
+                        'service_id'          => $data['new_service_id'],
+                        'is_forwarded'        => true,
+                        'forward_reason'      => $data['reason'],
+                        'forwarded_by'        => Auth::id(),
+                        'status'              => 'waiting',
+                        'counter_id'          => null,
+                    ]);
+
+                    Auth::user()->update([
+                        'queue_id' => null,
+                    ]);
+
+
+
+                    // ✅ Broadcast to monitors and counters
+                    event(new QueueStatusChanged($queue->fresh()));
+                });
+
                 Notification::make()
-                    ->title('No Active Ticket')
-                    ->body('Please select a ticket before forwarding.')
-                    ->danger()
+                    ->title('Queue Forwarded')
+                    ->body("Ticket {$queue->ticket_number} has been forwarded to the new service successfully.")
+                    ->success()
                     ->send();
-                return;
-            }
 
-            if (in_array($queue->status, ['served', 'cancelled'])) {
-                Notification::make()
-                    ->title('Cannot Forward')
-                    ->body('This ticket is already completed or cancelled.')
-                    ->warning()
-                    ->send();
-                return;
-            }
-
-            DB::transaction(function () use ($queue, $data) {
-
-
-                // ✅ Update queue info
-                $queue->update([
-                    'previous_service_id' => $queue->service_id,
-                    'service_id'          => $data['new_service_id'],
-                    'is_forwarded'        => true,
-                    'forward_reason'      => $data['reason'],
-                    'forwarded_by'        => Auth::id(),
-                    'status'              => 'waiting',
-                    'counter_id'          => null,
-                ]);
-
-                Auth::user()->update([
-                    'queue_id' => null,
-                ]);
-
-
-
-                // ✅ Broadcast to monitors and counters
-                event(new QueueStatusChanged($queue->fresh()));
+                $this->loadQueue();
             });
-
-            Notification::make()
-                ->title('Queue Forwarded')
-                ->body("Ticket {$queue->ticket_number} has been forwarded to the new service successfully.")
-                ->success()
-                ->send();
-
-            $this->loadQueue();
-        });
-}
+    }
     public function render()
     {
         return view('livewire.counter.counter-transaction-page');

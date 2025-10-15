@@ -9,21 +9,21 @@
                 <flux:icon name="x" />
             </flux:sidebar.toggle>
 
-            <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
+            <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse">
                 <x-app-logo />
             </a>
 
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Platform')" class="grid">
-                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
+                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')">{{ __('Dashboard') }}</flux:navlist.item>
                 </flux:navlist.group>
 
                 {{-- <flux:navlist.group :heading="__('Management')" class="grid">
-                    <flux:navlist.item icon="building-office" :href="route('admin.branches')" :current="request()->routeIs('admin.branches')" wire:navigate>{{ __('Branches') }}</flux:navlist.item>
-                    <flux:navlist.item icon="briefcase" :href="route('admin.services')" :current="request()->routeIs('admin.services')" wire:navigate>{{ __('Services') }}</flux:navlist.item>
-                    <flux:navlist.item icon="computer-desktop" :href="route('admin.counters')" :current="request()->routeIs('admin.counters')" wire:navigate>{{ __('Counters') }}</flux:navlist.item>
-                    <flux:navlist.item icon="queue-list" :href="route('admin.queues')" :current="request()->routeIs('admin.queues')" wire:navigate>{{ __('Queues') }}</flux:navlist.item>
-                    <flux:navlist.item icon="users" :href="route('admin.users')" :current="request()->routeIs('admin.users')" wire:navigate>{{ __('Users') }}</flux:navlist.item>
+                    <flux:navlist.item icon="building-office" :href="route('admin.branches')" :current="request()->routeIs('admin.branches')">{{ __('Branches') }}</flux:navlist.item>
+                    <flux:navlist.item icon="briefcase" :href="route('admin.services')" :current="request()->routeIs('admin.services')">{{ __('Services') }}</flux:navlist.item>
+                    <flux:navlist.item icon="computer-desktop" :href="route('admin.counters')" :current="request()->routeIs('admin.counters')">{{ __('Counters') }}</flux:navlist.item>
+                    <flux:navlist.item icon="queue-list" :href="route('admin.queues')" :current="request()->routeIs('admin.queues')">{{ __('Queues') }}</flux:navlist.item>
+                    <flux:navlist.item icon="users" :href="route('admin.users')" :current="request()->routeIs('admin.users')">{{ __('Users') }}</flux:navlist.item>
                 </flux:navlist.group> --}}
             </flux:navlist>
 
@@ -65,7 +65,7 @@
                     <flux:menu.separator />
 
                     <flux:menu.radio.group>
-                        <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>{{ __('Settings') }}</flux:menu.item>
+                        <flux:menu.item :href="route('settings.profile')" icon="cog">{{ __('Settings') }}</flux:menu.item>
                     </flux:menu.radio.group>
 
                     <flux:menu.separator />
@@ -114,7 +114,7 @@
                     <flux:menu.separator />
 
                     <flux:menu.radio.group>
-                        <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>{{ __('Settings') }}</flux:menu.item>
+                        <flux:menu.item :href="route('settings.profile')" icon="cog">{{ __('Settings') }}</flux:menu.item>
                     </flux:menu.radio.group>
 
                     <flux:menu.separator />

@@ -6,7 +6,7 @@
     <body class="min-h-screen antialiased bg-white dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
         <div class="flex flex-col gap-6 justify-center items-center p-6 bg-background min-h-svh md:p-10">
             <div class="flex flex-col gap-2 w-full max-w-sm">
-                {{-- <a href="{{ route('home') }}" class="flex flex-col gap-2 items-center font-medium" wire:navigate>
+                {{-- <a href="{{ route('home') }}" class="flex flex-col gap-2 items-center font-medium" >
                     <span class="flex justify-center items-center mb-1 w-9 h-9 rounded-md">
                         <x-app-logo-icon class="text-black fill-current size-9 dark:text-white" />
                     </span>
