@@ -66,19 +66,21 @@ class KioskController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function getServices($branchCode)
-    {
-        $branch = Branch::where('code', $branchCode)->first();
+{
+    $branch = Branch::where('code', $branchCode)->first();
 
-        if (!$branch) {
-            return ApiResponse::error('Branch not found', 404);
-        }
-// 
-        $services = Service::where('branch_id', $branch->id)
-            ->orderBy('name')
-            ->get();
-
-        return ApiResponse::success(ServiceResource::collection($services), 'Services retrieved');
+    if (!$branch) {
+        return ApiResponse::error('Branch not found', 404);
     }
+
+    $services = Service::withWaitingCount()
+        ->where('branch_id', $branch->id)
+        ->orderBy('name')
+        ->get();
+
+    return ApiResponse::success(ServiceResource::collection($services), 'Services retrieved');
+}
+
 
     /**
      * Create a new queue ticket

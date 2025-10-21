@@ -50,6 +50,12 @@ public function monitorService()
 {
     return $this->hasMany(MonitorService::class);
 }
+public function scopeWithWaitingCount($query)
+{
+    return $query->withCount(['queues as waiting_count' => function ($q) {
+        $q->where('status', 'waiting')->todayQueues();
+    }]);
+}
 
 
 }
