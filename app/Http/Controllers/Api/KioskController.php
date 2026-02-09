@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\QueueResource;
 use App\Http\Resources\BranchResource;
 use App\Http\Resources\ServiceResource;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class KioskController extends Controller
@@ -117,28 +118,36 @@ class KioskController extends Controller
         // Get branch settings
         $settings = Setting::forBranch($branch);
 
-        // Get today's queue count for this branch
-        $todayCount = Queue::where('branch_id', $branch->id)
-            ->todayQueues()
-            ->count();
+        // Use transaction with lock to prevent duplicate queue numbers
+        $queue = DB::transaction(function () use ($branch, $service, $settings) {
+            // Lock the branch row to prevent concurrent queue creation
+            Branch::where('id', $branch->id)->lockForUpdate()->first();
 
-        // Calculate next number
-        $nextNumber = ($settings->queue_number_base ?? 1) + $todayCount;
+            // Get today's queue count for this branch (now safe from race condition)
+            $todayCount = Queue::where('branch_id', $branch->id)
+                ->todayQueues()
+                ->count();
 
-        // Format ticket number with prefix
-        $prefix = $settings->ticket_prefix ?? 'QUE';
-        $formattedTicketNumber = $prefix . $nextNumber;
+            // Calculate next number
+            $nextNumber = ($settings->queue_number_base ?? 1) + $todayCount;
 
-        // Create queue
-        $queue = new Queue();
-        $queue->branch_id = $branch->id;
-        $queue->service_id = $service->id;
-        $queue->number = $nextNumber;
-        $queue->ticket_number = $formattedTicketNumber;
-        $queue->status = 'waiting';
-        $queue->save();
+            // Format ticket number with prefix
+            $prefix = $settings->ticket_prefix ?? 'QUE';
+            $formattedTicketNumber = $prefix . $nextNumber;
 
-        // Broadcast the queue status changed event
+            // Create queue
+            $queue = new Queue();
+            $queue->branch_id = $branch->id;
+            $queue->service_id = $service->id;
+            $queue->number = $nextNumber;
+            $queue->ticket_number = $formattedTicketNumber;
+            $queue->status = 'waiting';
+            $queue->save();
+
+            return $queue;
+        });
+
+        // Broadcast the queue status changed event (outside transaction)
         event(new QueueStatusChanged($queue));
 
         // Load relationships before returning the resource

@@ -6,6 +6,7 @@ use App\Models\Counter;
 use Livewire\Component;
 use WireUi\Traits\WireUiActions;
 use Livewire\Attributes\Title;
+use Illuminate\Support\Facades\DB;
 
 class SelectCounter extends Component
 {
@@ -54,27 +55,43 @@ class SelectCounter extends Component
 
     public function confirmAssign(Counter $counter)
     {
-        // dd($counter->toArray());
+        try {
+            DB::transaction(function () use ($counter) {
+                // Lock and re-fetch counter to prevent race condition
+                $counter = Counter::where('id', $counter->id)
+                    ->lockForUpdate()
+                    ->first();
 
-        // if ($counter->user_id) {
-        //     $this->dialog()->error(
-        //         title: 'Counter Occupied',
-        //         description: 'This counter was just taken by someone else. Please choose another.'
-        //     );
-        //     return;
-        // }
+                if (!$counter) {
+                    throw new \Exception('Counter not found.');
+                }
 
-        $user = auth()->user();
-        $user->update(['counter_id' => $counter->id]);
-        //since it is 1 to many the trancaiton will be change
-        // $counter->update(['user_id' => $user->id]);
+                // Check if counter is already occupied by another user
+                if ($counter->user_id && $counter->user_id !== auth()->id()) {
+                    throw new \Exception('This counter was just taken by someone else. Please choose another.');
+                }
 
-        $this->dialog()->success(
-            title: 'Counter Assigned',
-            description: "You are now using {$user->counter?->name}."
-        );
+                $user = auth()->user();
 
-        return redirect()->route('counter.transaction');
+                // Update both user and counter to maintain relationship
+                $user->update(['counter_id' => $counter->id]);
+                $counter->update(['user_id' => $user->id]);
+            });
+
+            $this->dialog()->success(
+                title: 'Counter Assigned',
+                description: "You are now using {$counter->name}."
+            );
+
+            return redirect()->route('counter.transaction');
+
+        } catch (\Exception $e) {
+            $this->dialog()->error(
+                title: 'Counter Unavailable',
+                description: $e->getMessage()
+            );
+            return;
+        }
     }
 
     public function render()

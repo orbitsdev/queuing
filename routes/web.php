@@ -82,67 +82,10 @@ Route::get('/display/{monitor}', DisplayPage::class)->name('display.show');
 Route::get('/monitors', \App\Livewire\Display\MonitorSelection::class)->name('monitors.selection');
 
 
-Route::get('/create-test-queue/{branch?}/{service?}', function ($branchId = null, $serviceId = null) {
-
-    $branch = $branchId ? \App\Models\Branch::find($branchId) : \App\Models\Branch::first();
-
-    if (!$branch) {
-        return response()->json(['error' => 'Branch not found'], 404);
-    }
-
-
-    $service = $serviceId ? \App\Models\Service::find($serviceId) : \App\Models\Service::where('branch_id', $branch->id)->first();
-
-    if (!$service) {
-        return response()->json(['error' => 'Service not found'], 404);
-    }
-
-
-    $setting = \App\Models\Setting::where('branch_id', $branch->id)->first();
-    $base = $setting ? $setting->queue_number_base : 1;
-    $prefix = $setting ? $setting->ticket_prefix : 'QUE';
-
-    $todayCount = \App\Models\Queue::where('branch_id', $branch->id)
-        ->whereDate('created_at', today())
-        ->count();
-
-    $nextNumber = $base + $todayCount;
-    $formattedTicketNumber = $prefix . $nextNumber;
-    $queue = \App\Models\Queue::create([
-        'branch_id' => $branch->id,
-        'service_id' => $service->id,
-        'number' => $nextNumber,
-        'ticket_number' => $formattedTicketNumber,
-        'status' => 'waiting',
-    ]);
-
-    event(new QueueStatusChanged($queue));
-    return response()->json([
-        'success' => true,
-        'message' => 'Test queue created successfully',
-        'queue' => [
-            'id' => $queue->id,
-            'branch' => $branch->name,
-            'service' => $service->name,
-            'number' => $queue->number,
-            'ticket_number' => $queue->ticket_number,
-            'created_at' => $queue->created_at->format('Y-m-d H:i:s'),
-            'status' => $queue->status
-        ],
-    ]);
-})->name('test.create-queue');
-//     Route::redirect('settings', 'settings/profile');
-//     Route::get('settings/profile', Profile::class)->name('settings.profile');
-//     Route::get('settings/password', Password::class)->name('settings.password');
-//     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
-// });
-
 //reverb test page
 Route::get('reverb-test', ReverTestPage::class)->name('reverb-test');
 
-
-
-//create new queue for testing
+// Create new queue for testing (with locking to prevent duplicate numbers)
 Route::get('/create-test-queue/{branch?}/{service?}', function ($branchId = null, $serviceId = null) {
     $branch = $branchId ? \App\Models\Branch::find($branchId) : \App\Models\Branch::first();
 
@@ -160,21 +103,29 @@ Route::get('/create-test-queue/{branch?}/{service?}', function ($branchId = null
     $base = $setting ? $setting->queue_number_base : 1;
     $prefix = $setting ? $setting->ticket_prefix : 'QUE';
 
-    $todayCount = \App\Models\Queue::where('branch_id', $branch->id)
-        ->whereDate('created_at', today())
-        ->count();
+    // Use transaction with lock to prevent duplicate queue numbers
+    $queue = \Illuminate\Support\Facades\DB::transaction(function () use ($branch, $service, $base, $prefix) {
+        // Lock the branch row to prevent concurrent queue creation
+        \App\Models\Branch::where('id', $branch->id)->lockForUpdate()->first();
 
-    $nextNumber = $base + $todayCount;
-    $formattedTicketNumber = $prefix . $nextNumber;
-    $queue = \App\Models\Queue::create([
-        'branch_id' => $branch->id,
-        'service_id' => $service->id,
-        'number' => $nextNumber,
-        'ticket_number' => $formattedTicketNumber,
-        'status' => 'waiting',
-    ]);
+        $todayCount = \App\Models\Queue::where('branch_id', $branch->id)
+            ->whereDate('created_at', today())
+            ->count();
+
+        $nextNumber = $base + $todayCount;
+        $formattedTicketNumber = $prefix . $nextNumber;
+
+        return \App\Models\Queue::create([
+            'branch_id' => $branch->id,
+            'service_id' => $service->id,
+            'number' => $nextNumber,
+            'ticket_number' => $formattedTicketNumber,
+            'status' => 'waiting',
+        ]);
+    });
 
     event(new QueueStatusChanged($queue));
+
     return response()->json([
         'success' => true,
         'message' => 'Test queue created successfully',

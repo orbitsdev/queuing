@@ -19,6 +19,7 @@ class Queue extends Model
         'service_id',
         'counter_id',
         'user_id',
+        'number',
         'ticket_number',
         'status',
         'called_at',
@@ -28,6 +29,11 @@ class Queue extends Model
         'hold_started_at',
         'cancelled_at',
         'hold_reason',
+        // Forward feature fields
+        'previous_service_id',
+        'is_forwarded',
+        'forward_reason',
+        'forwarded_by',
     ];
 
 
