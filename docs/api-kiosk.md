@@ -39,7 +39,7 @@ Validates a branch code and returns branch details if valid.
 **Example Request:**
 ```json
 {
-  "code": "BR001"
+  "code": "HQ01"
 }
 ```
 
@@ -50,13 +50,13 @@ Validates a branch code and returns branch details if valid.
   "message": "Branch found",
   "data": {
     "id": 1,
-    "name": "Main Branch",
-    "code": "BR001",
-    "address": "123 Main Street",
+    "name": "Main City Hall",
+    "code": "HQ01",
+    "address": "123 Main Street, Metro City",
     "created_at": "2025-06-17T06:10:00.000000Z",
     "updated_at": "2025-06-17T06:10:00.000000Z",
     "settings": {
-      "ticket_prefix": "QUE",
+      "ticket_prefix": "",
       "print_logo": true
     }
   }
@@ -97,7 +97,7 @@ Retrieves detailed information about a branch by its code.
 
 **Example Request:**
 ```
-GET /api/kiosk/branch/BR001
+GET /api/kiosk/branch/HQ01
 ```
 
 **Success Response (200 OK):**
@@ -107,13 +107,13 @@ GET /api/kiosk/branch/BR001
   "message": "Branch retrieved",
   "data": {
     "id": 1,
-    "name": "Main Branch",
-    "code": "BR001",
+    "name": "Main City Hall",
+    "code": "HQ01",
     "address": "123 Main Street",
     "created_at": "2025-06-17T06:10:00.000000Z",
     "updated_at": "2025-06-17T06:10:00.000000Z",
     "settings": {
-      "ticket_prefix": "QUE",
+      "ticket_prefix": "",
       "print_logo": true
     }
   }
@@ -143,7 +143,7 @@ Lists all services available for a specific branch.
 
 **Example Request:**
 ```
-GET /api/kiosk/services/BR001
+GET /api/kiosk/services/HQ01
 ```
 
 **Success Response (200 OK):**
@@ -163,13 +163,13 @@ GET /api/kiosk/services/BR001
       "updated_at": "2025-06-17T06:17:57.000000Z",
       "branch": {
         "id": 1,
-        "name": "Main Branch",
-        "code": "BR001",
+        "name": "Main City Hall",
+        "code": "HQ01",
         "address": "123 Main Street",
         "created_at": "2025-06-17T06:10:00.000000Z",
         "updated_at": "2025-06-17T06:10:00.000000Z",
         "settings": {
-          "ticket_prefix": "QUE",
+          "ticket_prefix": "",
           "print_logo": true
         }
       },
@@ -186,13 +186,13 @@ GET /api/kiosk/services/BR001
       "updated_at": "2025-06-17T06:17:57.000000Z",
       "branch": {
         "id": 1,
-        "name": "Main Branch",
-        "code": "BR001",
+        "name": "Main City Hall",
+        "code": "HQ01",
         "address": "123 Main Street",
         "created_at": "2025-06-17T06:10:00.000000Z",
         "updated_at": "2025-06-17T06:10:00.000000Z",
         "settings": {
-          "ticket_prefix": "QUE",
+          "ticket_prefix": "",
           "print_logo": true
         }
       },
@@ -227,7 +227,7 @@ Creates a new queue ticket for a specific branch and service.
 **Example Request:**
 ```json
 {
-  "branch_code": "BR001",
+  "branch_code": "HQ01",
   "service_id": 1
 }
 ```
@@ -244,7 +244,7 @@ Creates a new queue ticket for a specific branch and service.
     "counter_id": null,
     "user_id": null,
     "number": 1,
-    "ticket_number": "QUE1",
+    "ticket_number": "1",
     "status": "waiting",
     "called_at": null,
     "serving_at": null,
@@ -269,13 +269,13 @@ Creates a new queue ticket for a specific branch and service.
       "updated_at": "2025-06-17T06:17:57.000000Z",
       "branch": {
         "id": 1,
-        "name": "Main Branch",
-        "code": "BR001",
+        "name": "Main City Hall",
+        "code": "HQ01",
         "address": "123 Main Street",
         "created_at": "2025-06-17T06:10:00.000000Z",
         "updated_at": "2025-06-17T06:10:00.000000Z",
         "settings": {
-          "ticket_prefix": "QUE",
+          "ticket_prefix": "",
           "print_logo": true
         }
       },
@@ -283,13 +283,13 @@ Creates a new queue ticket for a specific branch and service.
     },
     "branch": {
       "id": 1,
-      "name": "Main Branch",
-      "code": "BR001",
+      "name": "Main City Hall",
+      "code": "HQ01",
       "address": "123 Main Street",
       "created_at": "2025-06-17T06:10:00.000000Z",
       "updated_at": "2025-06-17T06:10:00.000000Z",
       "settings": {
-        "ticket_prefix": "QUE",
+        "ticket_prefix": "",
         "print_logo": true
       }
     },
@@ -334,7 +334,9 @@ Creates a new queue ticket for a specific branch and service.
    - Each branch has its own queue numbering sequence
    - Queue numbers reset daily (based on created_at date)
    - The next number is calculated as: (branch_setting.queue_number_base + today's_queue_count)
-   - Ticket numbers are formatted with a prefix: (branch_setting.ticket_prefix + number)
+   - Ticket numbers are formatted with optional prefix: (branch_setting.ticket_prefix + number)
+   - Default configuration uses empty prefix for simple numbers (1, 2, 3...)
+   - Database-level locking prevents duplicate ticket numbers during concurrent requests
 
 2. **Date and Time Formatting**:
    - Queue responses include human-readable date and time formats for easier display and printing:
