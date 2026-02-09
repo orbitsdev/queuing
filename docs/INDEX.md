@@ -7,7 +7,9 @@
 | [System Overview](system-overview.md) | Application architecture, modules, routes, and workflow |
 | [Database](database.md) | Models, relationships, schema, and ERD |
 | [API - Kiosk](api-kiosk.md) | Kiosk API endpoints for ticket creation |
+| [API Testing Guide](api-testing-guide.md) | Quick test commands with branch codes and service IDs |
 | [Production Setup](production-setup.md) | Complete production deployment guide |
+| [Deployment Guide](deployment-guide.md) | Updating existing production system |
 
 ## Quick Links
 

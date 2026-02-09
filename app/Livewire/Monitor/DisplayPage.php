@@ -93,16 +93,19 @@ class DisplayPage extends Component
         $serviceIds = $this->monitor->services->pluck('id');
 
 
+        // Get only the LATEST serving queue per counter (prevents duplicates)
         $this->servingQueues = Queue::whereIn('service_id', $serviceIds)
-        ->whereHas('counter')
+            ->whereHas('counter')
             ->where('status', 'serving')
-->whereBetween('created_at', [
-    now()->startOfDay(),
-    now()->endOfDay()
-])
+            ->whereBetween('created_at', [
+                now()->startOfDay(),
+                now()->endOfDay()
+            ])
             ->with('counter')
-            ->orderBy('called_at')
-            ->get();
+            ->orderBy('serving_at', 'desc')
+            ->get()
+            ->unique('counter_id') // Only one per counter
+            ->values();
 
 
         // Get total count of waiting queues for today only

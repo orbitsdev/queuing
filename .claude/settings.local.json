@@ -8,7 +8,14 @@
       "Bash(php -l:*)",
       "Bash(composer test)",
       "Bash(curl:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(npm run build:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(npx vite build)",
+      "Bash(npx vite build:*)",
+      "Bash(cmd //c \"npm run build\")",
+      "Bash(php -r:*)"
     ]
   }
 }

@@ -2,6 +2,39 @@
 
 This guide helps you safely update the existing production system with data.
 
+---
+
+## Quick Update (Copy-Paste Commands)
+
+For fast deployment, run these commands in order:
+
+```bash
+# 1. Backup database first!
+mysqldump -u root -p queue-gensan > backup_$(date +%Y%m%d_%H%M%S).sql
+
+# 2. Pull latest code
+git pull origin main
+
+# 3. Install dependencies & build
+composer install --no-dev --optimize-autoloader
+npm install
+npm run build
+
+# 4. Run migrations (if any)
+php artisan migrate
+
+# 5. Clear caches
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# 6. Restart services
+sudo supervisorctl restart kiosqueeing-queue:*
+sudo supervisorctl restart kiosqueeing-reverb
+```
+
+---
+
 ## Pre-Deployment Checklist
 
 Before updating, ensure you have:
@@ -15,7 +48,7 @@ Before updating, ensure you have:
 
 ```bash
 # Backup database
-mysqldump -u YOUR_USER -p YOUR_DATABASE > backup_$(date +%Y%m%d_%H%M%S).sql
+mysqldump -u root -p queue-gensan > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # Or for SQLite
 cp database/database.sqlite database/database.sqlite.backup
@@ -40,13 +73,13 @@ git stash pop
 
 ---
 
-## Step 3: Install Dependencies
+## Step 3: Install Dependencies & Build
 
 ```bash
 # PHP dependencies
 composer install --no-dev --optimize-autoloader
 
-# Node dependencies (if frontend changed)
+# Node dependencies and build frontend
 npm install
 npm run build
 ```
@@ -87,11 +120,14 @@ php artisan view:cache
 ## Step 6: Restart Services
 
 ```bash
-# Restart queue worker
+# Restart queue worker (processes background jobs like broadcasting)
 sudo supervisorctl restart kiosqueeing-queue:*
 
-# Restart Reverb (WebSocket)
+# Restart Reverb (WebSocket server for real-time updates)
 sudo supervisorctl restart kiosqueeing-reverb
+
+# Verify services are running
+sudo supervisorctl status
 ```
 
 ---

@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\Counter;
 use App\Models\Service;
 use Livewire\Component;
+use App\Events\QueueStatusChanged;
 
 use Filament\Tables\Table;
 use Filament\Actions\Action;
@@ -232,7 +233,14 @@ Filter::make('created_at')
                         ->modalHeading('Delete Queue')
                         ->modalDescription('Delete the queue details')
                         ->action(function (Queue $queue): void {
+                            // Set status to deleted and broadcast BEFORE deleting
+                            // This allows monitors to receive the update
+                            $queue->status = 'deleted';
+                            event(new QueueStatusChanged($queue));
+
+                            // Now delete the queue
                             $queue->delete();
+
                             $this->dialog()->success(
                                 title: 'Queue Deleted',
                                 description: 'Queue has been successfully deleted'

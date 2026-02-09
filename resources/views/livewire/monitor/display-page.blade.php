@@ -13,7 +13,14 @@
                 <span>Live</span>
             </div>
         </div>
-        <div class="flex items-center">
+        <div class="flex items-center gap-4">
+            <!-- Services being displayed -->
+            <div class="hidden md:flex items-center gap-2 text-sm">
+                <span class="text-gray-400">Services:</span>
+                @foreach($services as $service)
+                    <span class="bg-[#001a71] px-2 py-1 rounded text-xs" title="{{ $service->name }}">{{ $service->code ?? $service->name }}</span>
+                @endforeach
+            </div>
             <div class="text-2xl font-medium" x-data="{ time: '' }" x-init="updateClock = () => {
                 // Create date object for Philippines (UTC+8)
                 const options = {
