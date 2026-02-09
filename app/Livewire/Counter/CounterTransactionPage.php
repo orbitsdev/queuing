@@ -235,6 +235,8 @@ class CounterTransactionPage extends Component implements HasForms, HasActions
                 'counter_id' => null,
                 'user_id' => null,
                 'status' => 'waiting',
+                'called_at' => null,
+                'serving_at' => null,
             ]);
 
             Auth::user()->update([

@@ -40,7 +40,23 @@ class Monitors extends Component implements HasForms, HasTable, HasActions
 
     public function mount()
     {
-        // $this->branch = $branch;
+        // Check if user has a branch assigned
+        if (!Auth::user()->branch_id) {
+            // For superadmins, redirect to branch selection for monitor management
+            if (Auth::user()->role === 'superadmin') {
+                return redirect()->route('admin.branches-for-monitor-management');
+            }
+            // For admins, redirect to branch selection for monitor management
+            if (Auth::user()->role === 'admin') {
+                return redirect()->route('admin.branches-for-monitor-management');
+            }
+            // For staff without branch, redirect to counter select
+            if (Auth::user()->role === 'staff') {
+                return redirect()->route('counter.select');
+            }
+            // For other users without branch, redirect to dashboard
+            return redirect()->route('dashboard');
+        }
     }
 
     public function createAction(): CreateAction
