@@ -29,7 +29,12 @@ class Monitor extends Model
 
 //scope current branch
   public function scopeCurrentBranch($query){
-return $query->where('branch_id', Auth::user()->branch_id);
+    $branchId = Auth::user()?->branch_id;
+    if (!$branchId) {
+        // Return empty result if no branch is set
+        return $query->whereRaw('1 = 0');
+    }
+    return $query->where('branch_id', $branchId);
  }
 
  //scope branch pass data

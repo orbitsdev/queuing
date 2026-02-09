@@ -59,7 +59,7 @@
                         <!-- Counter Name block -->
                         <div
                             class="bg-[#cee1ff] text-black text-4xl md:text-4xl font-bold py-4 px-4 col-span-3 flex items-center justify-center text-center uppercase">
-                            {{ $queue->counter?->name ?? 'This is counter is not available' }}
+                            {{ $queue->counter?->name ?? 'Counter Not Available' }}
                         </div>
 
                         <!-- Ticket Number block -->
